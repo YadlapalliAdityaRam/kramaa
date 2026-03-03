@@ -202,6 +202,7 @@ const CodingPlatform = () => {
     const [dailyCalendarLoading, setDailyCalendarLoading] = useState(false);
     const dismissedContestIdsRef = useRef(null);
     const seenContestIdsRef = useRef(new Set());
+    const safeProblems = Array.isArray(problems) ? problems : [];
 
     if (!dismissedContestIdsRef.current) {
         dismissedContestIdsRef.current = new Set(loadDismissedContestIds(dismissedContestStorageKey));
@@ -358,10 +359,10 @@ const CodingPlatform = () => {
     };
 
     // ── Computed values ──
-    const uniqueCompanies = [...new Set(problems.flatMap(p => p.companies || []))].sort();
-    const uniqueTopics = [...new Set(problems.flatMap(p => p.topics || (p.topic ? [p.topic] : [])))].sort();
+    const uniqueCompanies = [...new Set(safeProblems.flatMap(p => p.companies || []))].sort();
+    const uniqueTopics = [...new Set(safeProblems.flatMap(p => p.topics || (p.topic ? [p.topic] : [])))].sort();
 
-    const filteredProblems = problems.filter(p => {
+    const filteredProblems = safeProblems.filter(p => {
         const matchesDiff = filter.difficulty === 'All' || p.difficulty === filter.difficulty;
         const matchesTopic = filter.topic === 'All' ||
             (p.topics && p.topics.includes(filter.topic)) ||
@@ -417,8 +418,8 @@ const CodingPlatform = () => {
     const hardSolved = user?.stats?.hardSolved || user?.totalSolvedHard || 0;
 
     // Daily Challenge + Calendar
-    const fallbackDailyProblem = problems.length > 0
-        ? problems[Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24) % problems.length]
+    const fallbackDailyProblem = safeProblems.length > 0
+        ? safeProblems[Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24) % safeProblems.length]
         : null;
 
     const dailyProblem = dailyCalendar?.todayChallenge?.problem || fallbackDailyProblem;

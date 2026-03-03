@@ -11,7 +11,8 @@ const initialState = {
 export const fetchProblems = createAsyncThunk('problems/fetchAll', async (_, thunkAPI) => {
     try {
         const response = await api.get('/problems');
-        return response.data.problems;
+        const problems = response?.data?.problems;
+        return Array.isArray(problems) ? problems : [];
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response?.data?.message || 'Failed to fetch problems');
     }
@@ -53,7 +54,7 @@ const problemSlice = createSlice({
             .addCase(fetchProblems.pending, (state) => { state.isLoading = true; })
             .addCase(fetchProblems.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.problems = action.payload;
+                state.problems = Array.isArray(action.payload) ? action.payload : [];
             })
             .addCase(fetchProblems.rejected, (state, action) => {
                 state.isLoading = false;
