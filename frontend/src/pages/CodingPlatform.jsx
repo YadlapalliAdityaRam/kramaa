@@ -359,8 +359,20 @@ const CodingPlatform = () => {
     };
 
     // ── Computed values ──
-    const uniqueCompanies = [...new Set(safeProblems.flatMap(p => p.companies || []))].sort();
-    const uniqueTopics = [...new Set(safeProblems.flatMap(p => p.topics || (p.topic ? [p.topic] : [])))].sort();
+    const uniqueCompanies = [...new Set(
+        safeProblems.reduce((allCompanies, problem) => {
+            const companies = Array.isArray(problem?.companies) ? problem.companies : [];
+            return allCompanies.concat(companies);
+        }, [])
+    )].sort();
+    const uniqueTopics = [...new Set(
+        safeProblems.reduce((allTopics, problem) => {
+            const topics = Array.isArray(problem?.topics)
+                ? problem.topics
+                : (problem?.topic ? [problem.topic] : []);
+            return allTopics.concat(topics);
+        }, [])
+    )].sort();
 
     const filteredProblems = safeProblems.filter(p => {
         const matchesDiff = filter.difficulty === 'All' || p.difficulty === filter.difficulty;

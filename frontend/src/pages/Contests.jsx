@@ -243,7 +243,10 @@ const Contests = () => {
 
         if (payload && typeof payload === 'object') {
             const grouped = ['running', 'upcoming', 'completed']
-                .flatMap((key) => Array.isArray(payload[key]) ? payload[key] : []);
+                .reduce((allContests, key) => {
+                    const contestsByKey = Array.isArray(payload[key]) ? payload[key] : [];
+                    return allContests.concat(contestsByKey);
+                }, []);
             return grouped.map(normalizeContest);
         }
 
