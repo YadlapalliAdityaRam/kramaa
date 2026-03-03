@@ -1,0 +1,620 @@
+[
+  {
+    "_id": "698dd2fc68f8ddd28297effb",
+    "slug": "reverse-string",
+    "before": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "hello"
+          },
+          "output": "\"olleh\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b401f"
+        },
+        {
+          "input": {
+            "s": "abcde"
+          },
+          "output": "\"edcba\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4020"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "a"
+          },
+          "output": "\"a\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4021"
+        },
+        {
+          "input": {
+            "s": "racecar"
+          },
+          "output": "\"racecar\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4022"
+        },
+        {
+          "input": {
+            "s": "12345"
+          },
+          "output": "\"54321\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4023"
+        },
+        {
+          "input": {
+            "s": "OpenAI"
+          },
+          "output": "\"IAnepO\"",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4024"
+        }
+      ]
+    },
+    "after": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "hello"
+          },
+          "output": "olleh",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b401f"
+        },
+        {
+          "input": {
+            "s": "abcde"
+          },
+          "output": "edcba",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4020"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "a"
+          },
+          "output": "a",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4021"
+        },
+        {
+          "input": {
+            "s": "racecar"
+          },
+          "output": "racecar",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4022"
+        },
+        {
+          "input": {
+            "s": "12345"
+          },
+          "output": "54321",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4023"
+        },
+        {
+          "input": {
+            "s": "OpenAI"
+          },
+          "output": "IAnepO",
+          "isHidden": false,
+          "_id": "69a136ea00160cc4837b4024"
+        }
+      ]
+    }
+  },
+  {
+    "_id": "699ac722a3e1b3e80e4af1f1",
+    "slug": "balanced-bracket-validator",
+    "before": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "\"{[()]}\""
+          },
+          "output": true,
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f5236"
+        },
+        {
+          "input": {
+            "s": "\"{[(])}\""
+          },
+          "output": false,
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f5237"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "\"()\""
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5238"
+        },
+        {
+          "input": {
+            "s": "\"(((\""
+          },
+          "output": false,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5239"
+        },
+        {
+          "input": {
+            "s": "\"()[]{}\""
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f523a"
+        },
+        {
+          "input": {
+            "s": "\"{[]()}\""
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f523b"
+        }
+      ]
+    },
+    "after": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "{[()]}"
+          },
+          "output": true,
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f5236"
+        },
+        {
+          "input": {
+            "s": "{[(])}"
+          },
+          "output": false,
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f5237"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "()"
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5238"
+        },
+        {
+          "input": {
+            "s": "((("
+          },
+          "output": false,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5239"
+        },
+        {
+          "input": {
+            "s": "()[]{}"
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f523a"
+        },
+        {
+          "input": {
+            "s": "{[]()}"
+          },
+          "output": true,
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f523b"
+        }
+      ]
+    }
+  },
+  {
+    "_id": "699ac722a3e1b3e80e4af1f8",
+    "slug": "most-frequent-character",
+    "before": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "\"aabbccc\""
+          },
+          "output": "\"c\"",
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f522b"
+        },
+        {
+          "input": {
+            "s": "\"aabb\""
+          },
+          "output": "\"a\"",
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f522c"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "\"z\""
+          },
+          "output": "\"z\"",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522d"
+        },
+        {
+          "input": {
+            "s": "\"abcabc\""
+          },
+          "output": "\"a\"",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522e"
+        },
+        {
+          "input": {
+            "s": "\"zzzzz\""
+          },
+          "output": "\"z\"",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522f"
+        },
+        {
+          "input": {
+            "s": "\"abcdefghija\""
+          },
+          "output": "\"a\"",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5230"
+        }
+      ]
+    },
+    "after": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "aabbccc"
+          },
+          "output": "c",
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f522b"
+        },
+        {
+          "input": {
+            "s": "aabb"
+          },
+          "output": "a",
+          "isHidden": false,
+          "_id": "69a135beb6fd141eed3f522c"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "z"
+          },
+          "output": "z",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522d"
+        },
+        {
+          "input": {
+            "s": "abcabc"
+          },
+          "output": "a",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522e"
+        },
+        {
+          "input": {
+            "s": "zzzzz"
+          },
+          "output": "z",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f522f"
+        },
+        {
+          "input": {
+            "s": "abcdefghija"
+          },
+          "output": "a",
+          "isHidden": true,
+          "_id": "69a135beb6fd141eed3f5230"
+        }
+      ]
+    }
+  },
+  {
+    "_id": "699ac724a3e1b3e80e4af261",
+    "slug": "nim-game-strategy",
+    "before": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "piles": [
+              1,
+              3,
+              5,
+              7
+            ]
+          },
+          "output": "\"First\"",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f5168"
+        },
+        {
+          "input": {
+            "piles": [
+              1,
+              2,
+              3
+            ]
+          },
+          "output": "\"Second\"",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f5169"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "piles": [
+              4
+            ]
+          },
+          "output": "\"First\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516a"
+        },
+        {
+          "input": {
+            "piles": [
+              2,
+              2
+            ]
+          },
+          "output": "\"Second\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516b"
+        },
+        {
+          "input": {
+            "piles": [
+              1,
+              1,
+              1
+            ]
+          },
+          "output": "\"First\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516c"
+        },
+        {
+          "input": {
+            "piles": [
+              10,
+              10,
+              10,
+              10
+            ]
+          },
+          "output": "\"Second\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516d"
+        }
+      ]
+    },
+    "after": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "piles": [
+              1,
+              3,
+              5,
+              7
+            ]
+          },
+          "output": "First",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f5168"
+        },
+        {
+          "input": {
+            "piles": [
+              1,
+              2,
+              3
+            ]
+          },
+          "output": "Second",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f5169"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "piles": [
+              4
+            ]
+          },
+          "output": "First",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516a"
+        },
+        {
+          "input": {
+            "piles": [
+              2,
+              2
+            ]
+          },
+          "output": "Second",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516b"
+        },
+        {
+          "input": {
+            "piles": [
+              1,
+              1,
+              1
+            ]
+          },
+          "output": "First",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516c"
+        },
+        {
+          "input": {
+            "piles": [
+              10,
+              10,
+              10,
+              10
+            ]
+          },
+          "output": "Second",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f516d"
+        }
+      ]
+    }
+  },
+  {
+    "_id": "699ac724a3e1b3e80e4af268",
+    "slug": "longest-common-substring-suffix-array",
+    "before": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "\"abcdef\"",
+            "t": "\"zcdemf\""
+          },
+          "output": "\"cde\"",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f515b"
+        },
+        {
+          "input": {
+            "s": "\"hello\"",
+            "t": "\"world\""
+          },
+          "output": "\"o\"",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f515c"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "\"abcxyz\"",
+            "t": "\"xyzabc\""
+          },
+          "output": "\"abc\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515d"
+        },
+        {
+          "input": {
+            "s": "\"programming\"",
+            "t": "\"gaming\""
+          },
+          "output": "\"aming\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515e"
+        },
+        {
+          "input": {
+            "s": "\"abcd\"",
+            "t": "\"efgh\""
+          },
+          "output": "\"\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515f"
+        },
+        {
+          "input": {
+            "s": "\"aabcc\"",
+            "t": "\"aaccc\""
+          },
+          "output": "\"aac\"",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f5160"
+        }
+      ]
+    },
+    "after": {
+      "sampleTestCases": [
+        {
+          "input": {
+            "s": "abcdef",
+            "t": "zcdemf"
+          },
+          "output": "cde",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f515b"
+        },
+        {
+          "input": {
+            "s": "hello",
+            "t": "world"
+          },
+          "output": "o",
+          "isHidden": false,
+          "_id": "69a135bab6fd141eed3f515c"
+        }
+      ],
+      "hiddenTestCases": [
+        {
+          "input": {
+            "s": "abcxyz",
+            "t": "xyzabc"
+          },
+          "output": "abc",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515d"
+        },
+        {
+          "input": {
+            "s": "programming",
+            "t": "gaming"
+          },
+          "output": "aming",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515e"
+        },
+        {
+          "input": {
+            "s": "abcd",
+            "t": "efgh"
+          },
+          "output": "",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f515f"
+        },
+        {
+          "input": {
+            "s": "aabcc",
+            "t": "aaccc"
+          },
+          "output": "aac",
+          "isHidden": true,
+          "_id": "69a135bab6fd141eed3f5160"
+        }
+      ]
+    }
+  }
+]

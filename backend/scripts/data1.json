@@ -1,0 +1,396 @@
+[
+    {
+        "title": "Meet in the Middle - Subset Sum Close to Target",
+        "slug": "meet-in-the-middle-subset-sum",
+        "className": "Solution",
+        "functionName": "closestSubsetSum",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "target",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Meet in the Middle",
+            "Bit Manipulation",
+            "Binary Search",
+            "Backtracking"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Subset Sum Close to Target\n\nGiven an integer array `nums` and an integer `target`, find the subset of `nums` whose sum is closest to `target`.\n\nUse the Meet in the Middle technique to achieve better than brute-force performance.\n\n### Example\nInput: nums = [3, 5, 7, 2], target = 10\nOutput: 10\n\n### Constraints\n- 1 ≤ nums.length ≤ 40\n- 1 ≤ nums[i] ≤ 10^7\n- 1 ≤ target ≤ 10^9",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(2^n)",
+            "spaceComplexity": "O(2^n)",
+            "description": "The brute force approach is to generate all possible subsets of the array. For an array of size n, there are 2^n subsets. For each subset, calculate the sum and check how close it is to the target. Keep track of the subset sum that is closest to the target. Return that sum.\nThis approach is too slow for large inputs but works correctly for small arrays (n ≤ 20)."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[3, 5, 7, 2]\n10",
+                "output": "10",
+                "isHidden": false
+            },
+            {
+                "input": "[1, 2, 3, 4]\n6",
+                "output": "6",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[3, 6, 4, 3, 2]\n6",
+                "output": "6",
+                "isHidden": true
+            },
+            {
+                "input": "[10, 20, 30]\n25",
+                "output": "20",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 1, 1, 1]\n3",
+                "output": "3",
+                "isHidden": true
+            },
+            {
+                "input": "[5, 10, 15, 20, 25]\n18",
+                "output": "15",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Longest Common Substring via Suffix Array",
+        "slug": "longest-common-substring-suffix-array",
+        "className": "Solution",
+        "functionName": "longestCommonSubstring",
+        "returnType": "string",
+        "parameters": [
+            {
+                "name": "s",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "t",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Suffix Array",
+            "Strings",
+            "Binary Search",
+            "Hashing"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Longest Common Substring via Suffix Array\n\nGiven two strings s and t, return the longest substring that appears in both strings. If multiple substrings have the same maximum length, return the one that appears first in s.\n\nUse a Suffix Array with LCP (Longest Common Prefix) array for an efficient solution.\n\n### Example\nInput: s = \"abcdef\", t = \"zcdemf\"\nOutput: \"cde\"\n\n### Constraints\n- 1 ≤ s.length, t.length ≤ 10^5\n- Strings consist of lowercase English letters only",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2 * m)",
+            "spaceComplexity": "O(n * m)",
+            "description": "The brute force approach is to generate all substrings of s and for each substring check if it exists in t. Start from the longest possible substring and work down. For each starting index i in s, and each ending index j greater than i, extract the substring s[i..j] and check if it appears anywhere in t using string search. Keep track of the longest matching substring found. \nReturn it at the end. This is too slow for large inputs but demonstrates the core idea clearly."
+        },
+        "sampleTestCases": [
+            {
+                "input": "\"abcdef\"\n\"zcdemf\"",
+                "output": "\"cde\"",
+                "isHidden": false
+            },
+            {
+                "input": "\"hello\"\n\"world\"",
+                "output": "\"o\"",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "\"abcxyz\"\n\"xyzabc\"",
+                "output": "\"abc\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"programming\"\n\"gaming\"",
+                "output": "\"aming\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"abcd\"\n\"efgh\"",
+                "output": "\"\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"aabcc\"\n\"aaccc\"",
+                "output": "\"aac\"",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Nim Game Strategy",
+        "slug": "nim-game-strategy",
+        "className": "Solution",
+        "functionName": "nimWinner",
+        "returnType": "string",
+        "parameters": [
+            {
+                "name": "piles",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Game Theory",
+            "Bit Manipulation",
+            "Mathematics"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "isPublished": true,
+        "description": "## Nim Game Strategy\n\nGiven an array piles where piles[i] is the number of stones in the i-th pile, determine whether the first player wins with optimal play using standard Nim rules.\n\nRules:\n- Two players alternate turns\n- On each turn, a player removes any positive number of stones from exactly one pile\n- The player who takes the last stone wins\n\nReturn \"First\" if the first player wins, otherwise return \"Second\".\n\n### Example\nInput: piles = [1, 3, 5, 7]\nOutput: \"First\"\n\n### Constraints\n- 1 ≤ piles.length ≤ 10^5\n- 1 ≤ piles[i] ≤ 10^9",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(2^n)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach uses recursion with game tree search. For every pile, try removing 1 to piles[i] stones from it and recursively check if the resulting position is a losing position for the opponent. If any move leads to a losing position for the opponent, the current player wins. A position is losing if all moves from it lead to winning positions for the opponent. \nBase case: if all piles are 0, the current player has lost (previous player took the last stone). \nThis is extremely slow for large inputs due to exponential branching."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 3, 5, 7]",
+                "output": "\"First\"",
+                "isHidden": false
+            },
+            {
+                "input": "[1, 2, 3]",
+                "output": "\"Second\"",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[4]",
+                "output": "\"First\"",
+                "isHidden": true
+            },
+            {
+                "input": "[2, 2]",
+                "output": "\"Second\"",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 1, 1]",
+                "output": "\"First\"",
+                "isHidden": true
+            },
+            {
+                "input": "[10, 10, 10, 10]",
+                "output": "\"Second\"",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Maximum Flow in Pipeline Network",
+        "slug": "maximum-flow-pipeline-network",
+        "className": "Solution",
+        "functionName": "maxFlow",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "n",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "edges",
+                "type": "int",
+                "isArray": true,
+                "is2D": true
+            },
+            {
+                "name": "source",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "sink",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Network Flow",
+            "Graph",
+            "Breadth First Search"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Maximum Flow in Pipeline Network\n\nGiven a directed graph with n nodes, a list of edges [u, v, capacity], a source node, and a sink node, compute the maximum flow from source to sink.\n\n### Example\nInput: n=4, edges=[[0,1,3],[0,2,2],[1,3,2],[2,3,3]], source=0, sink=3\nOutput: 5\n\n### Constraints\n- 2 ≤ n ≤ 500\n- 1 ≤ edges.length ≤ 10^4\n- 0 ≤ capacity ≤ 10^4\n- 0 ≤ source, sink < n",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(max_flow * E)",
+            "spaceComplexity": "O(V + E)",
+            "description": "The brute force approach is to use simple DFS to find any path from source to sink repeatedly. For each DFS traversal, find any path from source to sink without caring about optimality. Find the minimum capacity (bottleneck) along that path. Subtract that capacity from all edges on the path and add it to the reverse edges (residual graph). Add the bottleneck value to the total flow. Repeat until no path exists from source to sink. This is the basic Ford-Fulkerson idea using DFS. \nIt is correct but can be very slow if capacities are large because each iteration may only push 1 unit of flow."
+        },
+        "sampleTestCases": [
+            {
+                "input": "4\n[[0,1,3],[0,2,2],[1,3,2],[2,3,3]]\n0\n3",
+                "output": "5",
+                "isHidden": false
+            },
+            {
+                "input": "2\n[[0,1,5]]\n0\n1",
+                "output": "5",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "6\n[[0,1,10],[0,2,10],[1,3,10],[2,4,10],[3,5,10],[4,5,10]]\n0\n5",
+                "output": "20",
+                "isHidden": true
+            },
+            {
+                "input": "4\n[[0,1,1],[0,2,1],[1,3,1],[2,3,1]]\n0\n3",
+                "output": "2",
+                "isHidden": true
+            },
+            {
+                "input": "3\n[[0,1,5],[1,2,3],[0,2,2]]\n0\n2",
+                "output": "5",
+                "isHidden": true
+            },
+            {
+                "input": "5\n[[0,1,3],[0,3,3],[1,2,4],[3,2,2],[3,4,2],[2,4,4]]\n0\n4",
+                "output": "5",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Strongly Connected Components Counter",
+        "slug": "strongly-connected-components-counter",
+        "className": "Solution",
+        "functionName": "countSCCs",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "n",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "edges",
+                "type": "int",
+                "isArray": true,
+                "is2D": true
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Graph",
+            "Depth First Search",
+            "Strongly Connected Components",
+            "Recursion"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Strongly Connected Components Counter\n\nGiven a directed graph with n nodes (0-indexed) and a list of directed edges, count the number of Strongly Connected Components (SCCs).\n\nA Strongly Connected Component is a maximal set of nodes such that there is a path from each node to every other node in the set.\n\n### Example\nInput: n=5, edges=[[0,1],[1,2],[2,0],[1,3],[3,4]]\nOutput: 3\n\n### Constraints\n- 1 ≤ n ≤ 10^5\n- 0 ≤ edges.length ≤ 2×10^5\n- 0 ≤ u, v < n for each edge [u, v]",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(V * (V + E))",
+            "spaceComplexity": "O(V + E)",
+            "description": "The brute force approach is to check every pair of nodes (u, v) to see if they are mutually reachable. For each node u, run a DFS or BFS to find all nodes reachable from u. Then for each node v reachable from u, check if u is also reachable from v by running another DFS from v. If u and v are mutually reachable, they belong to the same SCC. Use a union-find or visited array to group all mutually reachable nodes together. Count the number of distinct groups. This is O(V * (V + E)) because we run a full graph traversal for each node."
+        },
+        "sampleTestCases": [
+            {
+                "input": "5\n[[0,1],[1,2],[2,0],[1,3],[3,4]]",
+                "output": "3",
+                "isHidden": false
+            },
+            {
+                "input": "3\n[[0,1],[1,2],[2,0]]",
+                "output": "1",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "4\n[[0,1],[1,2],[2,3]]",
+                "output": "4",
+                "isHidden": true
+            },
+            {
+                "input": "4\n[[0,1],[1,0],[2,3],[3,2]]",
+                "output": "2",
+                "isHidden": true
+            },
+            {
+                "input": "6\n[[0,1],[1,2],[2,0],[3,4],[4,5],[5,3],[2,3]]",
+                "output": "2",
+                "isHidden": true
+            },
+            {
+                "input": "1\n[]",
+                "output": "1",
+                "isHidden": true
+            }
+        ]
+    }
+]

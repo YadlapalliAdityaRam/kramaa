@@ -1,0 +1,29 @@
+.page-transition-content {
+    transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), filter 240ms ease;
+    will-change: opacity, transform, filter;
+    transform-origin: 50% 0%;
+}
+
+.page-fade-out {
+    opacity: 0.84;
+    transform: translateY(7px) scale(0.997);
+    filter: blur(2px);
+}
+
+.page-fade-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-transition-content {
+        transition: none;
+    }
+
+    .page-fade-out,
+    .page-fade-in {
+        opacity: 1;
+        transform: none;
+    }
+}

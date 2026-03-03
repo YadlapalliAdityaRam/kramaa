@@ -1,0 +1,361 @@
+[
+    {
+        "title": "Anagram Group Counter",
+        "slug": "anagram-group-counter",
+        "className": "Solution",
+        "functionName": "countAnagramGroups",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "words",
+                "type": "string",
+                "isArray": true,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Strings",
+            "Hashing",
+            "Sorting"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Anagram Group Counter\n\nGiven an array of strings words, group all anagrams together and return the number of distinct anagram groups.\n\nTwo words are anagrams if one can be formed by rearranging the letters of the other.\n\n### Example\nInput: words=[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]\nOutput: 3\n\n### Constraints\n- 1 ≤ words.length ≤ 10^4\n- 1 ≤ words[i].length ≤ 100\n- words[i] consists of lowercase English letters",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2 * L)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach compares every pair of words to check if they are anagrams. Two words are anagrams if sorting both produces the same string. For each word that has not yet been grouped, create a new group and scan all remaining ungrouped words to find anagrams of it by comparing their sorted versions. Mark matched words as grouped. Count the total number of groups created. This is O(n^2 * L log L) due to pairwise comparisons and sorting each word. The optimal solution uses a hash map with sorted word as key."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]",
+                "output": "3",
+                "isHidden": false
+            },
+            {
+                "input": "[\"abc\",\"bca\",\"xyz\"]",
+                "output": "2",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[\"a\"]",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[\"abc\",\"abc\",\"abc\"]",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[\"listen\",\"silent\",\"hello\",\"world\",\"enlist\"]",
+                "output": "3",
+                "isHidden": true
+            },
+            {
+                "input": "[\"ab\",\"ba\",\"cd\",\"dc\",\"ef\"]",
+                "output": "3",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Rotate Array by K Steps",
+        "slug": "rotate-array-k-steps",
+        "className": "Solution",
+        "functionName": "rotateArray",
+        "returnType": "int[]",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "k",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Arrays",
+            "Two Pointers"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Rotate Array by K Steps\n\nGiven an integer array nums, rotate it to the right by k steps and return the result.\n\nRotating right by 1 means the last element moves to the front.\n\n### Example\nInput: nums=[1,2,3,4,5,6,7], k=3\nOutput: [5,6,7,1,2,3,4]\n\n### Constraints\n- 1 ≤ nums.length ≤ 10^5\n- -10^4 ≤ nums[i] ≤ 10^4\n- 0 ≤ k ≤ 10^5",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n * k)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach rotates the array one step at a time, repeating k times. In each single rotation step, save the last element of the array. Shift all other elements one position to the right by iterating from the end to the beginning. Place the saved last element at index 0. Repeat this full process k times (after taking k modulo n to avoid redundant full rotations). This is correct but takes O(n * k) time which is slow for large k."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 2, 3, 4, 5, 6, 7]\n3",
+                "output": "[5, 6, 7, 1, 2, 3, 4]",
+                "isHidden": false
+            },
+            {
+                "input": "[1, 2]\n1",
+                "output": "[2, 1]",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[1, 2, 3]\n0",
+                "output": "[1, 2, 3]",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 2, 3, 4, 5]\n5",
+                "output": "[1, 2, 3, 4, 5]",
+                "isHidden": true
+            },
+            {
+                "input": "[3, 99, -1, -100]\n2",
+                "output": "[-1, -100, 3, 99]",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 2, 3, 4, 5, 6]\n4",
+                "output": "[3, 4, 5, 6, 1, 2]",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Most Frequent Character",
+        "slug": "most-frequent-character",
+        "className": "Solution",
+        "functionName": "mostFrequent",
+        "returnType": "string",
+        "parameters": [
+            {
+                "name": "s",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Strings",
+            "Hashing"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Most Frequent Character\n\nGiven a string s, return the character that appears most frequently. If there is a tie, return the character that appears first in the string.\n\n### Example\nInput: s=\"aabbccc\"\nOutput: \"c\"\n\n### Constraints\n- 1 ≤ s.length ≤ 10^5\n- s consists of lowercase English letters only",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach checks the frequency of every character by scanning the entire string. For each character at index i, count how many times it appears in the full string by iterating through all characters. Track the character with the highest count seen so far. In case of a tie in frequency, prefer the character that appeared first in the original string. Return the most frequent character. This is O(n^2) because for each of the n characters we do a full scan of n characters."
+        },
+        "sampleTestCases": [
+            {
+                "input": "\"aabbccc\"",
+                "output": "\"c\"",
+                "isHidden": false
+            },
+            {
+                "input": "\"aabb\"",
+                "output": "\"a\"",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "\"z\"",
+                "output": "\"z\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"abcabc\"",
+                "output": "\"a\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"zzzzz\"",
+                "output": "\"z\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"abcdefghija\"",
+                "output": "\"a\"",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Balanced Bracket Validator",
+        "slug": "balanced-bracket-validator",
+        "className": "Solution",
+        "functionName": "isBalanced",
+        "returnType": "boolean",
+        "parameters": [
+            {
+                "name": "s",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Strings",
+            "Recursion",
+            "Stack"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Balanced Bracket Validator\n\nGiven a string s containing only the characters (, ), {, }, [ and ], determine if the brackets are balanced.\n\nA string is balanced if:\n- Every open bracket has exactly one matching close bracket\n- Brackets are closed in the correct order\n\n### Example\nInput: s=\"{[()]}\"\nOutput: true\n\n### Constraints\n- 1 ≤ s.length ≤ 10^4\n- s contains only (, ), {, }, [, ]",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach repeatedly scans the string looking for the innermost matched pair of brackets and removes them. In each pass through the string, find any occurrence of (), [], or {} as an adjacent pair and remove them (replace with empty string). Repeat this process until no more adjacent matched pairs can be found. If the string becomes empty then it was balanced (return true). If the string is non-empty but no more removals are possible then it is not balanced (return false). Each removal shortens the string by 2 and we may need O(n) passes making this O(n^2)."
+        },
+        "sampleTestCases": [
+            {
+                "input": "\"{[()]}\"",
+                "output": "true",
+                "isHidden": false
+            },
+            {
+                "input": "\"{[(])}\"",
+                "output": "false",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "\"()\"",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "\"(((\"",
+                "output": "false",
+                "isHidden": true
+            },
+            {
+                "input": "\"()[]{}\"",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "\"{[]()}\"",
+                "output": "true",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Sum of Distinct Squares",
+        "slug": "sum-of-distinct-squares",
+        "className": "Solution",
+        "functionName": "sumDistinctSquares",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Arrays",
+            "Hashing",
+            "Mathematics"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Sum of Distinct Squares\n\nGiven an integer array nums, return the sum of squares of all distinct values in the array.\n\n### Example\nInput: nums=[1,2,2,3]\nOutput: 14\n\nExplanation: Distinct values = {1,2,3}\n1^2 + 2^2 + 3^2 = 1 + 4 + 9 = 14\n\n### Constraints\n- 1 ≤ nums.length ≤ 10^4\n- 1 ≤ nums[i] ≤ 100",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach finds distinct values without using a Set or hash map. For each element in nums, check if it has appeared before by scanning all previous elements. If it has not appeared before, it is a distinct value — add its square to the total sum. If it has appeared before, skip it. Continue until all elements have been checked. Return the accumulated sum. This is O(n^2) because for each element we do a linear scan of previous elements to check for duplicates."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 2, 2, 3]",
+                "output": "14",
+                "isHidden": false
+            },
+            {
+                "input": "[4, 4, 4]",
+                "output": "16",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[1]",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 2, 3, 4, 5]",
+                "output": "55",
+                "isHidden": true
+            },
+            {
+                "input": "[3, 3, 3, 3]",
+                "output": "9",
+                "isHidden": true
+            },
+            {
+                "input": "[5, 10, 5, 10, 15]",
+                "output": "350",
+                "isHidden": true
+            }
+        ]
+    }
+]

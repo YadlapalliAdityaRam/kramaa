@@ -1,0 +1,451 @@
+﻿/* Workspace.css - Professional IDE Layout */
+
+:root {
+    --ide-header-bg: #252526;
+    --ide-border: #333333;
+    --ide-accent: #007acc;
+    --ide-success: #4ade80;
+    --ide-error: #f87171;
+}
+
+.workspace-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--ide-bg);
+    color: var(--ide-text);
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Header */
+.workspace-header {
+    height: 50px;
+    background-color: var(--ide-header-bg);
+    border-bottom: 1px solid var(--ide-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.workspace-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #4ade80, #3b82f6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.difficulty-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.difficulty-easy {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+}
+
+.difficulty-medium {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+}
+
+.difficulty-hard {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+.workspace-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.control-btn {
+    background: transparent;
+    border: 1px solid var(--ide-border);
+    color: var(--ide-text);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    border-color: #555;
+}
+
+.btn-run {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: transparent;
+}
+
+.btn-submit {
+    background: var(--ide-success);
+    /* Fallback */
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-submit:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Editor Header Controls */
+.editor-header-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.run-submit-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-right: 16px;
+    padding-right: 16px;
+    border-right: 1px solid #333;
+}
+
+.secondary-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Layout Body - Reset standard flex as panels handle it */
+.workspace-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.panel-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.panel-left {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--ide-panel-bg);
+}
+
+.panel-right {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Resize Handles */
+.resize-handle-horizontal {
+    width: 4px;
+    background: var(--ide-bg);
+    cursor: col-resize;
+    transition: background 0.2s;
+    position: relative;
+    border-left: 1px solid var(--ide-border);
+    border-right: 1px solid var(--ide-border);
+}
+
+.resize-handle-horizontal:hover,
+.resize-handle-horizontal:active {
+    background: var(--ide-accent);
+}
+
+.resize-handle-vertical {
+    height: 4px;
+    background: var(--ide-bg);
+    cursor: row-resize;
+    transition: background 0.2s;
+    position: relative;
+    border-top: 1px solid var(--ide-border);
+    border-bottom: 1px solid var(--ide-border);
+}
+
+.resize-handle-vertical:hover,
+.resize-handle-vertical:active {
+    background: var(--ide-accent);
+}
+
+/* Tabs */
+.tabs-header {
+    display: flex;
+    background: var(--ide-header-bg);
+    border-bottom: 1px solid var(--ide-border);
+    padding: 0 8px;
+    flex-shrink: 0;
+}
+
+/* Modern Tab Button Styling */
+.tab-btn-modern {
+    padding: 0 24px;
+    height: 100%;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #888;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn-modern:hover {
+    color: #e0e0e0;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn-modern.active {
+    color: #4ade80;
+    /* Green text for active */
+    background: rgba(74, 222, 128, 0.1);
+    /* Subtle green background */
+    border-bottom: 2px solid #4ade80;
+    /* Green accent line */
+}
+
+/* Panel Content */
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Orange Headings for Description */
+.section-heading-orange {
+    color: #f97316;
+    /* Orange-500 */
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+/* Ensure editor container fills panel */
+.editor-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Console Container - remove fixed height, it's now in a panel */
+.console-container {
+    width: 100%;
+    height: 100%;
+    border-top: none;
+    /* Handled by resize divider */
+    display: flex;
+    flex-direction: column;
+    background: var(--ide-console-bg);
+}
+
+/* Console Specifics */
+.console-header {
+    background: var(--ide-header-bg);
+    border-bottom: 1px solid var(--ide-border);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.console-tab {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #888;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.console-tab.active {
+    background: var(--ide-bg);
+    color: #fff;
+    border-top: 2px solid var(--ide-accent);
+}
+
+.console-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    padding-bottom: 60px;
+    /* Space for footer */
+}
+
+.result-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.result-pass {
+    background-color: var(--ide-success);
+}
+
+.result-fail {
+    background-color: var(--ide-error);
+}
+
+.code-block {
+    background: #2d2d2d;
+    padding: 12px;
+    border-radius: 6px;
+    color: #d4d4d4;
+    font-family: 'Fira Code', monospace;
+    white-space: pre-wrap;
+}
+
+/* Timer */
+.timer-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--ide-border);
+}
+
+.timer-display {
+    font-family: 'Fira Code', monospace;
+    color: #fff;
+    font-weight: 500;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.timer-controls button {
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.timer-controls button:hover {
+    color: #fff;
+}
+
+/* Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--ide-bg);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* Tabs Container */
+.tabs-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 48px;
+    white-space: nowrap;
+}
+
+/* ══ LIGHT THEME OVERRIDES ══ */
+[data-theme="light"] .workspace-container { background: #f8fafc; color: #0f172a; }
+[data-theme="light"] .workspace-header { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
+[data-theme="light"] .header-title { color: #0f172a !important; }
+[data-theme="light"] .workspace-sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.1); }
+[data-theme="light"] .sidebar-btn { color: #64748b; }
+[data-theme="light"] .sidebar-btn:hover { color: #0f172a; background: rgba(0,0,0,0.04); }
+[data-theme="light"] .sidebar-btn.active { color: #14b8a6; }
+[data-theme="light"] .workspace-content { background: #f8fafc; }
+[data-theme="light"] .panel-header { background: #f1f5f9; border-bottom: 1px solid rgba(0,0,0,0.08); color: #475569; }
+[data-theme="light"] .panel-title { color: #0f172a !important; }
+[data-theme="light"] .problem-description-content { color: #1e293b; background: #ffffff; }
+[data-theme="light"] .problem-description-content h1, [data-theme="light"] .problem-description-content h2, [data-theme="light"] .problem-description-content h3 { color: #0f172a; }
+[data-theme="light"] .problem-description-content code { background: rgba(0,0,0,0.05); color: #0f172a; }
+[data-theme="light"] .problem-description-content pre { background: #f1f5f9; border: 1px solid rgba(0,0,0,0.08); color: #0f172a; }
+[data-theme="light"] .editor-container { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); }
+[data-theme="light"] .console-panel { background: #ffffff; border-top: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
+[data-theme="light"] .test-case-tab { color: #64748b; background: #f8fafc; border: 1px solid rgba(0,0,0,0.08); }
+[data-theme="light"] .test-case-tab.active { color: #0f172a; background: #ffffff; border-bottom-color: transparent; }
+[data-theme="light"] .test-case-content { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-top: none; }
+[data-theme="light"] .theme-selector { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); color: #0f172a; }

@@ -1,0 +1,14 @@
+[build]
+  # Monorepo-safe path from repo root (current root resolves to ../project)
+  base = "AlgoVerse/frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback: route all frontend paths to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

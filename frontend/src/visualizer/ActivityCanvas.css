@@ -1,0 +1,97 @@
+.activity-canvas {
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-canvas-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.activity-timeline-header {
+    position: relative;
+    height: 28px;
+    margin-left: 40px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-tick {
+    position: absolute;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    transform: translateX(-50%);
+    top: 0;
+}
+
+.activity-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.activity-bar-row {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    gap: 8px;
+}
+
+.activity-label {
+    width: 32px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.activity-bar-track {
+    flex: 1;
+    position: relative;
+    height: 100%;
+}
+
+.activity-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.bar-selected {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.bar-rejected {
+    opacity: 0.5;
+}
+
+.bar-time {
+    font-size: 0.7rem;
+    color: white;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.activity-summary {
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 8px;
+    color: #10b981;
+    font-size: 0.85rem;
+    font-weight: 600;
+}

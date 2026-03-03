@@ -1,0 +1,30 @@
+.back-forward-controls {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #E2E8F0;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.nav-btn:active {
+    transform: translateY(0);
+}

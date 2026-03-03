@@ -1,0 +1,1073 @@
+const axios = require('axios');
+const fs = require('fs-extra');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const { spawn, exec } = require('child_process');
+const dockerExecutor = require('./dockerExecutor');
+const {
+    buildCFunctionContract,
+    validateCUserCode,
+    generateCDriverCode
+} = require('../utils/cLeetCodeDriver');
+const {
+    resolveTypeSpec,
+    getValidatorForSpec,
+    normalizeTypeName
+} = require('../utils/typeRegistry');
+const {
+    parseExecutionValue,
+    validateOutputByRule,
+    normalizeOutputValidationType
+} = require('../utils/outputValidation');
+
+class CodeExecutor {
+    constructor() {
+        this.apiUrl = process.env.JUDGE0_API_URL;
+        this.apiKey = process.env.JUDGE0_API_KEY;
+
+        this.languageIds = {
+            javascript: 63,
+            python: 71,
+            java: 62,
+            cpp: 54,
+            c: 50
+        };
+
+        // Compiler paths (rely on system PATH by default except Java)
+        this.compilerPaths = {
+            javac: process.env.JAVAC_PATH || 'javac',
+            java: process.env.JAVA_PATH || 'java',
+            gpp: 'g++',
+            gcc: 'gcc'
+        };
+
+        this.tmpDir = path.join(__dirname, '../tmp');
+        this.driversDir = path.join(__dirname, '../drivers');
+    }
+
+    async executeCode(code, language, input = '', timeLimit = 2000, problemDetails = {}) {
+        if (process.env.USE_DOCKER === 'true' && ['javascript', 'python', 'java', 'cpp', 'c'].includes(language)) {
+            // For single execution, we just run the batch of 1
+            // We need to decide if we want to return raw result or parsed
+            // The driver will return a JSON array loop output.
+            // We need to parse it to match expected single output format?
+            // Actually, executeCode is mostly used for "Run" button with 1 custom input.
+            // Let's keep it simple: consume the batch logic.
+
+            // Reuse the batch logic but expect 1 result
+            const results = await this.executeBatch(code, language, [{ input }], timeLimit, problemDetails);
+            if (results && results.length > 0) {
+                const first = results[0] || {};
+                const printedOutput = this._normalizeOutput(first.printedOutput);
+                const returnMissing = Boolean(first.returnMissing);
+                const stdout = printedOutput || this._normalizeOutput(first.stdout);
+                let stderr = this._normalizeOutput(first.stderr);
+
+                if (!stderr) {
+                    if (printedOutput) {
+                        stderr = 'Use return statement for final answer. Printed output is shown below.';
+                    } else if (returnMissing) {
+                        stderr = 'Function must return output using return statement.';
+                    }
+                }
+
+                return {
+                    stdout,
+                    stderr,
+                    status: stderr ? 'runtime_error' : 'accepted',
+                    time: first.time,
+                    memory: first.memory,
+                    printedOutput,
+                    returnMissing
+                };
+            }
+            return { status: 'error', stderr: 'No result returned' };
+        }
+
+        // Fallback or Local
+        if (['javascript', 'python', 'java', 'cpp', 'c'].includes(language)) {
+            // We use executeLocally but we need to update it to support batch or wrap
+            // For now, let's Redirect to executeBatch even for local to enforce uniformity
+            const results = await this.executeBatch(code, language, [{ input }], timeLimit, problemDetails);
+            if (results && results.length > 0) {
+                const res = results[0] || {};
+                const printedOutput = this._normalizeOutput(res.printedOutput);
+                const returnMissing = Boolean(res.returnMissing);
+                const stdout = printedOutput || this._normalizeOutput(res.stdout);
+                let stderr = this._normalizeOutput(res.stderr);
+
+                if (!stderr) {
+                    if (printedOutput) {
+                        stderr = 'Use return statement for final answer. Printed output is shown below.';
+                    } else if (returnMissing) {
+                        stderr = 'Function must return output using return statement.';
+                    }
+                }
+
+                return {
+                    stdout,
+                    stderr,
+                    status: stderr ? 'runtime_error' : 'accepted',
+                    time: res.time,
+                    memory: res.memory,
+                    printedOutput,
+                    returnMissing
+                };
+            }
+            return { status: 'error', stderr: 'Local execution failed' };
+        }
+
+        // ... judge0 ...
+        return { status: 'error', stderr: 'Judge0 fallback not fully implemented in this version.' };
+    }
+
+    async executeLocally(code, language, input, timeLimit, problemDetails) {
+        const jobId = uuidv4();
+        const jobDir = path.join(this.tmpDir, jobId);
+        await fs.ensureDir(jobDir);
+
+        const functionName = problemDetails.functionName || 'solve';
+        const className = problemDetails.className || 'Solution';
+        const isScript = problemDetails.mode === 'script'; // New flag for Generator/Script execution
+
+        // Static Analysis: Intercept and reject forbidden IO/system calls
+        if (!isScript && language !== 'c') {
+            // For languages like Python, intercept reading from stdin directly. We also block `open`, `os`, `exec`
+            const forbiddenPatterns = ['input(', 'sys.stdin', 'os.', 'subprocess.', 'eval(', 'exec(', 'open('];
+            for (const pattern of forbiddenPatterns) {
+                if (code.includes(pattern)) {
+                    return {
+                        status: 'error',
+                        stdout: '',
+                        stderr: `Security Error: Direct system/IO operations are not allowed. Usage of '${pattern}' is forbidden.\nPlease pass data via function parameters.`,
+                        time: 0,
+                        memory: 0
+                    };
+                }
+            }
+        }
+
+        try {
+            // 1. Write User Code
+            const userFile = this._getUserFileName(language);
+            let finalCode = code;
+            if (language === 'javascript' && !isScript) {
+                const classNameForExport = (className && String(className).trim().length > 0)
+                    ? String(className).trim()
+                    : 'Solution';
+                finalCode += `
+if (typeof module !== 'undefined' && module.exports) {
+    const __exports = {};
+    if (typeof ${classNameForExport} !== 'undefined') __exports.${classNameForExport} = ${classNameForExport};
+    if (typeof ${functionName} !== 'undefined') __exports.${functionName} = ${functionName};
+    module.exports = __exports;
+}`;
+            }
+            await fs.writeFile(path.join(jobDir, userFile), finalCode);
+
+            // 2. Prepare Driver (Copy + Compile)
+            if (isScript) {
+                await this._prepareScript(language, jobDir, userFile);
+            } else {
+                await this._prepareDriver(language, jobDir, functionName);
+            }
+
+            // 3. Execute
+            const paramNames = Array.isArray(problemDetails.parameters)
+                ? problemDetails.parameters.map((p) => p?.name).filter(Boolean)
+                : [];
+            const result = await this._execute(language, jobDir, input, functionName, timeLimit, isScript, className, paramNames);
+
+            // Cleanup
+            await this._cleanup(jobDir);
+
+            return result;
+        } catch (error) {
+            await this._cleanup(jobDir);
+            return {
+                status: 'error',
+                stdout: '',
+                stderr: `Execution Error: ${error.message}`,
+                time: 0,
+                memory: 0
+            };
+        }
+    }
+
+    _getUserFileName(language) {
+        switch (language) {
+            case 'javascript': return 'solution.js';
+            case 'python': return 'solution.py';
+            case 'java': return 'Solution.java';
+            case 'cpp': return 'solution.cpp';
+            case 'c': return 'solution.c';
+            default: throw new Error(`Unsupported language: ${language}`);
+        }
+    }
+
+    async _prepareDriver(language, jobDir, functionName) {
+        const driversDir = this.driversDir;
+
+        switch (language) {
+            case 'javascript':
+                await fs.copyFile(path.join(driversDir, 'javascript/driver.js'), path.join(jobDir, 'driver.js'));
+                break;
+            case 'python':
+                await fs.copyFile(path.join(driversDir, 'python/driver.py'), path.join(jobDir, 'driver.py'));
+                break;
+            case 'java':
+                await fs.copyFile(path.join(driversDir, 'java/Driver.java'), path.join(jobDir, 'Driver.java'));
+                try {
+                    // Compile both Driver.java and Solution.java
+                    await this._runCommand(`"${this.compilerPaths.javac}" Driver.java Solution.java`, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+            case 'cpp':
+                await fs.copyFile(path.join(driversDir, 'cpp/driver.cpp'), path.join(jobDir, 'driver.cpp'));
+                try {
+                    // Compile only driver.cpp (which includes solution.cpp) to avoid duplicate symbols or missing class def errors.
+                    // Inject FUNC_NAME macro for dynamic method call.
+                    const cppLinkFlags = process.platform === 'win32' ? ' -lpsapi' : '';
+                    const cmd = `"${this.compilerPaths.gpp}" -std=c++17 -o app driver.cpp -DFUNC_NAME=${functionName}${cppLinkFlags}`;
+                    await this._runCommand(cmd, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+            case 'c':
+                await fs.copyFile(path.join(driversDir, 'c/driver.c'), path.join(jobDir, 'driver.c'));
+                try {
+                    const cLinkFlags = process.platform === 'win32' ? ' -lpsapi' : '';
+                    const cmd = `"${this.compilerPaths.gcc}" -std=c11 -O2 -Wall -Werror -o app driver.c solution.c -DFUNC_NAME=${functionName}${cLinkFlags}`;
+                    await this._runCommand(cmd, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+        }
+    }
+
+    // New method for compiling/preparing scripts (Generators)
+    async _prepareScript(language, jobDir, userFile) {
+        switch (language) {
+            case 'java':
+                try {
+                    await this._runCommand(`"${this.compilerPaths.javac}" ${userFile}`, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+            case 'cpp':
+                try {
+                    const cmd = `"${this.compilerPaths.gpp}" -o app ${userFile}`;
+                    await this._runCommand(cmd, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+            case 'c':
+                try {
+                    const cmd = `"${this.compilerPaths.gcc}" -o app ${userFile}`;
+                    await this._runCommand(cmd, jobDir);
+                } catch (e) {
+                    throw new Error(`Compilation Error:\n${e.message}`);
+                }
+                break;
+            case 'javascript':
+            case 'python':
+                // No compilation needed
+                break;
+        }
+    }
+
+    async _execute(language, jobDir, input, functionName, timeLimit, isScript = false, className = null, paramNames = []) {
+        let command;
+        let args = [];
+        const env = { ...process.env };
+        if (!isScript) {
+            env.ALGOVERSE_FUNCTION_NAME = functionName;
+            if (className) {
+                env.ALGOVERSE_CLASS_NAME = className;
+            }
+            if (Array.isArray(paramNames) && paramNames.length > 0) {
+                env.ALGOVERSE_PARAM_NAMES = JSON.stringify(paramNames);
+            }
+        }
+        const isWin = process.platform === 'win32';
+
+        if (isScript) {
+            switch (language) {
+                case 'javascript':
+                    command = 'node';
+                    args = ['solution.js'];
+                    break;
+                case 'python':
+                    command = isWin ? 'py' : 'python3';
+                    args = ['solution.py'];
+                    break;
+                case 'java':
+                    command = this.compilerPaths.java;
+                    args = ['Solution']; // Assumes class is named Solution
+                    break;
+                case 'cpp':
+                case 'c':
+                    command = isWin ? 'app.exe' : './app';
+                    break;
+            }
+        } else {
+            // Existing logic for Driver execution
+            switch (language) {
+                case 'javascript':
+                    command = 'node';
+                    args = ['driver.js'];
+                    break;
+                case 'python':
+                    command = isWin ? 'py' : 'python3';
+                    args = ['driver.py'];
+                    break;
+                case 'java':
+                    command = this.compilerPaths.java;
+                    args = ['Driver'];
+                    break;
+                case 'cpp':
+                case 'c':
+                    command = isWin ? 'app.exe' : './app';
+                    break;
+            }
+        }
+
+        return new Promise((resolve) => {
+            const start = process.hrtime.bigint();
+            const child = spawn(command, args, {
+                cwd: jobDir,
+                env: env,
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            // Write input to stdin
+            if (input) {
+                child.stdin.write(input);
+            }
+            child.stdin.end();
+
+            child.stdout.on('data', (data) => stdout += data.toString());
+            child.stderr.on('data', (data) => stderr += data.toString());
+
+            let timeoutId;
+            let isResolved = false;
+
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+            };
+
+            child.on('error', (err) => {
+                if (isResolved) return;
+                isResolved = true;
+                cleanup();
+                resolve({
+                    stdout: stdout,
+                    stderr: `Process Error: ${err.message}`,
+                    status: 'error',
+                    time: 0,
+                    memory: 0
+                });
+            });
+
+            child.on('close', (code, signal) => {
+                if (isResolved) return;
+                isResolved = true;
+                cleanup();
+
+                const end = process.hrtime.bigint();
+                const runtimeMs = Number(end - start) / 1e6; // Convert ns to ms
+
+                // Child peak memory is reported by language drivers when available.
+                // Keep process-level fallback deterministic (0) rather than synthetic values.
+                const memory = 0;
+
+                let status = 'accepted';
+                if (code !== 0) {
+                    status = 'runtime_error';
+                }
+
+                let effectiveStderr = stderr;
+                if (status === 'runtime_error' && !String(effectiveStderr || '').trim()) {
+                    if (signal) {
+                        effectiveStderr = `Runtime Error: Process terminated by signal ${signal}.`;
+                    } else {
+                        effectiveStderr = `Runtime Error: Process exited with code ${code}.`;
+                    }
+                }
+
+                resolve({
+                    stdout,
+                    stderr: effectiveStderr,
+                    status,
+                    time: runtimeMs.toFixed(3),
+                    memory: memory.toFixed(3),
+                    exitCode: code,
+                    signal: signal || null
+                });
+            });
+
+            // Timeout
+            timeoutId = setTimeout(() => {
+                if (isResolved) return;
+                isResolved = true;
+                try {
+                    child.kill();
+                } catch (e) { }
+
+                resolve({
+                    stdout: stdout,
+                    stderr: 'Time Limit Exceeded',
+                    status: 'time_limit_exceeded',
+                    time: timeLimit,
+                    memory: 0
+                });
+            }, timeLimit);
+        });
+    }
+
+    _runCommand(command, cwd) {
+        return new Promise((resolve, reject) => {
+            exec(command, { cwd }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(new Error(stderr || stdout || error.message));
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
+    }
+
+    async _cleanup(jobDir) {
+        try {
+            await new Promise(r => setTimeout(r, 100));
+            await fs.remove(jobDir);
+        } catch (e) {
+            console.error('Cleanup error:', e.message);
+        }
+    }
+
+    formatResult(rawResult) {
+        return {
+            stdout: rawResult.stdout ? Buffer.from(rawResult.stdout, 'base64').toString() : '',
+            stderr: rawResult.stderr ? Buffer.from(rawResult.stderr, 'base64').toString() : '',
+            compile_output: rawResult.compile_output ? Buffer.from(rawResult.compile_output, 'base64').toString() : '',
+            status: rawResult.status.description.toLowerCase().replace(' ', '_'),
+            time: rawResult.time,
+            memory: rawResult.memory
+        };
+    }
+
+    _normalizeOutput(value) {
+        if (value === null || value === undefined) return '';
+        let str = String(value).replace(/\r\n/g, '\n').trim();
+
+        // Strip surrounding quotes so "hello" == hello during verification
+        if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
+            if (str.length >= 2) {
+                str = str.slice(1, -1);
+            }
+        }
+        return str;
+    }
+
+    _extractJsonArrayCandidates(raw) {
+        const candidates = [];
+        const seen = new Set();
+        const pushUnique = (value) => {
+            if (!value || seen.has(value)) return;
+            seen.add(value);
+            candidates.push(value);
+        };
+
+        pushUnique(raw);
+
+        const firstArrayStart = raw.indexOf('[');
+        const lastArrayEnd = raw.lastIndexOf(']');
+        if (firstArrayStart !== -1 && lastArrayEnd > firstArrayStart) {
+            pushUnique(raw.slice(firstArrayStart, lastArrayEnd + 1));
+        }
+
+        const maxStarts = 20;
+        let startsSeen = 0;
+        for (let start = 0; start < raw.length && startsSeen < maxStarts; start++) {
+            if (raw[start] !== '[') continue;
+            startsSeen += 1;
+
+            let depth = 0;
+            let inString = false;
+            let isEscaped = false;
+
+            for (let end = start; end < raw.length; end++) {
+                const ch = raw[end];
+
+                if (inString) {
+                    if (isEscaped) {
+                        isEscaped = false;
+                    } else if (ch === '\\') {
+                        isEscaped = true;
+                    } else if (ch === '"') {
+                        inString = false;
+                    }
+                    continue;
+                }
+
+                if (ch === '"') {
+                    inString = true;
+                    continue;
+                }
+
+                if (ch === '[') depth += 1;
+                if (ch === ']') {
+                    depth -= 1;
+                    if (depth === 0) {
+                        pushUnique(raw.slice(start, end + 1));
+                        break;
+                    }
+                }
+            }
+        }
+
+        return candidates;
+    }
+
+    _parseDriverResults(stdout) {
+        if (typeof stdout !== 'string') return null;
+        const raw = stdout.trim();
+        if (!raw) return null;
+
+        const candidates = this._extractJsonArrayCandidates(raw);
+        for (const candidate of candidates) {
+            try {
+                const parsed = JSON.parse(candidate);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (error) {
+                // Try next candidate.
+            }
+        }
+
+        return null;
+    }
+
+    _applyDriverMetricFallback(results, executionMeta = {}) {
+        if (!Array.isArray(results) || results.length === 0) return results;
+
+        const totalRuntime = Number(executionMeta?.time ?? 0);
+        const totalMemory = Number(executionMeta?.memory ?? 0);
+        const caseCount = Math.max(1, results.length);
+        const fallbackPerCaseRuntime = Number.isFinite(totalRuntime) && totalRuntime > 0
+            ? totalRuntime / caseCount
+            : 0;
+
+        return results.map((entry) => {
+            const item = (entry && typeof entry === 'object') ? entry : {};
+            const parsedRuntime = Number(item.time ?? item.runtime ?? 0);
+            const parsedMemory = Number(item.memory ?? 0);
+
+            let nextRuntime = Number.isFinite(parsedRuntime) && parsedRuntime >= 0
+                ? parsedRuntime
+                : 0;
+            let nextMemory = Number.isFinite(parsedMemory) && parsedMemory >= 0
+                ? parsedMemory
+                : 0;
+
+            if (nextRuntime === 0 && fallbackPerCaseRuntime > 0) {
+                nextRuntime = fallbackPerCaseRuntime;
+            }
+
+            if (nextMemory === 0 && Number.isFinite(totalMemory) && totalMemory > 0) {
+                nextMemory = totalMemory;
+            }
+
+            return {
+                ...item,
+                time: Number(nextRuntime.toFixed(6)),
+                memory: Number(nextMemory.toFixed(6))
+            };
+        });
+    }
+
+    _buildDriverOutputError(language, result, problemDetails = {}) {
+        const stderr = this._normalizeOutput(result?.stderr);
+        if (stderr) return stderr;
+
+        const signal = this._normalizeOutput(result?.signal);
+        if (signal) {
+            return `Runtime Error: Process terminated by signal ${signal}.`;
+        }
+
+        const exitCode = Number(result?.exitCode);
+        if (Number.isInteger(exitCode) && exitCode !== 0) {
+            return `Runtime Error: Process exited with code ${exitCode}.`;
+        }
+
+        if (language === 'c') {
+            try {
+                const contract = buildCFunctionContract(problemDetails || {});
+                return `C execution failed before driver output. Ensure exact signature '${contract.signature}' and return results via return statement only.`;
+            } catch {
+                return 'C execution failed before driver output. Ensure function signature matches the configured C contract.';
+            }
+        }
+
+        if (language === 'cpp') {
+            const className = problemDetails?.className || 'Solution';
+            const functionName = problemDetails?.functionName || 'solve';
+            return `C++ execution failed before driver output. Ensure class ${className} defines method ${functionName} with correct parameter/return types and uses return (not cout) for final answer.`;
+        }
+
+        return 'Driver Output Error';
+    }
+
+    async _executeLeetStyleCBatchLocally(code, inputs, timeLimit, problemDetails) {
+        const jobId = uuidv4();
+        const jobDir = path.join(this.tmpDir, jobId);
+        await fs.ensureDir(jobDir);
+
+        try {
+            const contract = buildCFunctionContract(problemDetails || {});
+            const signatureCheck = validateCUserCode(code, contract);
+            if (!signatureCheck.valid) {
+                return {
+                    status: 'error',
+                    stdout: '',
+                    stderr: `Compilation Error:\n${signatureCheck.error}`,
+                    time: 0,
+                    memory: 0
+                };
+            }
+
+            await fs.writeFile(path.join(jobDir, 'solution.c'), code);
+            const driverCode = generateCDriverCode(problemDetails || {}, inputs || []);
+            await fs.writeFile(path.join(jobDir, 'driver.c'), driverCode);
+
+            const cLinkFlags = process.platform === 'win32' ? ' -lpsapi' : '';
+            const compileCmd = `"${this.compilerPaths.gcc}" -std=c11 -O2 -Wall -Werror -o app driver.c solution.c${cLinkFlags}`;
+            await this._runCommand(compileCmd, jobDir);
+
+            const executionResult = await this._execute(
+                'c',
+                jobDir,
+                '',
+                problemDetails?.functionName || 'solve',
+                timeLimit,
+                false,
+                null,
+                []
+            );
+
+            return executionResult;
+        } catch (error) {
+            return {
+                status: 'error',
+                stdout: '',
+                stderr: `Compilation Error:\n${error.message}`,
+                time: 0,
+                memory: 0
+            };
+        } finally {
+            await this._cleanup(jobDir);
+        }
+    }
+
+    _validateInputAgainstParameters(inputObj, parameters) {
+        if (!parameters || parameters.length === 0) return true;
+
+        if (!inputObj || typeof inputObj !== 'object' || Array.isArray(inputObj)) {
+            return false;
+        }
+
+        const expectedNames = new Set();
+
+        for (const param of parameters) {
+            const expectedName = String(param?.name || '').trim();
+            if (!expectedName) return false;
+            expectedNames.add(expectedName);
+
+            const typeInfo = resolveTypeSpec(param?.type || '');
+            const depth = param?.is2D ? 2 : (param?.isArray ? 1 : typeInfo.depth);
+            const spec = {
+                baseType: normalizeTypeName(typeInfo.baseType),
+                depth
+            };
+
+            const validator = getValidatorForSpec(spec);
+            if (!validator) return false;
+
+            const val = inputObj[expectedName];
+
+            if (val === undefined) return false;
+
+            if (!validator(val)) {
+                return false;
+            }
+        }
+
+        const inputKeys = Object.keys(inputObj);
+        for (const key of inputKeys) {
+            if (!expectedNames.has(key)) return false;
+        }
+
+        return true;
+    }
+
+    _decodeEscapedStringValue(value) {
+        if (typeof value !== 'string') return value;
+
+        let current = value;
+        for (let i = 0; i < 6; i++) {
+            let changed = false;
+
+            const trimmed = current.trim();
+            if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    if (typeof parsed === 'string' && parsed !== current) {
+                        current = parsed;
+                        changed = true;
+                    }
+                } catch {
+                    // Keep current string when JSON parsing fails.
+                }
+            }
+
+            if (!changed && current.includes('\\"')) {
+                const unescaped = current.replace(/\\"/g, '"');
+                if (unescaped !== current) {
+                    current = unescaped;
+                    changed = true;
+                }
+            }
+
+            if (!changed) break;
+        }
+
+        return current;
+    }
+
+    _decodeMaybeJsonCollection(value) {
+        if (typeof value !== 'string') return value;
+
+        let current = value;
+        for (let i = 0; i < 4; i++) {
+            if (typeof current !== 'string') break;
+            const trimmed = current.trim();
+            if (!trimmed) break;
+
+            const looksJson =
+                (trimmed.startsWith('[') && trimmed.endsWith(']'))
+                || (trimmed.startsWith('{') && trimmed.endsWith('}'))
+                || (trimmed.startsWith('"') && trimmed.endsWith('"'));
+
+            if (!looksJson) break;
+
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (parsed === current) break;
+                current = parsed;
+            } catch {
+                break;
+            }
+        }
+
+        return current;
+    }
+
+    _normalizeInputValueForParameter(value, parameterMeta) {
+        const paramType = String(parameterMeta?.type || '').toLowerCase();
+        const isStringLike = paramType === 'string' || paramType === 'char';
+
+        if (parameterMeta?.is2D) {
+            let normalizedValue = typeof value === 'string'
+                ? this._decodeMaybeJsonCollection(value)
+                : value;
+
+            if (!Array.isArray(normalizedValue)) return normalizedValue;
+            return normalizedValue.map((row) => {
+                if (!Array.isArray(row)) return row;
+                return row.map((item) => (isStringLike ? this._decodeEscapedStringValue(item) : item));
+            });
+        }
+
+        if (parameterMeta?.isArray) {
+            let normalizedValue = typeof value === 'string'
+                ? this._decodeMaybeJsonCollection(value)
+                : value;
+
+            if (
+                Array.isArray(normalizedValue)
+                && normalizedValue.length === 1
+                && typeof normalizedValue[0] === 'string'
+            ) {
+                const decodedInner = this._decodeMaybeJsonCollection(normalizedValue[0]);
+                if (Array.isArray(decodedInner)) {
+                    normalizedValue = decodedInner;
+                }
+            }
+
+            if (!Array.isArray(normalizedValue)) return normalizedValue;
+            return normalizedValue.map((item) => (isStringLike ? this._decodeEscapedStringValue(item) : item));
+        }
+
+        if (isStringLike) {
+            return this._decodeEscapedStringValue(value);
+        }
+
+        return value;
+    }
+
+    _normalizeInputAgainstParameters(inputObj, parameters) {
+        if (!parameters || parameters.length === 0) return inputObj;
+        if (!inputObj || typeof inputObj !== 'object' || Array.isArray(inputObj)) return inputObj;
+
+        const normalized = { ...inputObj };
+        for (const param of parameters) {
+            if (Object.prototype.hasOwnProperty.call(normalized, param.name)) {
+                normalized[param.name] = this._normalizeInputValueForParameter(normalized[param.name], param);
+            }
+        }
+        return normalized;
+    }
+
+    // Unified Batch Execution (Local + Docker)
+    async executeBatch(code, language, testCases, timeLimit, problemDetails) {
+        const parameters = problemDetails?.parameters || [];
+
+        // Input payload must already be structured JSON types.
+        const inputs = testCases.map((tc) => tc.input);
+
+        // Enforce rigid parameter schema validation
+        if (parameters.length > 0) {
+            for (let i = 0; i < inputs.length; i++) {
+                if (!this._validateInputAgainstParameters(inputs[i], parameters)) {
+                    return testCases.map(() => ({
+                        stderr: 'Test case format error: Invalid data type or structure.',
+                        status: 'error',
+                        rawOutput: ''
+                    }));
+                }
+            }
+        }
+
+        const payloadInputs = inputs;
+
+        const batchPayload = JSON.stringify(payloadInputs);
+
+        if (process.env.USE_DOCKER === 'true') {
+            return await dockerExecutor.runBatchJob(code, language, batchPayload, timeLimit, problemDetails);
+        } else {
+            // LOCAL STRATEGY
+            const result = language === 'c'
+                ? await this._executeLeetStyleCBatchLocally(code, inputs, timeLimit, problemDetails)
+                : await this.executeLocally(code, language, batchPayload, timeLimit, problemDetails);
+
+            if (result.status === 'accepted' || result.status === 'runtime_error') {
+                const parsed = this._parseDriverResults(result.stdout);
+                if (parsed) {
+                    return this._applyDriverMetricFallback(parsed, {
+                        time: result.time,
+                        memory: result.memory
+                    });
+                }
+
+                const errorMessage = this._buildDriverOutputError(language, result, problemDetails);
+                return testCases.map(() => ({
+                    stdout: '',
+                    stderr: errorMessage,
+                    printedOutput: '',
+                    returnMissing: false,
+                    time: 0,
+                    memory: 0,
+                    rawOutput: result.stdout || ''
+                }));
+            }
+            return result; // time_limit or compilation error
+        }
+    }
+
+    _validateResultValues(returnedStr, expectedStr, declaredType, returnMissing, testCase = {}, problemDetails = {}) {
+        if (!declaredType) declaredType = 'void';
+
+        if (returnMissing) {
+            return "Function returned None. Did you forget to use return statement?";
+        }
+
+        const actualVal = parseExecutionValue(returnedStr);
+        const validationType = normalizeOutputValidationType(
+            testCase?.validationType || problemDetails?.validationType
+        );
+
+        return validateOutputByRule({
+            validationType,
+            validationKey: problemDetails?.validationKey,
+            tolerance: problemDetails?.tolerance,
+            actualOutput: actualVal,
+            expectedOutput: expectedStr,
+            testCaseInput: testCase?.input,
+            declaredType
+        });
+    }
+
+    async runTestCases(code, language, testCases, timeLimit = 2000, problemDetails = {}) {
+        // Delegate to executeBatch
+        const rawResults = await this.executeBatch(code, language, testCases, timeLimit, problemDetails);
+        const expectedCount = testCases.length;
+
+        // Verification: rawResults should be an Array
+        if (!Array.isArray(rawResults)) {
+            // Logic error or crash
+            return testCases.map(tc => ({
+                input: tc.input,
+                expectedOutput: tc.output,
+                actualOutput: '',
+                passed: false,
+                error: rawResults.stderr || 'Execution failed',
+                printedOutput: '',
+                returnMissing: false,
+                runtime: 0,
+                memory: 0
+            }));
+        }
+
+        if (rawResults.length !== expectedCount) {
+            console.error(`[Judge Warning] Expected ${expectedCount} test results but received ${rawResults.length}.`);
+            return testCases.map((tc) => ({
+                input: tc.input,
+                expectedOutput: tc.output,
+                actualOutput: '',
+                passed: false,
+                runtime: 0,
+                memory: 0,
+                error: `Execution failed: Judge returned inconsistent result count (${rawResults.length}/${expectedCount}).`,
+                printedOutput: '',
+                returnMissing: false
+            }));
+        }
+
+        const evaluatedResults = testCases.map((tc, i) => {
+            const res = rawResults[i];
+            if (!res || typeof res !== 'object') {
+                return {
+                    input: tc.input,
+                    expectedOutput: tc.output,
+                    actualOutput: '',
+                    passed: false,
+                    runtime: 0,
+                    memory: 0,
+                    error: `Execution failed: Judge returned incomplete results (${rawResults.length}/${expectedCount}).`,
+                    printedOutput: '',
+                    returnMissing: false
+                };
+            }
+
+            const expectedOutputRaw = tc.output;
+            const returnedOutputRaw = res.stdout;
+            const printedOutput = this._normalizeOutput(res.printedOutput);
+            const hasPrintedOutput = printedOutput.length > 0;
+            const returnMissing = Boolean(res.returnMissing);
+            const runtimeValue = Number(res.time ?? res.runtime ?? 0);
+            const memoryValue = Number(res.memory ?? 0);
+            const declaredReturnType = problemDetails?.returnType || 'void';
+
+            let error = this._normalizeOutput(res.stderr);
+            let passed = false;
+
+            if (hasPrintedOutput && !error) {
+                error = 'Use return statement for final answer. Printed output is shown below.';
+            } else if (!error) {
+                const validationError = this._validateResultValues(
+                    returnedOutputRaw,
+                    expectedOutputRaw,
+                    declaredReturnType,
+                    returnMissing,
+                    tc,
+                    problemDetails
+                );
+                if (validationError) {
+                    error = validationError;
+                } else {
+                    passed = true;
+                }
+            }
+
+            return {
+                input: tc.input,
+                expectedOutput: expectedOutputRaw,
+                actualOutput: returnedOutputRaw,
+                passed,
+                runtime: Number.isFinite(runtimeValue) ? runtimeValue : 0,
+                memory: Number.isFinite(memoryValue) ? memoryValue : 0,
+                error,
+                printedOutput,
+                returnMissing
+            };
+        });
+
+        const hasReturnTypeMismatch = evaluatedResults.some((result) =>
+            typeof result.error === 'string'
+            && result.error.toLowerCase().includes('return type mismatch')
+        );
+
+        if (hasReturnTypeMismatch) {
+            return evaluatedResults.map((result) => {
+                if (result.passed) {
+                    return {
+                        ...result,
+                        passed: false,
+                        error: 'Return type contract violated across test cases.'
+                    };
+                }
+                return result;
+            });
+        }
+
+        return evaluatedResults;
+    }
+
+    async runTestCasesSerial(code, language, testCases, timeLimit = 2000, problemDetails = {}, options = {}) {
+        const stopOnFailure = options.stopOnFailure !== false;
+        const results = [];
+
+        for (let i = 0; i < testCases.length; i++) {
+            const singleCase = testCases[i];
+            const [singleResult] = await this.runTestCases(
+                code,
+                language,
+                [singleCase],
+                timeLimit,
+                problemDetails
+            );
+
+            const normalized = singleResult || {
+                input: singleCase.input,
+                expectedOutput: singleCase.output,
+                actualOutput: '',
+                passed: false,
+                runtime: 0,
+                memory: 0,
+                error: 'Execution failed',
+                printedOutput: '',
+                returnMissing: false
+            };
+
+            normalized.testCaseNumber = i + 1;
+            results.push(normalized);
+
+            if (stopOnFailure && !normalized.passed) {
+                break;
+            }
+        }
+
+        return results;
+    }
+}
+
+module.exports = new CodeExecutor();

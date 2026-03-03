@@ -1,0 +1,365 @@
+[
+    {
+        "title": "Longest Subarray With Sum K",
+        "slug": "longest-subarray-sum-k",
+        "className": "Solution",
+        "functionName": "longestSubarrayWithSumK",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "k",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Medium",
+        "topics": [
+            "Two Pointers",
+            "Prefix Sum",
+            "Hashing"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "isPublished": true,
+        "description": "## Longest Subarray With Sum K\n\nGiven an integer array nums and integer k, return the length of the longest contiguous subarray that sums to exactly k.\n\n### Example\nInput: nums=[1,2,3,1,1], k=3\nOutput: 3\n\n### Constraints\n- 1 ≤ nums.length ≤ 10^5\n- -10^4 ≤ nums[i] ≤ 10^4\n- -10^9 ≤ k ≤ 10^9",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach uses two nested loops. The outer loop fixes the starting index i. The inner loop extends the end index j from i to n-1, maintaining a running sum. Each time the running sum equals k, compute the length (j - i + 1) and update the maximum length if it is larger. Continue the inner loop even after finding a match because longer subarrays with the same sum may exist. After both loops finish, return the maximum length found. Return 0 if no subarray with sum k was found."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 2, 3, 1, 1]\n3",
+                "output": "3",
+                "isHidden": false
+            },
+            {
+                "input": "[1, -1, 1]\n1",
+                "output": "3",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[1, 2, 3]\n6",
+                "output": "3",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 1, 1, 1, 1]\n2",
+                "output": "2",
+                "isHidden": true
+            },
+            {
+                "input": "[-2, -1, 2, 3]\n-3",
+                "output": "2",
+                "isHidden": true
+            },
+            {
+                "input": "[0, 0, 0, 5]\n0",
+                "output": "3",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Best Time to Buy and Sell Stock",
+        "slug": "best-time-to-buy-sell-stock",
+        "className": "Solution",
+        "functionName": "maxProfit",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "prices",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Array",
+            "Dynamic Programming"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Best Time to Buy and Sell Stock\n\nGiven an array prices where prices[i] is the price of a stock on day i, return the maximum profit achievable from a single buy-then-sell transaction.\n\nYou must buy before you sell. Return 0 if no profit is possible.\n\n### Example\nInput: prices=[7,1,5,3,6,4]\nOutput: 5\n\n### Constraints\n- 1 ≤ prices.length ≤ 10^5\n- 0 ≤ prices[i] ≤ 10^4",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach uses two nested loops. The outer loop picks a buy day i and the inner loop picks a sell day j where j is strictly greater than i. Compute the profit as prices[j] - prices[i]. If this profit is positive and greater than the current maximum profit, update the maximum. After all pairs are checked return the maximum profit found. If no pair gives positive profit return 0. This is O(n^2) because it checks every possible buy-sell pair."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[7, 1, 5, 3, 6, 4]",
+                "output": "5",
+                "isHidden": false
+            },
+            {
+                "input": "[7, 6, 4, 3, 1]",
+                "output": "0",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[1, 2]",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[3, 3, 3, 3]",
+                "output": "0",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 4, 2, 7]",
+                "output": "6",
+                "isHidden": true
+            },
+            {
+                "input": "[2, 1, 4, 5, 2, 9, 7]",
+                "output": "8",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Valid Parentheses",
+        "slug": "valid-parentheses",
+        "className": "Solution",
+        "functionName": "isValid",
+        "returnType": "boolean",
+        "parameters": [
+            {
+                "name": "s",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Stack",
+            "String"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Valid Parentheses\n\nGiven a string s containing only (, ), {, }, [ and ], return true if the input string is valid.\n\nA string is valid if:\n- Open brackets are closed by the same type of bracket\n- Open brackets are closed in the correct order\n\n### Example\nInput: s=\"()[]{}\"\nOutput: true\n\n### Constraints\n- 1 ≤ s.length ≤ 10^4\n- s consists of only (, ), {, }, [, ]",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach repeatedly removes innermost matched adjacent bracket pairs from the string. Scan the string for any adjacent matching pair: (), [], or {}. When found, remove those two characters and restart the scan from the beginning. Keep repeating until no more adjacent pairs can be removed. If the final string is empty return true. If the string still has characters but no adjacent pairs remain then it was not balanced so return false. Each removal takes O(n) to find and O(n) to reconstruct the string making the total O(n^2)."
+        },
+        "sampleTestCases": [
+            {
+                "input": "\"()[]{}\"",
+                "output": "true",
+                "isHidden": false
+            },
+            {
+                "input": "\"([)]\"",
+                "output": "false",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "\"()\"",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "\"{[]}\"",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "\"]\"",
+                "output": "false",
+                "isHidden": true
+            },
+            {
+                "input": "\"((()))\"",
+                "output": "true",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Reverse String",
+        "slug": "reverse-string",
+        "className": "Solution",
+        "functionName": "reverseString",
+        "returnType": "string",
+        "parameters": [
+            {
+                "name": "s",
+                "type": "string",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Two Pointers",
+            "String"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Reverse String\n\nGiven a string s, return the string reversed.\n\n### Example\nInput: s=\"hello\"\nOutput: \"olleh\"\n\n### Constraints\n- 1 ≤ s.length ≤ 10^5\n- s consists of printable ASCII characters",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach builds the reversed string by iterating through the original string from the last character to the first character. Start with an empty result string. In each step, append the current character (going from index n-1 down to 0) to the result. Return the result string once all characters have been processed. This is straightforward and runs in O(n) time and O(n) space for the output. An in-place two-pointer approach can achieve O(1) extra space but the core idea is the same."
+        },
+        "sampleTestCases": [
+            {
+                "input": "\"hello\"",
+                "output": "\"olleh\"",
+                "isHidden": false
+            },
+            {
+                "input": "\"abcde\"",
+                "output": "\"edcba\"",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "\"a\"",
+                "output": "\"a\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"racecar\"",
+                "output": "\"racecar\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"12345\"",
+                "output": "\"54321\"",
+                "isHidden": true
+            },
+            {
+                "input": "\"OpenAI\"",
+                "output": "\"IAnepO\"",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Two Sum",
+        "slug": "two-sum",
+        "className": "Solution",
+        "functionName": "twoSum",
+        "returnType": "int[]",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "target",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Easy",
+        "topics": [
+            "Arrays",
+            "Hashing"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 500,
+        "memoryLimit": 64,
+        "isPublished": true,
+        "description": "## Two Sum\n\nGiven an integer array nums and an integer target, return the indices of the two numbers that add up to target.\n\nEach input has exactly one solution. \nYou may not use the same element twice.\nReturn the answer in ascending index order.\n\n### Example\nInput: nums=[2,7,11,15], target=9\nOutput: [0,1]\n\n### Constraints\n- 2 ≤ nums.length ≤ 10^4\n- -10^9 ≤ nums[i] ≤ 10^9\n- Exactly one valid answer exists",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach uses two nested loops to check every possible pair of indices. The outer loop picks the first index i starting from 0. The inner loop picks the second index j starting from i+1 to ensure we do not use the same element twice. For each pair (i, j), check if nums[i] + nums[j] equals target. If it does, return [i, j] immediately since the problem guarantees exactly one solution. This is O(n^2) in time and O(1) in space since no extra data structures are needed."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[2, 7, 11, 15]\n9",
+                "output": "[0, 1]",
+                "isHidden": false
+            },
+            {
+                "input": "[3, 2, 4]\n6",
+                "output": "[1, 2]",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[3, 3]\n6",
+                "output": "[0, 1]",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 5, 3, 7]\n8",
+                "output": "[1, 2]",
+                "isHidden": true
+            },
+            {
+                "input": "[-3, 4, 3, 90]\n0",
+                "output": "[0, 2]",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 2, 3, 4, 5]\n9",
+                "output": "[3, 4]",
+                "isHidden": true
+            }
+        ]
+    }
+]

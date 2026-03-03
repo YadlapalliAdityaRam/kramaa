@@ -1,0 +1,26 @@
+.tree-canvas {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 350px;
+    padding: 10px 0;
+}
+
+.tree-svg {
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    min-height: 350px;
+}
+
+.tree-canvas-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #cfcfcf;
+    font-size: 1.05rem;
+    font-weight: 600;
+}

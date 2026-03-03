@@ -1,0 +1,387 @@
+[
+    {
+        "title": "Bitmask DP - Minimum Cost to Visit All Cities",
+        "slug": "bitmask-dp-min-cost-visit-all-cities",
+        "className": "Solution",
+        "functionName": "minCostTour",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "n",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "cost",
+                "type": "int",
+                "isArray": true,
+                "is2D": true
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Dynamic Programming",
+            "Bit Manipulation",
+            "Graph"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Bitmask DP - Minimum Cost to Visit All Cities\n\nGiven n cities and an n×n cost matrix where cost[i][j] is the travel cost from city i to city j, find the minimum cost to visit all cities exactly once, starting and ending at city 0 (Travelling Salesman Problem).\n\n### Example\nInput: n=4, cost=[[0,10,15,20],[10,0,35,25],[15,35,0,30],[20,25,30,0]]\nOutput: 80\n\n### Constraints\n- 2 ≤ n ≤ 20\n- 0 ≤ cost[i][j] ≤ 10^6\n- cost[i][i] = 0",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n!)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach generates all possible permutations of cities 1 to n-1 (since we always start and end at city 0). For each permutation, calculate the total cost of the tour: start at city 0, visit all cities in the permutation order, then return to city 0. Sum up cost[prev][curr] for each consecutive pair in the tour including the return to 0. Track the minimum total cost across all permutations. This is O(n!) which becomes infeasible for n > 12 but is easy to understand and implement."
+        },
+        "sampleTestCases": [
+            {
+                "input": "4\n[[0,10,15,20],[10,0,35,25],[15,35,0,30],[20,25,30,0]]",
+                "output": "80",
+                "isHidden": false
+            },
+            {
+                "input": "2\n[[0,5],[5,0]]",
+                "output": "10",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "3\n[[0,1,15],[1,0,10],[15,10,0]]",
+                "output": "26",
+                "isHidden": true
+            },
+            {
+                "input": "4\n[[0,2,9,10],[1,0,6,4],[15,7,0,8],[6,3,12,0]]",
+                "output": "21",
+                "isHidden": true
+            },
+            {
+                "input": "3\n[[0,10,10],[10,0,10],[10,10,0]]",
+                "output": "30",
+                "isHidden": true
+            },
+            {
+                "input": "5\n[[0,3,6,7,3],[3,0,2,8,2],[6,2,0,4,5],[7,8,4,0,1],[3,2,5,1,0]]",
+                "output": "13",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Range Sum with Point Updates",
+        "slug": "range-sum-point-updates",
+        "className": "Solution",
+        "functionName": "processQueries",
+        "returnType": "int[]",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "queries",
+                "type": "int",
+                "isArray": true,
+                "is2D": true
+            }
+        ],
+        "difficulty": "Hard",
+        "topics": [
+            "Segment Tree",
+            "Fenwick Tree",
+            "Arrays"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 2000,
+        "memoryLimit": 256,
+        "isPublished": true,
+        "description": "## Range Sum with Point Updates\n\nGiven an integer array nums and a list of queries, process each query:\n- [1, i, val] means update nums[i] += val\n- [2, l, r] means return the sum of nums[l..r] inclusive\n\nReturn an array of results for all type-2 queries in order.\n\n### Example\nInput: nums=[1,3,5], queries=[[1,1,2],[2,0,2],[2,1,2]]\nOutput: [11,10]\n\n### Constraints\n- 1 ≤ nums.length ≤ 10^5\n- 1 ≤ queries.length ≤ 10^5\n- 0 ≤ i, l, r < nums.length",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n * q)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach directly simulates each query on the array. For a type-1 query [1, i, val], simply do nums[i] += val which is O(1). For a type-2 query [2, l, r], loop from index l to r and sum all elements, which is O(n) per query. Collect all type-2 results into an output array and return it. This is correct but slow when there are many range sum queries on large arrays because each range query takes O(n) time, making the total time O(n * q)."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 3, 5]\n[[1,1,2],[2,0,2],[2,1,2]]",
+                "output": "[11, 10]",
+                "isHidden": false
+            },
+            {
+                "input": "[2, 4, 6]\n[[2,0,2]]",
+                "output": "[12]",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[1, 2, 3, 4, 5]\n[[2,0,4],[1,2,10],[2,0,4],[2,2,4]]",
+                "output": "[15, 25, 22]",
+                "isHidden": true
+            },
+            {
+                "input": "[5, 5, 5, 5]\n[[1,0,5],[2,0,3],[2,1,2]]",
+                "output": "[25, 10]",
+                "isHidden": true
+            },
+            {
+                "input": "[0, 0, 0, 0, 0]\n[[1,2,7],[1,4,3],[2,0,4],[2,2,4]]",
+                "output": "[10, 10]",
+                "isHidden": true
+            },
+            {
+                "input": "[10, 20, 30, 40, 50]\n[[2,1,3],[1,2,5],[2,1,3],[2,0,4]]",
+                "output": "[90, 95, 155]",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Kth Largest Element in Stream",
+        "slug": "kth-largest-element-stream",
+        "className": "Solution",
+        "functionName": "kthLargest",
+        "returnType": "int[]",
+        "parameters": [
+            {
+                "name": "k",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "stream",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Medium",
+        "topics": [
+            "Heap (Priority Queue)",
+            "Sorting",
+            "Arrays"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "isPublished": true,
+        "description": "## Kth Largest Element in Stream\n\nGiven an integer k and an array stream of integers arriving one by one, after each new integer is added return the k-th largest element seen so far.\n\nReturn an array of answers (one per element). Output -1 if fewer than k elements have been seen so far.\n\n### Example\nInput: k=3, stream=[4,5,8,2,7]\nOutput: [-1,-1,4,4,5]\n\n### Constraints\n- 1 ≤ k ≤ 10^4\n- 1 ≤ stream.length ≤ 10^5\n- -10^4 ≤ stream[i] ≤ 10^4",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2 log n)",
+            "spaceComplexity": "O(n)",
+            "description": "The brute force approach maintains a running list of all elements seen so far. After adding each new element to the list, sort the entire list in descending order. If the list has fewer than k elements, append -1 to the result. Otherwise, the k-th largest is the element at index k-1 in the sorted list. Append that to the result array. This correctly produces the answer but sorting after every insertion is expensive, making it O(n^2 log n) overall."
+        },
+        "sampleTestCases": [
+            {
+                "input": "3\n[4, 5, 8, 2, 7]",
+                "output": "[-1, -1, 4, 4, 5]",
+                "isHidden": false
+            },
+            {
+                "input": "1\n[3, 1, 4, 1, 5]",
+                "output": "[3, 3, 4, 4, 5]",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "2\n[1, 2, 3, 4, 5]",
+                "output": "[-1, 1, 2, 3, 4]",
+                "isHidden": true
+            },
+            {
+                "input": "4\n[5, 4, 3, 2, 1, 6]",
+                "output": "[-1, -1, -1, 2, 1, 2]",
+                "isHidden": true
+            },
+            {
+                "input": "3\n[10, 10, 10, 10]",
+                "output": "[-1, -1, 10, 10]",
+                "isHidden": true
+            },
+            {
+                "input": "2\n[7, 3, 5, 1, 9, 2]",
+                "output": "[-1, 3, 3, 3, 5, 5]",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Course Schedule Validator",
+        "slug": "course-schedule-validator",
+        "className": "Solution",
+        "functionName": "canFinish",
+        "returnType": "boolean",
+        "parameters": [
+            {
+                "name": "numCourses",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            },
+            {
+                "name": "prerequisites",
+                "type": "int",
+                "isArray": true,
+                "is2D": true
+            }
+        ],
+        "difficulty": "Medium",
+        "topics": [
+            "Graph",
+            "Topological Sort",
+            "Depth First Search"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "isPublished": true,
+        "description": "## Course Schedule Validator\n\nThere are numCourses courses labeled 0 to numCourses-1. Given prerequisites[i] = [a, b] meaning you must take course b before course a, determine if it is possible to finish all courses (i.e., the dependency graph has no cycle).\n\n### Example\nInput: numCourses=4, prerequisites=[[1,0],[2,1],[3,2]]\nOutput: true\n\n### Constraints\n- 1 ≤ numCourses ≤ 2000\n- 0 ≤ prerequisites.length ≤ 5000\n- prerequisites[i].length == 2\n- 0 ≤ a, b < numCourses",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(V^2 + E)",
+            "spaceComplexity": "O(V + E)",
+            "description": "The brute force approach tries to detect a cycle by repeatedly removing nodes with no incoming edges (in-degree = 0) from the graph. Build an in-degree count for every node. Add all nodes with in-degree 0 to a queue. Process each node from the queue by removing its outgoing edges (decreasing neighbors in-degree). If a neighbor's in-degree drops to 0 add it to the queue. Count how many nodes get processed. If the count equals numCourses then no cycle exists and all courses can be finished (return true). Otherwise a cycle exists (return false). The brute force version does this without an optimized data structure making it slower."
+        },
+        "sampleTestCases": [
+            {
+                "input": "4\n[[1,0],[2,1],[3,2]]",
+                "output": "true",
+                "isHidden": false
+            },
+            {
+                "input": "2\n[[0,1],[1,0]]",
+                "output": "false",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "1\n[]",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "3\n[[0,1],[0,2],[1,2]]",
+                "output": "true",
+                "isHidden": true
+            },
+            {
+                "input": "4\n[[0,1],[1,2],[2,3],[3,1]]",
+                "output": "false",
+                "isHidden": true
+            },
+            {
+                "input": "5\n[[1,0],[2,0],[3,1],[4,2],[4,3]]",
+                "output": "true",
+                "isHidden": true
+            }
+        ]
+    },
+    {
+        "title": "Subarray Sum Equals K (Count)",
+        "slug": "subarray-sum-equals-k-count",
+        "className": "Solution",
+        "functionName": "subarraySum",
+        "returnType": "int",
+        "parameters": [
+            {
+                "name": "nums",
+                "type": "int",
+                "isArray": true,
+                "is2D": false
+            },
+            {
+                "name": "k",
+                "type": "int",
+                "isArray": false,
+                "is2D": false
+            }
+        ],
+        "difficulty": "Medium",
+        "topics": [
+            "Arrays",
+            "Prefix Sum",
+            "Hashing"
+        ],
+        "companies": [
+            "Google",
+            "Amazon",
+            "Meta",
+            "NVIDIA"
+        ],
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "isPublished": true,
+        "description": "## Subarray Sum Equals K (Count)\n\nGiven an integer array nums and an integer k, return the total number of contiguous subarrays whose sum equals k.\n\n### Example\nInput: nums=[1,1,1], k=2\nOutput: 2\n\n### Constraints\n- 1 ≤ nums.length ≤ 2×10^4\n- -1000 ≤ nums[i] ≤ 1000\n- -10^7 ≤ k ≤ 10^7",
+        "editorial": {
+            "title": "Brute Force Approach",
+            "timeComplexity": "O(n^2)",
+            "spaceComplexity": "O(1)",
+            "description": "The brute force approach uses two nested loops. The outer loop fixes the starting index i of the subarray. The inner loop extends the ending index j from i to n-1, accumulating the running sum as each element is added. Whenever the running sum equals k, increment a counter. After both loops finish, return the counter. This checks every possible subarray exactly once and is easy to implement but runs in O(n^2) time which is too slow for large inputs."
+        },
+        "sampleTestCases": [
+            {
+                "input": "[1, 1, 1]\n2",
+                "output": "2",
+                "isHidden": false
+            },
+            {
+                "input": "[1, 2, 3]\n3",
+                "output": "2",
+                "isHidden": false
+            }
+        ],
+        "hiddenTestCases": [
+            {
+                "input": "[3, 4, 7, 2, -3, 1, 4, 2]\n7",
+                "output": "4",
+                "isHidden": true
+            },
+            {
+                "input": "[1]\n1",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[-1, -1, 1]\n0",
+                "output": "1",
+                "isHidden": true
+            },
+            {
+                "input": "[1, 2, 1, 2, 1]\n3",
+                "output": "4",
+                "isHidden": true
+            }
+        ]
+    }
+]
