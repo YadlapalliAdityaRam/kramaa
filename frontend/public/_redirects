@@ -1,3 +1,4 @@
 /api/* https://kramaa.onrender.com/api/:splat 200
 /socket.io/* https://kramaa.onrender.com/socket.io/:splat 200
+/uploads/* https://kramaa.onrender.com/uploads/:splat 200
 /* /index.html 200

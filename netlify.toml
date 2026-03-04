@@ -19,6 +19,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/uploads/*"
+  to = "https://kramaa.onrender.com/uploads/:splat"
+  status = 200
+  force = true
+
 # SPA fallback: route all frontend paths to index.html
 [[redirects]]
   from = "/*"

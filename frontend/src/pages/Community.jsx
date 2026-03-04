@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useSearchParams } from 'react-router-dom';
-import api from '../utils/api';
+import api, { getCurrentApiBaseUrl } from '../utils/api';
 import toast from 'react-hot-toast';
 import ReportModal from '../components/common/ReportModal';
 import SkeletonCard from '../components/common/SkeletonCard';
@@ -41,15 +41,29 @@ const CATEGORY_COLORS = {
     Official: { bg: 'rgba(236,72,153,0.12)', color: '#ec4899', border: 'rgba(236,72,153,0.3)' },
 };
 
+const stripApiSuffix = (baseUrl) => String(baseUrl || '').replace(/\/api\/?$/, '');
+
 const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
     if (!url.startsWith('/')) return url;
 
-    const configuredApiUrl = String(import.meta.env.VITE_API_URL || '').trim();
-    const configuredBaseUrl = configuredApiUrl ? configuredApiUrl.replace(/\/api\/?$/, '') : '';
-
+    // Prefer explicit env base URL in production.
+    const configuredApiUrl = String(
+        import.meta.env.VITE_API_URL ||
+        import.meta.env.VITE_API_BASE_URL ||
+        ''
+    ).trim().replace(/\/+$/, '');
+    const configuredBaseUrl = configuredApiUrl ? stripApiSuffix(configuredApiUrl) : '';
     if (configuredBaseUrl) return `${configuredBaseUrl}${url}`;
+
+    // Fall back to runtime API base used by axios.
+    const runtimeApiBaseUrl = String(getCurrentApiBaseUrl() || '').trim().replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(runtimeApiBaseUrl)) {
+        return `${stripApiSuffix(runtimeApiBaseUrl)}${url}`;
+    }
+
+    // Same-origin fallback (works with Netlify /uploads proxy redirects).
     if (typeof window !== 'undefined') return `${window.location.origin}${url}`;
     return url;
 };
