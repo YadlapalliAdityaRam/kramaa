@@ -188,6 +188,24 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Root/health aliases for platform probes (e.g., Render default health checks).
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        service: 'kramaa-backend',
+        message: 'Backend is running',
+        dbState: getDbStateLabel(),
+        healthEndpoint: '/api/health'
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        success: true,
+        dbState: getDbStateLabel()
+    });
+});
+
 app.use('/api', (req, res, next) => {
     if (req.path === '/health') return next();
     if (mongoose.connection.readyState !== 1) {
