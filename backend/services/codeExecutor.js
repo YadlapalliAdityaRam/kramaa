@@ -4,6 +4,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { spawn, exec } = require('child_process');
 const dockerExecutor = require('./dockerExecutor');
+const containerPool = require('./containerPool');
 const {
     buildCFunctionContract,
     validateCUserCode,
@@ -43,6 +44,192 @@ class CodeExecutor {
 
         this.tmpDir = path.join(__dirname, '../tmp');
         this.driversDir = path.join(__dirname, '../drivers');
+
+        this.supportedLanguages = ['javascript', 'python', 'java', 'cpp', 'c'];
+        this._commandAvailabilityCache = new Map();
+        this._commandAvailabilityTtlMs = 60 * 1000;
+        this._dockerReadyCache = { checkedAt: 0, ready: false };
+        this._dockerReadyTtlMs = 60 * 1000;
+        this._dockerPoolInitialized = false;
+    }
+
+    _normalizeCommand(command) {
+        return String(command || '').trim().replace(/^"(.*)"$/, '$1');
+    }
+
+    _isPathLikeCommand(command) {
+        const normalized = this._normalizeCommand(command);
+        return normalized.includes('/') || normalized.includes('\\');
+    }
+
+    _execShell(command, cwd = undefined) {
+        return new Promise((resolve, reject) => {
+            exec(command, { cwd }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(new Error((stderr || stdout || error.message || 'Command failed').trim()));
+                    return;
+                }
+                resolve({ stdout: String(stdout || ''), stderr: String(stderr || '') });
+            });
+        });
+    }
+
+    async _isCommandAvailable(command) {
+        const normalized = this._normalizeCommand(command);
+        if (!normalized) return false;
+
+        const now = Date.now();
+        const cached = this._commandAvailabilityCache.get(normalized);
+        if (cached && (now - cached.checkedAt) < this._commandAvailabilityTtlMs) {
+            return cached.available;
+        }
+
+        let available = false;
+        try {
+            if (this._isPathLikeCommand(normalized)) {
+                available = await fs.pathExists(normalized);
+            } else {
+                const probeCmd = process.platform === 'win32'
+                    ? `where.exe ${normalized}`
+                    : `command -v ${normalized}`;
+                await this._execShell(probeCmd);
+                available = true;
+            }
+        } catch {
+            available = false;
+        }
+
+        this._commandAvailabilityCache.set(normalized, {
+            available,
+            checkedAt: now
+        });
+        return available;
+    }
+
+    _getRequiredCommandGroupsForLanguage(language) {
+        const isWin = process.platform === 'win32';
+        switch (language) {
+            case 'javascript':
+                return [{ label: 'node', commands: ['node'] }];
+            case 'python':
+                return isWin
+                    ? [{ label: 'python', commands: ['py', 'python', 'python3'] }]
+                    : [{ label: 'python3', commands: ['python3'] }];
+            case 'java':
+                return [
+                    { label: this._normalizeCommand(this.compilerPaths.javac), commands: [this.compilerPaths.javac] },
+                    { label: this._normalizeCommand(this.compilerPaths.java), commands: [this.compilerPaths.java] }
+                ];
+            case 'cpp':
+                return [{ label: this._normalizeCommand(this.compilerPaths.gpp), commands: [this.compilerPaths.gpp] }];
+            case 'c':
+                return [{ label: this._normalizeCommand(this.compilerPaths.gcc), commands: [this.compilerPaths.gcc] }];
+            default:
+                return [];
+        }
+    }
+
+    async _getMissingLocalDependencies(language) {
+        const groups = this._getRequiredCommandGroupsForLanguage(language);
+        const missing = [];
+        for (const group of groups) {
+            let found = false;
+            const commandOptions = Array.isArray(group?.commands) ? group.commands : [];
+            for (const cmd of commandOptions) {
+                // eslint-disable-next-line no-await-in-loop
+                const present = await this._isCommandAvailable(cmd);
+                if (present) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                missing.push(group?.label || this._normalizeCommand(commandOptions[0] || 'unknown'));
+            }
+        }
+        return missing;
+    }
+
+    async _isDockerReady() {
+        const now = Date.now();
+        if ((now - this._dockerReadyCache.checkedAt) < this._dockerReadyTtlMs) {
+            return this._dockerReadyCache.ready;
+        }
+
+        let ready = false;
+        try {
+            await this._execShell('docker --version');
+            await this._execShell(`docker inspect --type=image ${containerPool.imageName}`);
+            ready = true;
+        } catch {
+            ready = false;
+        }
+
+        this._dockerReadyCache = { checkedAt: now, ready };
+        return ready;
+    }
+
+    _buildMissingDependencyMessage(language, missingCommands = []) {
+        const tools = missingCommands.length > 0
+            ? missingCommands.join(', ')
+            : 'required language runtime/compiler';
+        return `Execution environment missing required tool(s): ${tools}. Configure runtime dependencies for ${language} or enable Docker executor with image '${containerPool.imageName}'.`;
+    }
+
+    _extractMissingCommandFromShellError(message) {
+        const text = String(message || '').trim();
+        if (!text) return null;
+
+        // Linux shell: "/bin/sh: 1: javac: not found"
+        let match = text.match(/(?:^|\/bin\/sh:\s*\d+:\s*)([a-zA-Z0-9+_.-]+):\s*not found/i);
+        if (match && match[1]) return match[1];
+
+        // Windows shell: "'javac' is not recognized as an internal or external command"
+        match = text.match(/'([^']+)'\s+is not recognized as an internal or external command/i);
+        if (match && match[1]) return match[1];
+
+        // Spawn error: "spawn javac ENOENT"
+        match = text.match(/spawn\s+([a-zA-Z0-9+_.-]+)\s+ENOENT/i);
+        if (match && match[1]) return match[1];
+
+        return null;
+    }
+
+    _buildBatchEnvironmentErrors(testCases, language, missingCommands = []) {
+        const message = this._buildMissingDependencyMessage(language, missingCommands);
+        return testCases.map(() => ({
+            stdout: '',
+            stderr: message,
+            printedOutput: '',
+            returnMissing: false,
+            time: 0,
+            memory: 0,
+            status: 'error',
+            rawOutput: ''
+        }));
+    }
+
+    async _tryDockerBatchFallback(code, language, batchPayload, timeLimit, problemDetails, testCases) {
+        const dockerFallbackEnabled = String(process.env.AUTO_DOCKER_FALLBACK || 'true').toLowerCase() !== 'false';
+        if (!dockerFallbackEnabled) return null;
+        if (!this.supportedLanguages.includes(language)) return null;
+
+        const dockerReady = await this._isDockerReady();
+        if (!dockerReady) return null;
+
+        try {
+            if (!this._dockerPoolInitialized) {
+                await containerPool.initialize();
+                this._dockerPoolInitialized = true;
+            }
+            return await dockerExecutor.runBatchJob(code, language, batchPayload, timeLimit, problemDetails);
+        } catch (error) {
+            return this._buildBatchEnvironmentErrors(
+                testCases,
+                language,
+                [`docker (${error.message || 'initialization failed'})`]
+            );
+        }
     }
 
     async executeCode(code, language, input = '', timeLimit = 2000, problemDetails = {}) {
@@ -61,20 +248,13 @@ class CodeExecutor {
                 const printedOutput = this._normalizeOutput(first.printedOutput);
                 const returnMissing = Boolean(first.returnMissing);
                 const stdout = printedOutput || this._normalizeOutput(first.stdout);
-                let stderr = this._normalizeOutput(first.stderr);
-
-                if (!stderr) {
-                    if (printedOutput) {
-                        stderr = 'Use return statement for final answer. Printed output is shown below.';
-                    } else if (returnMissing) {
-                        stderr = 'Function must return output using return statement.';
-                    }
-                }
+                const stderr = this._normalizeOutput(first.stderr);
+                const status = first.status || (stderr ? 'runtime_error' : 'accepted');
 
                 return {
                     stdout,
                     stderr,
-                    status: stderr ? 'runtime_error' : 'accepted',
+                    status,
                     time: first.time,
                     memory: first.memory,
                     printedOutput,
@@ -94,20 +274,13 @@ class CodeExecutor {
                 const printedOutput = this._normalizeOutput(res.printedOutput);
                 const returnMissing = Boolean(res.returnMissing);
                 const stdout = printedOutput || this._normalizeOutput(res.stdout);
-                let stderr = this._normalizeOutput(res.stderr);
-
-                if (!stderr) {
-                    if (printedOutput) {
-                        stderr = 'Use return statement for final answer. Printed output is shown below.';
-                    } else if (returnMissing) {
-                        stderr = 'Function must return output using return statement.';
-                    }
-                }
+                const stderr = this._normalizeOutput(res.stderr);
+                const status = res.status || (stderr ? 'runtime_error' : 'accepted');
 
                 return {
                     stdout,
                     stderr,
-                    status: stderr ? 'runtime_error' : 'accepted',
+                    status,
                     time: res.time,
                     memory: res.memory,
                     printedOutput,
@@ -369,9 +542,12 @@ if (typeof module !== 'undefined' && module.exports) {
                 if (isResolved) return;
                 isResolved = true;
                 cleanup();
+                const missingTool = this._extractMissingCommandFromShellError(err?.message);
                 resolve({
                     stdout: stdout,
-                    stderr: `Process Error: ${err.message}`,
+                    stderr: missingTool
+                        ? this._buildMissingDependencyMessage(language, [missingTool])
+                        : `Process Error: ${err.message}`,
                     status: 'error',
                     time: 0,
                     memory: 0
@@ -438,7 +614,13 @@ if (typeof module !== 'undefined' && module.exports) {
         return new Promise((resolve, reject) => {
             exec(command, { cwd }, (error, stdout, stderr) => {
                 if (error) {
-                    reject(new Error(stderr || stdout || error.message));
+                    const combined = String(stderr || stdout || error.message || '').trim();
+                    const missingTool = this._extractMissingCommandFromShellError(combined);
+                    if (missingTool) {
+                        reject(new Error(this._buildMissingDependencyMessage('execution', [missingTool])));
+                        return;
+                    }
+                    reject(new Error(combined));
                 } else {
                     resolve(stdout);
                 }
@@ -861,36 +1043,67 @@ if (typeof module !== 'undefined' && module.exports) {
 
         const batchPayload = JSON.stringify(payloadInputs);
 
-        if (process.env.USE_DOCKER === 'true') {
-            return await dockerExecutor.runBatchJob(code, language, batchPayload, timeLimit, problemDetails);
-        } else {
-            // LOCAL STRATEGY
-            const result = language === 'c'
-                ? await this._executeLeetStyleCBatchLocally(code, inputs, timeLimit, problemDetails)
-                : await this.executeLocally(code, language, batchPayload, timeLimit, problemDetails);
+        const dockerEnabled = process.env.USE_DOCKER === 'true';
 
-            if (result.status === 'accepted' || result.status === 'runtime_error') {
-                const parsed = this._parseDriverResults(result.stdout);
-                if (parsed) {
-                    return this._applyDriverMetricFallback(parsed, {
-                        time: result.time,
-                        memory: result.memory
-                    });
-                }
-
-                const errorMessage = this._buildDriverOutputError(language, result, problemDetails);
-                return testCases.map(() => ({
-                    stdout: '',
-                    stderr: errorMessage,
-                    printedOutput: '',
-                    returnMissing: false,
-                    time: 0,
-                    memory: 0,
-                    rawOutput: result.stdout || ''
-                }));
+        if (dockerEnabled) {
+            const dockerReady = await this._isDockerReady();
+            if (dockerReady) {
+                return await dockerExecutor.runBatchJob(code, language, batchPayload, timeLimit, problemDetails);
             }
-            return result; // time_limit or compilation error
+
+            // If Docker was requested but isn't available, gracefully fall back to local toolchain
+            // when runtime/compiler dependencies exist.
+            const missingLocalDependencies = await this._getMissingLocalDependencies(language);
+            if (missingLocalDependencies.length > 0) {
+                return this._buildBatchEnvironmentErrors(
+                    testCases,
+                    language,
+                    ['docker daemon/image', ...missingLocalDependencies]
+                );
+            }
         }
+
+        const missingLocalDependencies = await this._getMissingLocalDependencies(language);
+        if (missingLocalDependencies.length > 0) {
+            const dockerFallback = await this._tryDockerBatchFallback(
+                code,
+                language,
+                batchPayload,
+                timeLimit,
+                problemDetails,
+                testCases
+            );
+            if (dockerFallback) return dockerFallback;
+
+            return this._buildBatchEnvironmentErrors(testCases, language, missingLocalDependencies);
+        }
+
+        // LOCAL STRATEGY
+        const result = language === 'c'
+            ? await this._executeLeetStyleCBatchLocally(code, inputs, timeLimit, problemDetails)
+            : await this.executeLocally(code, language, batchPayload, timeLimit, problemDetails);
+
+        if (result.status === 'accepted' || result.status === 'runtime_error') {
+            const parsed = this._parseDriverResults(result.stdout);
+            if (parsed) {
+                return this._applyDriverMetricFallback(parsed, {
+                    time: result.time,
+                    memory: result.memory
+                });
+            }
+
+            const errorMessage = this._buildDriverOutputError(language, result, problemDetails);
+            return testCases.map(() => ({
+                stdout: '',
+                stderr: errorMessage,
+                printedOutput: '',
+                returnMissing: false,
+                time: 0,
+                memory: 0,
+                rawOutput: result.stdout || ''
+            }));
+        }
+        return result; // time_limit or compilation error
     }
 
     _validateResultValues(returnedStr, expectedStr, declaredType, returnMissing, testCase = {}, problemDetails = {}) {
@@ -980,14 +1193,22 @@ if (typeof module !== 'undefined' && module.exports) {
             let error = this._normalizeOutput(res.stderr);
             let passed = false;
 
-            if (hasPrintedOutput && !error) {
-                error = 'Use return statement for final answer. Printed output is shown below.';
-            } else if (!error) {
+            let comparableOutput = returnedOutputRaw;
+            let validationReturnMissing = returnMissing;
+            const hasExplicitReturnValue = String(returnedOutputRaw ?? '').trim().length > 0;
+
+            // If user prints the final answer and doesn't explicitly return, validate against stdout.
+            if (!hasExplicitReturnValue && hasPrintedOutput) {
+                comparableOutput = printedOutput;
+                validationReturnMissing = false;
+            }
+
+            if (!error) {
                 const validationError = this._validateResultValues(
-                    returnedOutputRaw,
+                    comparableOutput,
                     expectedOutputRaw,
                     declaredReturnType,
-                    returnMissing,
+                    validationReturnMissing,
                     tc,
                     problemDetails
                 );
@@ -1001,7 +1222,7 @@ if (typeof module !== 'undefined' && module.exports) {
             return {
                 input: tc.input,
                 expectedOutput: expectedOutputRaw,
-                actualOutput: returnedOutputRaw,
+                actualOutput: comparableOutput,
                 passed,
                 runtime: Number.isFinite(runtimeValue) ? runtimeValue : 0,
                 memory: Number.isFinite(memoryValue) ? memoryValue : 0,

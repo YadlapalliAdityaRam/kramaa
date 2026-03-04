@@ -5,8 +5,8 @@ const execPromise = util.promisify(exec);
 class ContainerPool {
     constructor() {
         this.pool = [];
-        this.maxSize = 3; // Keep 3 warm containers
-        this.imageName = 'algoverse-runner';
+        this.maxSize = Number.parseInt(process.env.CONTAINER_POOL_SIZE || '3', 10) || 3; // Keep warm containers
+        this.imageName = process.env.DOCKER_RUNNER_IMAGE || 'algoverse-runner';
         this.containerPrefix = 'algoverse-worker-';
     }
 

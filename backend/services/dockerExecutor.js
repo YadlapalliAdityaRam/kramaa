@@ -11,6 +11,44 @@ const {
 } = require('../utils/cLeetCodeDriver');
 
 class DockerExecutor {
+    _getRequiredToolsForLanguage(language) {
+        switch (language) {
+            case 'javascript':
+                return ['node'];
+            case 'python':
+                return ['python3'];
+            case 'java':
+                return ['javac', 'java'];
+            case 'cpp':
+                return ['g++'];
+            case 'c':
+                return ['gcc'];
+            default:
+                return [];
+        }
+    }
+
+    async _getMissingToolsInContainer(containerId, language) {
+        const requiredTools = this._getRequiredToolsForLanguage(language);
+        if (!requiredTools.length) return [];
+
+        const missing = [];
+        for (const tool of requiredTools) {
+            // eslint-disable-next-line no-await-in-loop
+            const probe = await this._spawnDockerExec(
+                containerId,
+                `command -v ${tool} >/dev/null 2>&1`,
+                '',
+                2000
+            );
+            if (probe.status !== 'accepted') {
+                missing.push(tool);
+            }
+        }
+
+        return missing;
+    }
+
     _extractJsonArrayCandidates(raw) {
         const candidates = [];
         const seen = new Set();
@@ -149,6 +187,14 @@ class DockerExecutor {
         if (!container) throw new Error('No available containers.');
 
         try {
+            const missingTools = await this._getMissingToolsInContainer(container.id, language);
+            if (missingTools.length > 0) {
+                return {
+                    status: 'error',
+                    stderr: `Execution environment missing required tool(s) in Docker image '${containerPool.imageName}': ${missingTools.join(', ')}. Rebuild the image from backend/docker/Dockerfile and redeploy.`
+                };
+            }
+
             const driversDir = path.join(__dirname, '../drivers');
             const functionName = problemDetails.functionName || 'solve';
             const className = problemDetails.className;
@@ -193,6 +239,28 @@ if (typeof module !== 'undefined' && module.exports) {
                     await this._writeToContainer(container.id, driverFile, pyDriver);
 
                     runCmd = `python3 driver.py`;
+                    break;
+
+                case 'java':
+                    sourceFile = 'Solution.java';
+                    driverFile = 'Driver.java';
+                    const javaDriver = fs.readFileSync(path.join(driversDir, 'java/Driver.java'), 'utf8');
+
+                    await this._writeToContainer(container.id, sourceFile, code);
+                    await this._writeToContainer(container.id, driverFile, javaDriver);
+
+                    {
+                        const compileCmd = `javac Driver.java Solution.java`;
+                        const compileRes = await this._spawnDockerExec(container.id, compileCmd, '', 10000);
+                        if (compileRes.status !== 'accepted') {
+                            return {
+                                status: 'error',
+                                stderr: `Compilation Error:\n${compileRes.stderr || 'Unknown Java compile error'}`
+                            };
+                        }
+                    }
+
+                    runCmd = `java Driver`;
                     break;
 
                 case 'cpp':
