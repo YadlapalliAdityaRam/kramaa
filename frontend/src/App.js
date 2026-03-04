@@ -121,17 +121,16 @@ const AppContent = () => {
       const tokenRemoved = event.key === 'token' && !event.newValue;
       if (!logoutMarkerUpdated && !tokenRemoved) return;
 
-      // Force full state reset in this tab (including stale component state).
+      // Keep navigation inside SPA to avoid static-host 404s on direct /login requests.
+      dispatch(logout());
       if (location.pathname !== '/login') {
-        window.location.replace('/login');
-        return;
+        navigate('/login', { replace: true });
       }
-      window.location.reload();
     };
 
     window.addEventListener('storage', onStorageEvent);
     return () => window.removeEventListener('storage', onStorageEvent);
-  }, [location.pathname]);
+  }, [dispatch, location.pathname, navigate]);
 
   // Hide Navbar for Problem Workspace (e.g., /coding-platform/two-sum) but show for list (/coding-platform)
   const shouldHideNavbar = /^\/coding-platform\/[^/]+$/.test(location.pathname);

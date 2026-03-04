@@ -278,7 +278,7 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
     const fetchThread = useCallback(async () => {
         try {
             const res = await api.get(`/doubts/${threadId}/detail`);
-            setThread(res.data.thread);
+            setThread(res.data?.thread || null);
         } catch { toast.error('Failed to load thread'); onBack(); }
     }, [threadId, onBack]);
 
@@ -286,8 +286,9 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
         try {
             setRepliesLoading(true);
             const res = await api.get(`/doubts/${threadId}/replies`, { params: { page, limit: 20 } });
-            setReplies(prev => reset ? res.data.replies : [...prev, ...res.data.replies]);
-            setRepliesHasMore(res.data.pagination.hasMore);
+            const items = Array.isArray(res.data?.replies) ? res.data.replies : [];
+            setReplies(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
+            setRepliesHasMore(Boolean(res.data?.pagination?.hasMore));
             setRepliesPage(page);
         } catch { /* silent */ } finally { setRepliesLoading(false); }
     }, [threadId]);
@@ -315,7 +316,7 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
                     hasDisliked: res.data.hasDisliked
                 }));
             } else {
-                setReplies(prev => prev.map(r =>
+                setReplies(prev => (Array.isArray(prev) ? prev : []).map(r =>
                     r._id === id ? {
                         ...r,
                         likesCount: res.data.likesCount,
@@ -342,7 +343,7 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
             setReplyingTo(null);
             await fetchReplies(1, true);
             // Update thread reply count
-            setThread(prev => ({ ...prev, repliesCount: (prev.repliesCount || 0) + 1 }));
+            setThread(prev => (prev ? { ...prev, repliesCount: (prev.repliesCount || 0) + 1 } : prev));
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to post reply');
         } finally { setPosting(false); }
@@ -363,6 +364,7 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
 
     const cat = CATEGORY_COLORS[thread.category] || CATEGORY_COLORS.General;
     const isSaved = savedThreadIds.includes(thread._id) || thread.isSaved;
+    const safeReplies = Array.isArray(replies) ? replies : [];
     const threadOwnerId = (thread.user?._id || thread.user?.id || '').toString();
     const canDeleteThread = Boolean(currentUserId) && threadOwnerId === currentUserId;
 
@@ -489,9 +491,9 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
                     <FaComment size={14} style={{ color: '#60a5fa' }} /> Replies ({thread.repliesCount || 0})
                 </h3>
 
-                {replies.length > 0 ? (
+                {safeReplies.length > 0 ? (
                     <>
-                        {replies.map(reply => (
+                        {safeReplies.map(reply => (
                             <ReplyItem
                                 key={reply._id}
                                 reply={reply}
@@ -814,8 +816,9 @@ const Community = () => {
             const res = await api.get('/doubts/community', {
                 params: { page: pageNum, limit: 15, sort: sortOption, category: categoryFilter }
             });
-            setThreads(prev => reset ? res.data.threads : [...prev, ...res.data.threads]);
-            setHasMore(res.data.pagination.hasMore);
+            const items = Array.isArray(res.data?.threads) ? res.data.threads : [];
+            setThreads(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
+            setHasMore(Boolean(res.data?.pagination?.hasMore));
             setPage(pageNum);
         } catch {
             toast.error("Failed to load community threads");
@@ -853,8 +856,8 @@ const Community = () => {
             const res = await api.get('/doubts/my-posts', {
                 params: { page: pageNum, limit: 8, sort: 'latest' }
             });
-            const items = res.data?.threads || [];
-            setYourThreads(prev => reset ? items : [...prev, ...items]);
+            const items = Array.isArray(res.data?.threads) ? res.data.threads : [];
+            setYourThreads(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
             setYourHasMore(Boolean(res.data?.pagination?.hasMore));
             setYourPage(pageNum);
         } catch {
@@ -876,7 +879,7 @@ const Community = () => {
         try {
             setSavedLoading(true);
             const res = await api.get('/doubts/saved');
-            setSavedThreads(res.data.threads || []);
+            setSavedThreads(Array.isArray(res.data?.threads) ? res.data.threads : []);
         } catch {
             if (!silent) toast.error('Failed to load saved posts');
         } finally {
@@ -898,7 +901,7 @@ const Community = () => {
         if (!isAuthenticated) return toast.error('Login to react');
         try {
             const res = await api.post(`/doubts/${id}/like`, { type });
-            setThreads(prev => prev.map(t =>
+            setThreads(prev => (Array.isArray(prev) ? prev : []).map(t =>
                 t._id === id ? {
                     ...t,
                     likesCount: res.data.likesCount,
@@ -907,7 +910,7 @@ const Community = () => {
                     hasDisliked: res.data.hasDisliked
                 } : t
             ));
-            setYourThreads(prev => prev.map(t =>
+            setYourThreads(prev => (Array.isArray(prev) ? prev : []).map(t =>
                 t._id === id ? {
                     ...t,
                     likesCount: res.data.likesCount,
@@ -938,15 +941,15 @@ const Community = () => {
             const res = await api.post(`/doubts/${threadId}/save`);
             const nextSaved = Boolean(res.data?.saved);
 
-            setThreads(prev => prev.map(t => (
+            setThreads(prev => (Array.isArray(prev) ? prev : []).map(t => (
                 t._id === threadId ? { ...t, isSaved: nextSaved } : t
             )));
-            setYourThreads(prev => prev.map(t => (
+            setYourThreads(prev => (Array.isArray(prev) ? prev : []).map(t => (
                 t._id === threadId ? { ...t, isSaved: nextSaved } : t
             )));
 
             if (!nextSaved) {
-                setSavedThreads(prev => prev.filter(t => t._id !== threadId));
+                setSavedThreads(prev => (Array.isArray(prev) ? prev : []).filter(t => t._id !== threadId));
             } else {
                 await fetchSavedThreads(true);
             }
@@ -964,9 +967,9 @@ const Community = () => {
 
         try {
             await api.delete(`/doubts/${threadId}`);
-            setThreads(prev => prev.filter(t => t._id !== threadId));
-            setYourThreads(prev => prev.filter(t => t._id !== threadId));
-            setSavedThreads(prev => prev.filter(t => t._id !== threadId));
+            setThreads(prev => (Array.isArray(prev) ? prev : []).filter(t => t._id !== threadId));
+            setYourThreads(prev => (Array.isArray(prev) ? prev : []).filter(t => t._id !== threadId));
+            setSavedThreads(prev => (Array.isArray(prev) ? prev : []).filter(t => t._id !== threadId));
             if (activeThreadId === threadId) {
                 setActiveThreadId(null);
                 const nextParams = new URLSearchParams(searchParams);
@@ -994,10 +997,13 @@ const Community = () => {
     };
 
     // Client-side search filter
+    const safeThreads = Array.isArray(threads) ? threads : [];
+    const safeYourThreads = Array.isArray(yourThreads) ? yourThreads : [];
+    const safeSavedThreads = Array.isArray(savedThreads) ? savedThreads : [];
     const filteredThreads = searchQuery
-        ? threads.filter(t => t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || t.content?.toLowerCase().includes(searchQuery.toLowerCase()))
-        : threads;
-    const savedThreadIds = savedThreads.map(t => t._id);
+        ? safeThreads.filter(t => t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || t.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+        : safeThreads;
+    const savedThreadIds = safeSavedThreads.map(t => t._id);
 
     // If a thread is active, show detail view
     if (activeThreadId) {
@@ -1195,14 +1201,14 @@ const Community = () => {
                                     <FaUserCircle size={13} style={{ color: '#60a5fa' }} /> Your Posts
                                 </h3>
 
-                                {yourLoading && yourThreads.length === 0 ? (
+                                {yourLoading && safeYourThreads.length === 0 ? (
                                     <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>Loading your posts...</div>
-                                ) : yourThreads.length === 0 ? (
+                                ) : safeYourThreads.length === 0 ? (
                                     <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>You have not posted yet.</div>
                                 ) : (
                                     <div style={{ maxHeight: '360px', overflowY: 'auto', paddingRight: '4px' }}>
                                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                                            {yourThreads.map((thread) => (
+                                            {safeYourThreads.map((thread) => (
                                                 <motion.div
                                                     key={thread._id}
                                                     whileHover={{ scale: 1.02 }}
@@ -1334,11 +1340,11 @@ const Community = () => {
 
                                 {savedLoading ? (
                                     <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>Loading saved posts...</div>
-                                ) : savedThreads.length === 0 ? (
+                                ) : safeSavedThreads.length === 0 ? (
                                     <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>No saved posts yet.</div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
-                                        {savedThreads.map((thread) => (
+                                        {safeSavedThreads.map((thread) => (
                                             <div
                                                 key={thread._id}
                                                 style={{
@@ -1419,7 +1425,7 @@ const Community = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.88rem' }}>
                                     <span>Total Threads</span>
-                                    <span style={{ color: '#60a5fa', fontWeight: 600 }}>{threads.length}+</span>
+                                    <span style={{ color: '#60a5fa', fontWeight: 600 }}>{safeThreads.length}+</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.88rem' }}>
                                     <span>Active Categories</span>

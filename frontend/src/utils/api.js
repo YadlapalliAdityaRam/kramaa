@@ -38,8 +38,16 @@ const shouldPreferSameOriginApi = () => {
 };
 
 const buildApiBaseUrls = () => {
-    const fromList = String(import.meta.env.VITE_API_URLS || '').trim();
-    const fromSingle = String(import.meta.env.VITE_API_URL || '').trim();
+    const fromList = String(
+        import.meta.env.VITE_API_URLS
+        || import.meta.env.VITE_API_BASE_URLS
+        || ''
+    ).trim();
+    const fromSingle = String(
+        import.meta.env.VITE_API_URL
+        || import.meta.env.VITE_API_BASE_URL
+        || ''
+    ).trim();
     const disableAutoSiblingFailover = String(import.meta.env.VITE_DISABLE_PORT_FAILOVER || '').trim().toLowerCase() === 'true';
     const enableAutoSiblingFailover = String(import.meta.env.VITE_ENABLE_PORT_FAILOVER || '').trim().toLowerCase() === 'true';
 

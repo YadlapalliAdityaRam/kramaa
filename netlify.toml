@@ -7,6 +7,18 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[[redirects]]
+  from = "/api/*"
+  to = "https://kramaa.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/socket.io/*"
+  to = "https://kramaa.onrender.com/socket.io/:splat"
+  status = 200
+  force = true
+
 # SPA fallback: route all frontend paths to index.html
 [[redirects]]
   from = "/*"
