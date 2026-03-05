@@ -24,6 +24,13 @@ const {
     updateAdminSecurity,
     forceLogoutAllDevices
 } = require('../controllers/adminProfileController');
+const {
+    getDailyChallengesHistory,
+    getUpcomingDailyChallenges,
+    scheduleDailyChallenge,
+    updateDailyChallenge,
+    deleteDailyChallenge
+} = require('../controllers/dailyChallengeAdminController');
 
 // Shared Admin Routes (ADMIN & SUPER_ADMIN)
 router.get('/profile', protect, authorize('ADMIN', 'SUPER_ADMIN'), getAdminProfile);
@@ -38,6 +45,11 @@ router.get('/audit-logs', protect, authorize('ADMIN', 'SUPER_ADMIN'), getAuditLo
 router.get('/health', protect, authorize('ADMIN', 'SUPER_ADMIN'), getSystemHealth);
 router.get('/users', protect, authorize('ADMIN', 'SUPER_ADMIN'), getUsers);
 router.delete('/users/:id', protect, authorize('ADMIN', 'SUPER_ADMIN'), deleteUser); // General delete user
+router.get('/daily-challenges/history', protect, authorize('ADMIN', 'SUPER_ADMIN'), getDailyChallengesHistory);
+router.get('/daily-challenges/upcoming', protect, authorize('ADMIN', 'SUPER_ADMIN'), getUpcomingDailyChallenges);
+router.post('/daily-challenges/schedule', protect, authorize('ADMIN', 'SUPER_ADMIN'), scheduleDailyChallenge);
+router.put('/daily-challenges/update', protect, authorize('ADMIN', 'SUPER_ADMIN'), updateDailyChallenge);
+router.delete('/daily-challenges/delete', protect, authorize('ADMIN', 'SUPER_ADMIN'), deleteDailyChallenge);
 
 // Super Admin Only Routes
 router.post('/emergency', protect, authorize('SUPER_ADMIN'), emergencyAction);
