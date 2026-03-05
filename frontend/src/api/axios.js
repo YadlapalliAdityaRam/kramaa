@@ -6,9 +6,15 @@ const normalizeApiBaseUrl = (url) => {
     return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
 };
 
+const viteApiBaseUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE_URL : '';
 const viteApiUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : '';
+const viteApiBaseUrls = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE_URLS : '';
 const reactApiUrl = typeof process !== 'undefined' ? process.env?.REACT_APP_API_URL : '';
-const apiBaseUrl = normalizeApiBaseUrl(viteApiUrl || reactApiUrl || '/api');
+const firstApiBaseFromList = String(viteApiBaseUrls || '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)[0];
+const apiBaseUrl = normalizeApiBaseUrl(viteApiBaseUrl || firstApiBaseFromList || viteApiUrl || reactApiUrl || '/api');
 
 // Create a centralized Axios instance
 const api = axios.create({
