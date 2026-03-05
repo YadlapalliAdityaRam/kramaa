@@ -223,6 +223,7 @@ app.use('/api', (req, res, next) => {
 
 // Routes (Placeholders for now)
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/home', require('./routes/homeRoutes'));
 app.use('/api/problems', require('./routes/problems'));
 app.use('/api/submissions', require('./routes/submissions'));
 app.use('/api/users', require('./routes/userRoutes'));
@@ -237,6 +238,7 @@ app.use('/api/profiles', require('./routes/profileRoutes'));
 app.use('/api/superadmin', require('./routes/superAdminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api', require('./routes/socialRoutes'));
 
 // Serve frontend bundle in production when deploying as a single service.
 if (isProduction) {
@@ -367,13 +369,28 @@ const startServer = async () => {
 const cluster = require('cluster');
 const os = require('os');
 const numCPUs = os.cpus().length;
+const isPrimary = typeof cluster.isPrimary === 'boolean' ? cluster.isPrimary : cluster.isMaster;
+
+const shouldUseCluster = (() => {
+    if (String(process.env.NODE_ENV || '').toLowerCase() !== 'production') return false;
+    return String(process.env.ENABLE_CLUSTER || '').toLowerCase() === 'true';
+})();
+
+const getWorkerCount = () => {
+    const parsed = Number.parseInt(process.env.CLUSTER_WORKERS || '', 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+        return Math.min(parsed, numCPUs);
+    }
+    return Math.max(1, Math.min(2, numCPUs));
+};
 
 if (require.main === module) {
-    if (process.env.NODE_ENV === 'production' && cluster.isMaster) {
-        console.log(`Master ${process.pid} is running`);
+    if (shouldUseCluster && isPrimary) {
+        const workerCount = getWorkerCount();
+        console.log(`Primary ${process.pid} is running with cluster mode (${workerCount} workers).`);
 
         // Fork workers.
-        for (let i = 0; i < numCPUs; i++) {
+        for (let i = 0; i < workerCount; i++) {
             cluster.fork();
         }
 
@@ -382,6 +399,10 @@ if (require.main === module) {
             cluster.fork();
         });
     } else {
+        if (String(process.env.NODE_ENV || '').toLowerCase() === 'production' && !shouldUseCluster) {
+            console.log('Cluster mode disabled. Running single process for socket/session stability.');
+        }
+
         // Workers can share any TCP connection
         process.on('uncaughtException', (err) => {
             console.error('UNCAUGHT EXCEPTION! Shutting down...', err);
