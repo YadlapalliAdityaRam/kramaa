@@ -8,8 +8,7 @@ const DAILY_CHALLENGE_SOURCES = Object.freeze({
 const DailyChallengeSchema = new mongoose.Schema({
     date: {
         type: Date,
-        required: true,
-        index: true
+        required: true
     },
     dateKey: {
         type: String,
