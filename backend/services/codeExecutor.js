@@ -44,6 +44,11 @@ class CodeExecutor {
 
         this.tmpDir = path.join(__dirname, '../tmp');
         this.driversDir = path.join(__dirname, '../drivers');
+        const parsedJavaHeap = Number.parseInt(process.env.JAVA_HEAP_MB || '128', 10);
+        this.javaHeapMb = Number.isFinite(parsedJavaHeap)
+            ? Math.min(512, Math.max(64, parsedJavaHeap))
+            : 128;
+        this.javaMinHeapMb = Math.min(32, this.javaHeapMb);
 
         this.supportedLanguages = ['javascript', 'python', 'java', 'cpp', 'c'];
         this._commandAvailabilityCache = new Map();
@@ -174,6 +179,19 @@ class CodeExecutor {
             ? missingCommands.join(', ')
             : 'required language runtime/compiler';
         return `Execution environment missing required tool(s): ${tools}. Configure runtime dependencies for ${language} or enable Docker executor with image '${containerPool.imageName}'.`;
+    }
+
+    _getJavaCompileFlags() {
+        return `-J-Xms${this.javaMinHeapMb}m -J-Xmx${this.javaHeapMb}m -J-XX:+UseSerialGC`;
+    }
+
+    _getJavaRuntimeArgs(mainClass) {
+        return [
+            `-Xms${this.javaMinHeapMb}m`,
+            `-Xmx${this.javaHeapMb}m`,
+            '-XX:+UseSerialGC',
+            mainClass
+        ];
     }
 
     _extractMissingCommandFromShellError(message) {
@@ -392,7 +410,10 @@ if (typeof module !== 'undefined' && module.exports) {
                 await fs.copyFile(path.join(driversDir, 'java/Driver.java'), path.join(jobDir, 'Driver.java'));
                 try {
                     // Compile both Driver.java and Solution.java
-                    await this._runCommand(`"${this.compilerPaths.javac}" Driver.java Solution.java`, jobDir);
+                    await this._runCommand(
+                        `"${this.compilerPaths.javac}" ${this._getJavaCompileFlags()} Driver.java Solution.java`,
+                        jobDir
+                    );
                 } catch (e) {
                     throw new Error(`Compilation Error:\n${e.message}`);
                 }
@@ -427,7 +448,10 @@ if (typeof module !== 'undefined' && module.exports) {
         switch (language) {
             case 'java':
                 try {
-                    await this._runCommand(`"${this.compilerPaths.javac}" ${userFile}`, jobDir);
+                    await this._runCommand(
+                        `"${this.compilerPaths.javac}" ${this._getJavaCompileFlags()} ${userFile}`,
+                        jobDir
+                    );
                 } catch (e) {
                     throw new Error(`Compilation Error:\n${e.message}`);
                 }
@@ -482,7 +506,7 @@ if (typeof module !== 'undefined' && module.exports) {
                     break;
                 case 'java':
                     command = this.compilerPaths.java;
-                    args = ['Solution']; // Assumes class is named Solution
+                    args = this._getJavaRuntimeArgs('Solution'); // Assumes class is named Solution
                     break;
                 case 'cpp':
                 case 'c':
@@ -502,7 +526,7 @@ if (typeof module !== 'undefined' && module.exports) {
                     break;
                 case 'java':
                     command = this.compilerPaths.java;
-                    args = ['Driver'];
+                    args = this._getJavaRuntimeArgs('Driver');
                     break;
                 case 'cpp':
                 case 'c':

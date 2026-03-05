@@ -11,6 +11,24 @@ const {
 } = require('../utils/cLeetCodeDriver');
 
 class DockerExecutor {
+    _getJavaHeapMb() {
+        const parsed = Number.parseInt(process.env.JAVA_HEAP_MB || '128', 10);
+        if (!Number.isFinite(parsed)) return 128;
+        return Math.min(512, Math.max(64, parsed));
+    }
+
+    _getJavaMinHeapMb() {
+        return Math.min(32, this._getJavaHeapMb());
+    }
+
+    _getJavaCompileFlags() {
+        return `-J-Xms${this._getJavaMinHeapMb()}m -J-Xmx${this._getJavaHeapMb()}m -J-XX:+UseSerialGC`;
+    }
+
+    _getJavaRuntimeFlags() {
+        return `-Xms${this._getJavaMinHeapMb()}m -Xmx${this._getJavaHeapMb()}m -XX:+UseSerialGC`;
+    }
+
     _getRequiredToolsForLanguage(language) {
         switch (language) {
             case 'javascript':
@@ -250,7 +268,7 @@ if (typeof module !== 'undefined' && module.exports) {
                     await this._writeToContainer(container.id, driverFile, javaDriver);
 
                     {
-                        const compileCmd = `javac Driver.java Solution.java`;
+                        const compileCmd = `javac ${this._getJavaCompileFlags()} Driver.java Solution.java`;
                         const compileRes = await this._spawnDockerExec(container.id, compileCmd, '', 10000);
                         if (compileRes.status !== 'accepted') {
                             return {
@@ -260,7 +278,7 @@ if (typeof module !== 'undefined' && module.exports) {
                         }
                     }
 
-                    runCmd = `java Driver`;
+                    runCmd = `java ${this._getJavaRuntimeFlags()} Driver`;
                     break;
 
                 case 'cpp':

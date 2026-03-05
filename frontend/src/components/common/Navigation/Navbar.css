@@ -39,6 +39,12 @@
     flex-shrink: 0;
 }
 
+.nav-user-actions,
+.nav-guest-actions {
+    display: flex;
+    align-items: center;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: 800;
@@ -347,6 +353,15 @@
     margin-bottom: 8px;
 }
 
+.mobile-nav-subsection-title {
+    color: #cbd5e1;
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 8px 2px 4px;
+}
+
 .mobile-nav-links,
 .mobile-nav-auth {
     display: flex;
@@ -425,9 +440,17 @@
 
 @media (max-width: 768px) {
     .navbar {
-        --mobile-right-space: 188px;
+        --mobile-right-space: 220px;
         padding: 0 8px;
         gap: 8px;
+    }
+
+    .navbar.is-mobile-guest {
+        --mobile-right-space: 120px;
+    }
+
+    .navbar.is-mobile-auth {
+        --mobile-right-space: 220px;
     }
 
     .nav-backforward {
@@ -445,7 +468,7 @@
 
     .search-container {
         flex: 1 1 auto;
-        min-width: 92px;
+        min-width: 80px;
         max-width: none;
     }
 
@@ -463,6 +486,11 @@
 
     .nav-right {
         gap: 6px;
+        min-width: max-content;
+    }
+
+    .nav-user-actions {
+        gap: 4px !important;
     }
 
     .mobile-menu-toggle {
@@ -478,12 +506,16 @@
 
 @media (max-width: 640px) {
     .navbar {
-        --mobile-right-space: 178px;
+        --mobile-right-space: 212px;
+    }
+
+    .navbar.is-mobile-guest {
+        --mobile-right-space: 116px;
     }
 
     .search-container {
-        min-width: 88px;
-        max-width: 150px;
+        min-width: 72px;
+        max-width: 136px;
     }
 
     .search-input {
@@ -492,6 +524,27 @@
 
     .logo img {
         height: 26px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar.is-mobile-auth {
+        --mobile-right-space: 206px;
+    }
+
+    .search-container {
+        min-width: 64px;
+        max-width: 118px;
+    }
+
+    .search-input {
+        font-size: 0.8rem;
+    }
+
+    .nav-profile-avatar,
+    .mobile-menu-toggle {
+        width: 34px;
+        height: 34px;
     }
 }
 
@@ -545,6 +598,9 @@
 }
 [data-theme="light"] .mobile-nav-section-title {
     color: #64748b;
+}
+[data-theme="light"] .mobile-nav-subsection-title {
+    color: #334155;
 }
 [data-theme="light"] .mobile-nav-link {
     color: #0f172a;

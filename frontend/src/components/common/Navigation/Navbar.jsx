@@ -25,6 +25,7 @@ const Navbar = () => {
     const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
@@ -146,14 +147,51 @@ const Navbar = () => {
         { to: '/admin/contests', label: 'Contests' },
         { to: '/admin/submissions', label: 'Submissions' },
         { to: '/admin/companies', label: 'Companies' },
+        { to: '/admin/tickets', label: 'Tickets' },
+        { to: '/admin/daily-challenges', label: 'Daily Challenges' },
+        { to: '/admin/social', label: 'Social Control' },
         { to: '/admin/reports', label: 'Reports' },
         { to: '/admin/audit-logs', label: 'Audit Logs' },
-        { to: '/admin/users', label: 'Log Users' }
+        { to: '/admin/users', label: 'User Management' }
     ];
+
+    const superAdminLinks = [
+        { to: '/super-admin/profile', label: 'Profile' },
+        { to: '/super-admin/admins', label: 'Admin Management' },
+        { to: '/super-admin/problems', label: 'Problem Master List' },
+        { to: '/super-admin/contests', label: 'Contest Management' },
+        { to: '/super-admin/daily-challenges', label: 'Daily Challenges' },
+        { to: '/super-admin/social', label: 'Social Control' },
+        { to: '/super-admin/reports', label: 'Moderation Reports' },
+        { to: '/super-admin/audit', label: 'Audit Logs' },
+        { to: '/super-admin/health', label: 'System Health' },
+        { to: '/super-admin/emergency', label: 'Emergency Zone' },
+        { to: '/super-admin/tickets', label: 'Tickets' }
+    ];
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        const query = searchQuery.trim();
+        if (!query) {
+            navigate('/algorithms');
+            return;
+        }
+        navigate(`/algorithms?search=${encodeURIComponent(query)}`);
+        setIsMobileMenuOpen(false);
+    };
+
+    const navClassName = [
+        'navbar',
+        isScrolled ? 'navbar-scrolled' : '',
+        isMobile ? 'is-mobile' : '',
+        isMobile && isAuthenticated ? 'is-mobile-auth' : '',
+        isMobile && !isAuthenticated ? 'is-mobile-guest' : '',
+        viewportWidth <= 480 ? 'is-compact' : ''
+    ].filter(Boolean).join(' ');
 
     return (
         <>
-            <nav className={`navbar ${isScrolled ? 'navbar-scrolled' : ''}`}>
+            <nav className={navClassName}>
                 <div className="nav-left">
                     <div className="nav-backforward">
                         <BackForward />
@@ -163,10 +201,17 @@ const Navbar = () => {
                         <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Krama</span>
                     </Link>
 
-                    <div className="search-container">
+                    <form className="search-container" onSubmit={handleSearchSubmit}>
                         <FaSearch className="nav-search-icon" style={{ position: 'absolute', left: '14px', top: '13px', color: '#64748b' }} />
-                        <input type="text" placeholder="Search algorithms..." className="search-input" />
-                    </div>
+                        <input
+                            type="text"
+                            placeholder={isMobile ? 'Search...' : 'Search algorithms...'}
+                            className="search-input"
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            aria-label="Search algorithms"
+                        />
+                    </form>
                 </div>
                 <div className="nav-right">
                     {/* Standard Links - Only for Regular Users or Guests */}
@@ -201,6 +246,12 @@ const Navbar = () => {
                             <Link to="/admin/companies" className={`admin-nav-btn ${isActive('/admin/companies') ? 'active' : ''}`}>
                                 companies
                             </Link>
+                            <Link to="/admin/daily-challenges" className={`admin-nav-btn ${isActive('/admin/daily-challenges') ? 'active' : ''}`}>
+                                daily
+                            </Link>
+                            <Link to="/admin/social" className={`admin-nav-btn ${isActive('/admin/social') ? 'active' : ''}`}>
+                                social
+                            </Link>
                             <Link to="/admin/reports" className={`admin-nav-btn ${isActive('/admin/reports') ? 'active' : ''}`}>
                                 reports
                             </Link>
@@ -228,7 +279,7 @@ const Navbar = () => {
                     <ThemeToggle />
 
                     {isAuthenticated ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="nav-user-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <NotificationBell />
                             <button
                                 ref={triggerRef}
@@ -245,7 +296,7 @@ const Navbar = () => {
                             </button>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div className="nav-guest-actions" style={{ display: 'flex', gap: '10px' }}>
                             {!isMobile && <Link to="/login" className="nav-link" style={{ color: 'var(--text-primary)' }}>Login</Link>}
                             {!isMobile && <Link to="/register" className="nav-link" style={{
                                 background: 'var(--primary-orange)', color: 'black', padding: '6px 16px', borderRadius: '8px', fontWeight: 'bold'
@@ -277,14 +328,23 @@ const Navbar = () => {
 
                         {user?.role === 'SUPER_ADMIN' && (
                             <div className="mobile-nav-links">
-                                <Link to="/super-admin/profile" className={`mobile-nav-link ${isActive('/super-admin') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-                                    Super Admin
-                                </Link>
+                                <div className="mobile-nav-subsection-title">Super Admin</div>
+                                {superAdminLinks.map((link) => (
+                                    <Link
+                                        key={link.to}
+                                        to={link.to}
+                                        className={`mobile-nav-link ${isActive(link.to) ? 'active' : ''}`}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
                             </div>
                         )}
 
                         {user?.role === 'ADMIN' && (
                             <div className="mobile-nav-links">
+                                <div className="mobile-nav-subsection-title">Admin</div>
                                 {adminLinks.map((link) => (
                                     <Link
                                         key={link.to}

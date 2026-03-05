@@ -215,17 +215,22 @@ export const getCurrentApiBaseUrl = () => API_BASE_URLS[normalizeIndex(activeBac
 export const getSocketBaseUrls = () => API_BASE_URLS.map(toSocketBaseUrl);
 export const getCurrentSocketBaseUrl = () => toSocketBaseUrl(getCurrentApiBaseUrl());
 export const getSocketClientOptions = (overrides = {}) => {
-    const forcePolling = String(import.meta.env.VITE_SOCKET_TRANSPORT || '').trim().toLowerCase() === 'polling'
-        || Boolean(import.meta.env.DEV);
+    const socketTransportMode = String(import.meta.env.VITE_SOCKET_TRANSPORT || '').trim().toLowerCase();
+    const forcePolling = socketTransportMode === 'polling' || Boolean(import.meta.env.DEV);
+    const websocketOnly = socketTransportMode === 'websocket';
+    const pollingFirst = !forcePolling && !websocketOnly;
 
     const baseOptions = {
-        transports: forcePolling ? ['polling'] : ['websocket', 'polling'],
+        transports: forcePolling
+            ? ['polling']
+            : (websocketOnly ? ['websocket', 'polling'] : ['polling', 'websocket']),
         upgrade: !forcePolling,
-        rememberUpgrade: !forcePolling,
+        rememberUpgrade: websocketOnly,
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        timeout: 10000
+        timeout: 10000,
+        withCredentials: true
     };
 
     return {
