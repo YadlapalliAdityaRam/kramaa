@@ -1,0 +1,123 @@
+.offline-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0f172a; /* Slate 900 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.offline-content {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    max-width: 450px;
+    padding: 2rem;
+}
+
+.offline-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    background: rgba(244, 63, 94, 0.1); /* Rose 500 with opacity */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.offline-icon {
+    font-size: 3rem;
+    color: #f43f5e; /* Rose 500 */
+}
+
+.offline-title {
+    color: #f8fafc; /* Slate 50 */
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+
+.offline-text {
+    color: #94a3b8; /* Slate 400 */
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+.offline-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #3b82f6; /* Blue 500 */
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.offline-retry-btn:hover {
+    background: #2563eb; /* Blue 600 */
+    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.4);
+}
+
+.retry-icon {
+    font-size: 1.25rem;
+}
+
+/* Background Animated Blobs */
+.offline-background-blobs {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.blob {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+}
+
+.blob-1 {
+    top: -100px;
+    right: -100px;
+}
+
+.blob-2 {
+    bottom: -150px;
+    left: -150px;
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0) 70%);
+}
+
+@media (max-width: 640px) {
+    .offline-title {
+        font-size: 2rem;
+    }
+    .offline-text {
+        font-size: 1rem;
+    }
+    .offline-retry-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

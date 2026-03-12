@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { algorithmList } from '../data/algorithmsData';
 import './Algorithms.css';
@@ -25,9 +25,15 @@ const DIFFICULTY_CLASS = {
 const getAccentColor = (category) => CATEGORY_ACCENTS[category] || '#64748b';
 
 const Algorithms = () => {
+    const [searchParams] = useSearchParams();
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedDifficulty, setSelectedDifficulty] = useState('All');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
+
+    useEffect(() => {
+        const query = searchParams.get('search') || '';
+        setSearchTerm((prev) => (prev === query ? prev : query));
+    }, [searchParams]);
 
     const categories = useMemo(() => {
         const unique = Array.from(new Set(algorithmList.map((algorithm) => algorithm.category)));

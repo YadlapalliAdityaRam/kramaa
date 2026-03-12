@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, clearError } from '../../redux/slices/authSlice';
 import { motion } from 'framer-motion';
-import { FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
+import { FaUser, FaLock, FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const { email, password } = formData;
 
     const dispatch = useDispatch();
@@ -27,7 +28,7 @@ const Login = () => {
         if (error) {
             setTimeout(() => dispatch(clearError()), 3000);
         }
-    }, [isAuthenticated, error, navigate, dispatch]);
+    }, [isAuthenticated, user, error, navigate, dispatch]);
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -46,7 +47,7 @@ const Login = () => {
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Welcome Back</h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to continue your journey</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to AlgoVerse to continue</p>
                 </div>
 
                 {error && (
@@ -70,6 +71,7 @@ const Login = () => {
                             placeholder="Email Address"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="email"
                             required
                         />
                     </div>
@@ -77,15 +79,35 @@ const Login = () => {
                     <div className="search-container" style={{ marginBottom: '10px' }}>
                         <FaLock style={{ position: 'absolute', left: '14px', top: '14px', color: '#64748b' }} />
                         <input
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={password}
                             onChange={onChange}
                             placeholder="Password"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="current-password"
                             required
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            title={showPassword ? 'Hide password' : 'Show password'}
+                            style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#64748b',
+                                cursor: 'pointer',
+                                padding: '4px'
+                            }}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>

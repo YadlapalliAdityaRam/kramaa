@@ -21,7 +21,10 @@ const stateColors = {
     'red-node': '#ef4444',
     'black-node': '#1f2937',
     inserted: '#3b82f6',
-    rotated: '#ec4899'
+    rotated: '#ec4899',
+    swapping: '#f97316',
+    found: '#22c55e',
+    partial: '#d97706'
 };
 
 // Calculate tree layout positions
@@ -35,9 +38,17 @@ const calculatePositions = (root, width) => {
         const y = 40 + level * LEVEL_HEIGHT;
         positions[node.id] = { x, y };
 
-        const mid = (leftBound + rightBound) / 2;
-        if (node.left) assignPositions(node.left, level + 1, leftBound, mid);
-        if (node.right) assignPositions(node.right, level + 1, mid, rightBound);
+        const children = node.children || [];
+        const activeChildren = children.length > 0 ? children : [node.left, node.right].filter(Boolean);
+
+        if (activeChildren.length === 0) return;
+
+        const segmentWidth = (rightBound - leftBound) / activeChildren.length;
+        activeChildren.forEach((child, index) => {
+            const childLeft = leftBound + index * segmentWidth;
+            const childRight = childLeft + segmentWidth;
+            assignPositions(child, level + 1, childLeft, childRight);
+        });
     };
 
     assignPositions(root, 0, 0, width);
@@ -62,115 +73,131 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
     const traverse = (node) => {
         if (!node) return;
         nodesArr.push(node);
-        if (node.left) {
-            edgesArr.push({ from: node.id, to: node.left.id });
-            traverse(node.left);
-        }
-        if (node.right) {
-            edgesArr.push({ from: node.id, to: node.right.id });
-            traverse(node.right);
-        }
+
+        const children = node.children || [];
+        const activeChildren = children.length > 0 ? children : [node.left, node.right].filter(Boolean);
+
+        activeChildren.forEach((child) => {
+            edgesArr.push({ from: node.id, to: child.id });
+            traverse(child);
+        });
     };
     traverse(treeData);
 
     const highlightSet = new Set(highlightEdges.map(e => `${e.from}-${e.to}`));
 
     return (
-        <div className="tree-canvas">
-            <svg viewBox={`0 0 ${width} ${height}`} className="tree-svg">
-                <defs>
-                    <filter id="tree-glow">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
+        <div className="tree-canvas" style={{ overflow: 'hidden', position: 'relative', cursor: 'grab' }}>
+            <motion.div
+                drag
+                dragConstraints={{ left: -width, right: width, top: -height, bottom: height }}
+                style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            >
+                <svg viewBox={`0 0 ${width} ${height}`} className="tree-svg" style={{ minWidth: `${width}px`, minHeight: `${height}px` }}>
+                    <defs>
+                        <filter id="tree-glow">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
 
-                {/* Edges */}
-                {edgesArr.map((edge, i) => {
-                    const from = positions[edge.from];
-                    const to = positions[edge.to];
-                    if (!from || !to) return null;
-                    const isHighlighted = highlightSet.has(`${edge.from}-${edge.to}`);
+                    {/* Edges */}
+                    {edgesArr.map((edge, i) => {
+                        const from = positions[edge.from];
+                        const to = positions[edge.to];
+                        if (!from || !to) return null;
+                        const manualHighlight = highlightSet.has(`${edge.from}-${edge.to}`);
+                        const fromState = nodeStates[edge.from] || 'default';
+                        const toState = nodeStates[edge.to] || 'default';
+                        const autoHighlight = fromState !== 'default' && toState !== 'default';
+                        const isHighlighted = manualHighlight || autoHighlight;
 
-                    return (
-                        <motion.line
-                            key={`edge-${i}`}
-                            x1={from.x}
-                            y1={from.y}
-                            x2={to.x}
-                            y2={to.y}
-                            stroke={isHighlighted ? '#10b981' : '#374151'}
-                            strokeWidth={isHighlighted ? 3 : 2}
-                            opacity={isHighlighted ? 1 : 0.5}
-                            animate={{
-                                stroke: isHighlighted ? '#10b981' : '#374151',
-                                strokeWidth: isHighlighted ? 3 : 2
-                            }}
-                            transition={{ duration: 0.3 }}
-                        />
-                    );
-                })}
+                        return (
+                            <motion.line
+                                key={`edge-${i}`}
+                                x1={from.x}
+                                y1={from.y}
+                                x2={to.x}
+                                y2={to.y}
+                                stroke={isHighlighted ? '#10b981' : '#374151'}
+                                strokeWidth={isHighlighted ? 3 : 2}
+                                opacity={isHighlighted ? 1 : 0.5}
+                                animate={{
+                                    stroke: isHighlighted ? '#10b981' : '#374151',
+                                    strokeWidth: isHighlighted ? 3 : 2
+                                }}
+                                transition={{ duration: 0.3 }}
+                            />
+                        );
+                    })}
 
-                {/* Nodes */}
-                {nodesArr.map((node) => {
-                    const pos = positions[node.id];
-                    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return null;
-                    const state = nodeStates[node.id] || 'default';
-                    const color = node.color === 'red' ? stateColors['red-node'] :
-                        node.color === 'black' ? stateColors['black-node'] :
-                            stateColors[state] || stateColors.default;
-                    const isActive = state !== 'default';
+                    {/* Nodes */}
+                    {nodesArr.map((node) => {
+                        const pos = positions[node.id];
+                        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return null;
+                        const state = nodeStates[node.id] || 'default';
+                        const color = node.color === 'red' ? stateColors['red-node'] :
+                            node.color === 'black' ? stateColors['black-node'] :
+                                stateColors[state] || stateColors.default;
+                        const isActive = state !== 'default';
 
-                    return (
-                        <g key={`node-${node.id}`}>
-                            {isActive && (
+                        return (
+                            <g key={`node-${node.id}`}>
+                                {isActive && (
+                                    <motion.circle
+                                        cx={pos.x}
+                                        cy={pos.y}
+                                        r={safeNodeRadius + 5}
+                                        fill="none"
+                                        stroke={color}
+                                        strokeWidth="2"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: [0.2, 0.5, 0.2], r: [safeNodeRadius + 3, safeNodeRadius + 7, safeNodeRadius + 3] }}
+                                        transition={{ duration: 1.2, repeat: Infinity }}
+                                    />
+                                )}
                                 <motion.circle
                                     cx={pos.x}
                                     cy={pos.y}
-                                    r={safeNodeRadius + 5}
-                                    fill="none"
-                                    stroke={color}
+                                    r={safeNodeRadius}
+                                    fill={color}
+                                    stroke={isActive ? color : '#4b5563'}
                                     strokeWidth="2"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: [0.2, 0.5, 0.2], r: [safeNodeRadius + 3, safeNodeRadius + 7, safeNodeRadius + 3] }}
-                                    transition={{ duration: 1.2, repeat: Infinity }}
+                                    filter={isActive ? 'url(#tree-glow)' : 'none'}
+                                    animate={{ fill: color }}
+                                    transition={{ duration: 0.3 }}
                                 />
-                            )}
-                            <motion.circle
-                                cx={pos.x}
-                                cy={pos.y}
-                                r={safeNodeRadius}
-                                fill={color}
-                                stroke={isActive ? color : '#4b5563'}
-                                strokeWidth="2"
-                                filter={isActive ? 'url(#tree-glow)' : 'none'}
-                                animate={{ fill: color }}
-                                transition={{ duration: 0.3 }}
-                            />
-                            <text
-                                x={pos.x}
-                                y={pos.y + 5}
-                                textAnchor="middle"
-                                fill="white"
-                                fontSize="13"
-                                fontWeight="700"
-                            >
-                                {node.value !== undefined ? node.value : node.id}
-                            </text>
-                        </g>
-                    );
-                })}
-            </svg>
+                                <text
+                                    x={pos.x}
+                                    y={pos.y + 5}
+                                    textAnchor="middle"
+                                    fill="white"
+                                    fontSize={node.label && node.label.length > 4 ? '10' : '13'}
+                                    fontWeight="700"
+                                >
+                                    {node.label || (node.value !== undefined ? node.value : node.id)}
+                                </text>
+                            </g>
+                        );
+                    })}
+                </svg>
+            </motion.div>
         </div>
     );
 };
 
 function getDepth(node) {
     if (!node) return 0;
-    return 1 + Math.max(getDepth(node.left), getDepth(node.right));
+    const children = node.children || [];
+    const activeChildren = children.length > 0 ? children : [node.left, node.right].filter(Boolean);
+    let maxChildDepth = 0;
+    for (const child of activeChildren) {
+        maxChildDepth = Math.max(maxChildDepth, getDepth(child));
+    }
+    return 1 + maxChildDepth;
 }
 
 export default TreeCanvas;

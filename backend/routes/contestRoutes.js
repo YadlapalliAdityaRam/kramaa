@@ -13,7 +13,17 @@ const {
     getLeaderboard,
     getPendingContests,
     approveContest,
-    deleteContest
+    deleteContest,
+    exitContest,
+    submitContest,
+    rejoinContest,
+    heartbeatContest,
+    getMyContestSummary,
+    getMyContestHistory,
+    getFriendsContestResults,
+    finalizeContestResults,
+    recalculateContestResults,
+    getContestAnalytics
 } = require('../controllers/contestController');
 
 router.post(
@@ -29,9 +39,19 @@ router.post(
 router.get('/pending', protect, authorize('SUPER_ADMIN'), getPendingContests);
 
 router.get('/', optionalProtect, getAllContests);
+router.get('/history/me', protect, getMyContestHistory);
 router.get('/:id/participants', contestIdValidation, validateRequest, getContestParticipants);
 router.get('/:id/leaderboard', contestIdValidation, validateRequest, getLeaderboard);
+router.get('/:id/friends-leaderboard', protect, contestIdValidation, validateRequest, getFriendsContestResults);
+router.get('/:id/my-summary', protect, contestIdValidation, validateRequest, getMyContestSummary);
+router.get('/:id/analytics', protect, authorize('ADMIN', 'SUPER_ADMIN'), contestIdValidation, validateRequest, getContestAnalytics);
 router.post('/:id/register', protect, contestIdValidation, validateRequest, registerForContest);
+router.post('/:id/exit', protect, contestIdValidation, validateRequest, exitContest);
+router.post('/:id/submit', protect, contestIdValidation, validateRequest, submitContest);
+router.post('/:id/rejoin', protect, contestIdValidation, validateRequest, rejoinContest);
+router.post('/:id/heartbeat', protect, contestIdValidation, validateRequest, heartbeatContest);
+router.post('/:id/finalize', protect, authorize('ADMIN', 'SUPER_ADMIN'), contestIdValidation, validateRequest, finalizeContestResults);
+router.post('/:id/recalculate', protect, authorize('SUPER_ADMIN'), contestIdValidation, validateRequest, recalculateContestResults);
 router.put('/:id/approve', protect, authorize('SUPER_ADMIN'), contestIdValidation, validateRequest, approveContest);
 router.delete('/:id', protect, authorize('SUPER_ADMIN'), contestIdValidation, validateRequest, deleteContest);
 router.get('/:id', optionalProtect, contestIdValidation, validateRequest, getContest);

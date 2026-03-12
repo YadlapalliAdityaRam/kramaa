@@ -5,6 +5,7 @@ const CommentReport = require('../models/CommentReport');
 const Setting = require('../models/Setting');
 const User = require('../models/User');
 const notificationService = require('../services/notificationService');
+const { recordActivity } = require('../services/social/activityService');
 
 // ═══════ HELPERS ═══════
 
@@ -31,6 +32,31 @@ const sanitizeInput = (text) => {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+};
+
+const normalizeImageUrl = (rawUrl) => {
+    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+
+    let url = rawUrl.trim().replace(/\\/g, '/');
+    if (!url) return null;
+
+    url = url.replace(/^\.\/+/, '');
+    url = url.replace(/^public\/uploads\//i, '/uploads/');
+    url = url.replace(/^\/public\/uploads\//i, '/uploads/');
+    if (/^uploads\//i.test(url)) url = `/${url}`;
+
+    const publicBackendBaseUrl = String(
+        process.env.PUBLIC_BACKEND_URL
+        || process.env.BACKEND_PUBLIC_URL
+        || process.env.SERVER_PUBLIC_URL
+        || ''
+    ).trim().replace(/\/+$/, '');
+
+    if (url.startsWith('/uploads/') && /^https?:\/\//i.test(publicBackendBaseUrl)) {
+        return `${publicBackendBaseUrl}${url}`;
+    }
+
+    return url;
 };
 
 // Check if discussions are enabled globally
@@ -145,6 +171,7 @@ exports.getCommunityThreads = async (req, res) => {
 
         const processed = threads.map(t => {
             const obj = t.toObject();
+            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
             obj.hasLiked = userLikes.includes(t._id.toString());
             obj.hasDisliked = userDislikes.includes(t._id.toString());
             obj.isSaved = savedDoubtIds.has(t._id.toString());
@@ -218,6 +245,7 @@ exports.getMyCommunityPosts = async (req, res) => {
 
         const processed = threads.map((thread) => {
             const obj = thread.toObject();
+            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
             obj.hasLiked = userLikes.includes(thread._id.toString());
             obj.hasDisliked = userDislikes.includes(thread._id.toString());
             obj.isSaved = savedDoubtIds.has(thread._id.toString());
@@ -273,6 +301,7 @@ exports.getSavedCommunityThreads = async (req, res) => {
 
         const processed = threads.map((thread) => {
             const obj = thread.toObject();
+            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
             obj.hasLiked = userLikes.includes(thread._id.toString());
             obj.hasDisliked = userDislikes.includes(thread._id.toString());
             obj.isSaved = true;
@@ -382,6 +411,7 @@ exports.getDoubts = async (req, res) => {
 
         const processed = doubts.map(d => {
             const obj = d.toObject();
+            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
             obj.hasLiked = userLikes.includes(d._id.toString());
             obj.hasDisliked = userDislikes.includes(d._id.toString());
             if (obj.isDeleted) {
@@ -441,6 +471,7 @@ exports.getReplies = async (req, res) => {
 
         const processed = replies.map(r => {
             const obj = r.toObject();
+            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
             obj.hasLiked = userLikes.includes(r._id.toString());
             obj.hasDisliked = userDislikes.includes(r._id.toString());
             if (obj.isDeleted) {
@@ -565,6 +596,26 @@ exports.createDoubt = async (req, res) => {
                     thread: { ...populated.toObject(), hasLiked: false, hasDisliked: false }
                 });
             }
+        }
+
+        try {
+            await recordActivity(req, {
+                userId: req.user.id,
+                activityType: 'discussion_created',
+                problemId: problemId || null,
+                doubtId: newDoubt._id,
+                metadata: {
+                    category: category || (problemId ? 'Problem' : 'General'),
+                    title: sanitizedTitle || '',
+                    threadLink: problemId
+                        ? `/coding-platform/${problemId}`
+                        : `/community?threadId=${newDoubt._id}`
+                },
+                dedupeKey: `discussion:${newDoubt._id}`,
+                dedupeWindowMinutes: 60 * 24
+            });
+        } catch (activityError) {
+            console.error('Activity event create failed (discussion_created):', activityError.message);
         }
 
         // Notify owner when someone comments/replies on their post/comment.
@@ -955,18 +1006,18 @@ exports.getThreadDetail = async (req, res) => {
             const upsertResult = await DoubtView.updateOne(
                 {
                     doubt: existingThread._id,
-                    viewerUser: requesterId,
-                    windowStartAt: getViewWindowStart(timestampMs)
+                    viewerUser: requesterId
                 },
                 {
                     $setOnInsert: {
+                        windowStartAt: getViewWindowStart(timestampMs),
                         viewedAt: new Date(timestampMs)
                     }
                 },
                 { upsert: true }
             );
 
-            // Count only when this request inserts a new view record for the 24h bucket.
+            // Count only when this request inserts the first-ever view record for this user on this post.
             if (upsertResult.upsertedCount === 1) {
                 await Doubt.updateOne({ _id: existingThread._id }, { $inc: { views: 1 } });
             }
@@ -986,6 +1037,7 @@ exports.getThreadDetail = async (req, res) => {
         }
 
         const obj = thread.toObject();
+        obj.imageUrl = normalizeImageUrl(obj.imageUrl);
         obj.hasLiked = hasLiked;
         obj.hasDisliked = hasDisliked;
         obj.isSaved = requesterId ? (await getSavedDoubtIdSet(req, requesterId)).has(thread._id.toString()) : false;

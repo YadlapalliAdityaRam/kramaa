@@ -19,8 +19,10 @@
     "validate:problem-stats": "node scripts/validate_problem_stats_sync.js",
     "migrate:problem-ownership-primary-admin": "node scripts/reassign_secondary_admin_problem_ownership.js",
     "cleanup:suspicious-users": "node scripts/cleanup_suspicious_users.js --dry-run",
+    "migrate:user-data": "node scripts/migrate_user_data.js",
     "test:otp-delivery": "node scripts/test_otp_delivery.js",
-    "preflight:prod": "node scripts/preflight_production.js"
+    "preflight:prod": "node scripts/preflight_production.js",
+    "check:languages": "node scripts/check_language_stack.js"
   },
   "keywords": [],
   "author": "",

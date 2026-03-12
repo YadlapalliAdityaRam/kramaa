@@ -1,18 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../../utils/api';
-import { FaHeartbeat, FaServer, FaUsers, FaExclamationTriangle, FaShieldAlt } from 'react-icons/fa';
+import { FaExclamationTriangle, FaHeartbeat, FaServer, FaShieldAlt, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 
+const INITIAL_STATS = {
+    health: {
+        status: 'Unknown',
+        systemLoad: '-',
+        errorRate: '-'
+    },
+    users: {
+        total: 0
+    }
+};
+
 const SystemHealth = () => {
+    const [stats, setStats] = useState(INITIAL_STATS);
+    const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
+    const [emergencyReason, setEmergencyReason] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isMobile, setIsMobile] = useState(() => (
+        typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    ));
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const fetchHealth = async () => {
         try {
             const res = await api.get('/admin/health');
-            setStats(res.data.stats);
+            setStats(res?.data?.stats || INITIAL_STATS);
         } catch (err) {
+            setStats(INITIAL_STATS);
             console.error(err);
         } finally {
             setLoading(false);
@@ -21,7 +45,7 @@ const SystemHealth = () => {
 
     useEffect(() => {
         fetchHealth();
-        const interval = setInterval(fetchHealth, 30000); // Poll every 30s
+        const interval = setInterval(fetchHealth, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -35,7 +59,7 @@ const SystemHealth = () => {
     const handleConfirmEmergency = async (e) => {
         e.preventDefault();
         if (!emergencyReason || !confirmPassword) {
-            toast.error("Reason and Password are required!");
+            toast.error('Reason and Password are required!');
             return;
         }
 
@@ -48,21 +72,33 @@ const SystemHealth = () => {
             toast.success(`${pendingAction} executed successfully.`);
             setShowModal(false);
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to execute emergency action.");
+            toast.error(err?.response?.data?.message || 'Failed to execute emergency action.');
         }
     };
 
-    if (loading) return <div className="text-gray-500">Loading health data...</div>;
+    if (loading) {
+        return <div className="text-gray-500">Loading health data...</div>;
+    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
-            {/* Modal Overlay */}
             {showModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 1000, backdropFilter: 'blur(5px)'
-                }}>
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        backdropFilter: 'blur(5px)',
+                        padding: '12px'
+                    }}
+                >
                     <div className="sa-card" style={{ width: '100%', maxWidth: '500px', border: '1px solid #ef4444' }}>
                         <div className="sa-card-header">
                             <h2 className="sa-card-title" style={{ color: '#ef4444' }}>
@@ -78,7 +114,7 @@ const SystemHealth = () => {
                                 type="text"
                                 className="sa-input"
                                 value={emergencyReason}
-                                onChange={e => setEmergencyReason(e.target.value)}
+                                onChange={(e) => setEmergencyReason(e.target.value)}
                                 placeholder="Why are you doing this?"
                                 autoFocus
                             />
@@ -88,22 +124,31 @@ const SystemHealth = () => {
                                 type="password"
                                 className="sa-input"
                                 value={confirmPassword}
-                                onChange={e => setConfirmPassword(e.target.value)}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Enter your password"
                             />
 
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    gap: '1rem',
+                                    marginTop: '1.5rem',
+                                    justifyContent: 'flex-end',
+                                    flexWrap: isMobile ? 'wrap' : 'nowrap'
+                                }}
+                            >
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
                                     className="sa-btn"
-                                    style={{ background: '#333', color: '#ccc' }}
+                                    style={{ background: '#333', color: '#ccc', width: isMobile ? '100%' : 'auto' }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     className="sa-btn sa-btn-danger"
+                                    style={{ width: isMobile ? '100%' : 'auto' }}
                                 >
                                     CONFIRM ACTION
                                 </button>
@@ -113,7 +158,6 @@ const SystemHealth = () => {
                 </div>
             )}
 
-            {/* Health Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                 <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ padding: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', color: '#4ade80' }}>
@@ -121,7 +165,7 @@ const SystemHealth = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>System Status</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.status}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.status || 'Unknown'}</div>
                     </div>
                 </div>
                 <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -130,7 +174,7 @@ const SystemHealth = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Active Users</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.users?.total}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{Number(stats?.users?.total || 0)}</div>
                     </div>
                 </div>
                 <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -139,7 +183,7 @@ const SystemHealth = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>System Load</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.systemLoad}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.systemLoad || '-'}</div>
                     </div>
                 </div>
                 <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -148,12 +192,11 @@ const SystemHealth = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Error Rate (24h)</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.errorRate}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.errorRate || '-'}</div>
                     </div>
                 </div>
             </div>
 
-            {/* Emergency Controls */}
             <div className="sa-card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                 <div className="sa-card-header">
                     <h2 className="sa-card-title" style={{ color: '#f87171' }}>
@@ -176,7 +219,6 @@ const SystemHealth = () => {
                     >
                         Pause All Contests
                     </button>
-                    {/* Add more buttons as needed */}
                 </div>
             </div>
         </div>

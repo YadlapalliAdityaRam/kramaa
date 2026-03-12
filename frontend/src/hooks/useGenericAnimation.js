@@ -55,7 +55,7 @@ const useGenericAnimation = (steps) => {
         setCurrentStepIndex(0);
     }, [pause]);
 
-    const setStep = useCallback((index) => {
+    const setIndex = useCallback((index) => {
         pause();
         setCurrentStepIndex(Math.max(0, Math.min(index, steps.length - 1)));
     }, [steps.length, pause]);
@@ -74,7 +74,7 @@ const useGenericAnimation = (steps) => {
         stepForward,
         stepBackward,
         reset,
-        setStep
+        setIndex
     };
 };
 

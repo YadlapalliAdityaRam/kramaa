@@ -9,10 +9,19 @@ const ContestList = () => {
     const [contests, setContests] = useState([]);
     const [pendingContests, setPendingContests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(() => (
+        typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    ));
     const { user } = useSelector(state => state.auth);
     const normalizedRole = String(user?.role || '').toUpperCase();
     const isSuperAdmin = normalizedRole === 'SUPER_ADMIN';
     const isAdmin = normalizedRole === 'ADMIN';
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const fetchContests = async () => {
         try {
@@ -168,7 +177,7 @@ const ContestList = () => {
                                         {getApprovalBadge(contest.approvalStatus)}
                                     </td>
                                     <td className="text-right">
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', alignItems: 'center', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                                             {/* Approve/Reject for super admin on pending */}
                                             {isSuperAdmin && contest.approvalStatus === 'PENDING' && (
                                                 <>
@@ -229,14 +238,16 @@ const ContestList = () => {
 
     return (
         <div className="glass-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '10px' : undefined }}>
                 <h2 style={{ color: 'white', fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Contest Management</h2>
                 {isAdmin && (
                     <Link to="/admin/create-contest" style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
                         padding: '8px 16px', borderRadius: '8px',
                         background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                        color: 'white', textDecoration: 'none', fontWeight: '600', fontSize: '0.85rem'
+                        color: 'white', textDecoration: 'none', fontWeight: '600', fontSize: '0.85rem',
+                        width: isMobile ? '100%' : 'auto',
+                        justifyContent: 'center'
                     }}>
                         <FaPlus /> Create Contest
                     </Link>

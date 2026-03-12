@@ -1,167 +1,163 @@
-const clampInt = (value, min, max) => {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return min;
-    return Math.max(min, Math.min(max, Math.round(numeric)));
-};
-
-const toBinary8 = (value) => clampInt(value, 0, 255).toString(2).padStart(8, '0');
-
-const normalizeInput = (input) => {
-    if (Array.isArray(input) && input.length > 0) {
-        return {
-            number: clampInt(input[0], 0, 255),
-            bitIndex: clampInt(input[1], 0, 7)
-        };
-    }
-
-    if (input && typeof input === 'object') {
-        return {
-            number: clampInt(input.number, 0, 255),
-            bitIndex: clampInt(input.bitIndex, 0, 7)
-        };
-    }
-
-    return {
-        number: 42,
-        bitIndex: 2
-    };
-};
-
-const buildStep = ({
-    operation,
-    description,
-    number,
-    bitIndex,
-    mask = 0,
-    resultText = '',
-    previousNumber = null
-}) => ({
-    type: operation === 'completed' ? 'completed' : 'bit',
-    operation,
-    description,
-    number,
-    bitIndex,
-    mask,
-    binary: toBinary8(number),
-    maskBinary: toBinary8(mask),
-    previousNumber,
-    previousBinary: previousNumber === null ? null : toBinary8(previousNumber),
-    highlightBits: Number.isInteger(bitIndex) ? [bitIndex] : [],
-    resultText
-});
-
-export const generateBitManipulationSteps = (input) => {
-    const { number, bitIndex } = normalizeInput(input);
-    const mask = 1 << bitIndex;
+export const generateBitManipulationSteps = (a, b, operation) => {
     const steps = [];
+    const bitLength = 8;
 
-    steps.push(buildStep({
-        operation: 'init',
-        description: `Start with n = ${number} (${toBinary8(number)}) and bit index ${bitIndex}.`,
-        number,
-        bitIndex,
-        mask,
-        resultText: `Mask = 1 << ${bitIndex} = ${mask}`
-    }));
+    const toBinary = (num) => {
+        let bin = (num >>> 0).toString(2);
+        return bin.padStart(bitLength, '0').slice(-bitLength);
+    };
 
-    const isSet = (number & mask) !== 0;
-    steps.push(buildStep({
-        operation: 'check',
-        description: `Check bit ${bitIndex}: n & mask = ${number & mask}.`,
-        number,
-        bitIndex,
-        mask,
-        resultText: `Bit ${bitIndex} is ${isSet ? 'SET (1)' : 'NOT SET (0)'}`
-    }));
+    const binA = toBinary(a);
+    const binB = toBinary(b);
+    let result = 0;
 
-    const setResult = number | mask;
-    steps.push(buildStep({
-        operation: 'set',
-        description: `Set bit ${bitIndex}: n | mask = ${setResult}.`,
-        number: setResult,
-        previousNumber: number,
-        bitIndex,
-        mask,
-        resultText: `Set result = ${setResult}`
-    }));
+    steps.push({
+        type: 'init',
+        description: `Converting inputs to 8-bit binary representation.`,
+        a: a,
+        b: b,
+        binA: binA,
+        binB: binB,
+        activeBit: -1,
+        resultBin: ' '.repeat(bitLength),
+        operation: operation
+    });
 
-    const clearResult = number & ~mask;
-    steps.push(buildStep({
-        operation: 'clear',
-        description: `Clear bit ${bitIndex}: n & ~mask = ${clearResult}.`,
-        number: clearResult,
-        previousNumber: number,
-        bitIndex,
-        mask,
-        resultText: `Clear result = ${clearResult}`
-    }));
+    if (operation === 'AND' || operation === 'OR' || operation === 'XOR') {
+        let currentResultStr = ' '.repeat(bitLength).split('');
+        for (let i = bitLength - 1; i >= 0; i--) {
+            const bitA = parseInt(binA[i]);
+            const bitB = parseInt(binB[i]);
+            let resBit;
 
-    const toggleResult = number ^ mask;
-    steps.push(buildStep({
-        operation: 'toggle',
-        description: `Toggle bit ${bitIndex}: n ^ mask = ${toggleResult}.`,
-        number: toggleResult,
-        previousNumber: number,
-        bitIndex,
-        mask,
-        resultText: `Toggle result = ${toggleResult}`
-    }));
+            let logicDesc = '';
+            if (operation === 'AND') {
+                resBit = bitA & bitB;
+                logicDesc = `${bitA} AND ${bitB} → ${resBit} (Both must be 1)`;
+            } else if (operation === 'OR') {
+                resBit = bitA | bitB;
+                logicDesc = `${bitA} OR ${bitB} → ${resBit} (At least one is 1)`;
+            } else if (operation === 'XOR') {
+                resBit = bitA ^ bitB;
+                logicDesc = `${bitA} XOR ${bitB} → ${resBit} (Bits must be different)`;
+            }
 
-    if (number === 0) {
-        steps.push(buildStep({
-            operation: 'count-result',
-            description: 'Count set bits using n & (n - 1).',
-            number,
-            bitIndex,
-            mask,
-            resultText: 'Set bits count = 0'
-        }));
-    } else {
-        let current = number;
-        let count = 0;
-        while (current > 0) {
-            const next = current & (current - 1);
-            count += 1;
-            steps.push(buildStep({
-                operation: 'count-step',
-                description: `Count step ${count}: ${current} & (${current} - 1) = ${next}.`,
-                number: next,
-                previousNumber: current,
-                bitIndex,
-                mask,
-                resultText: `Cleared one set bit. Count so far = ${count}`
-            }));
-            current = next;
+            currentResultStr[i] = resBit.toString();
+
+            steps.push({
+                type: 'compare',
+                description: `Comparing bit at position ${bitLength - 1 - i}: ${logicDesc}`,
+                a: a,
+                b: b,
+                binA: binA,
+                binB: binB,
+                activeBit: i,
+                resultBin: currentResultStr.join(''),
+                operation: operation
+            });
         }
-        steps.push(buildStep({
-            operation: 'count-result',
-            description: `Total set bits in ${number} = ${count}.`,
-            number,
-            bitIndex,
-            mask,
-            resultText: `Set bits count = ${count}`
-        }));
+
+        switch (operation) {
+            case 'AND': result = a & b; break;
+            case 'OR': result = a | b; break;
+            case 'XOR': result = a ^ b; break;
+        }
+
+    } else if (operation === 'NOT') {
+        let currentResultStr = ' '.repeat(bitLength).split('');
+        for (let i = bitLength - 1; i >= 0; i--) {
+            const bitA = parseInt(binA[i]);
+            const resBit = bitA === 1 ? 0 : 1;
+            currentResultStr[i] = resBit.toString();
+
+            steps.push({
+                type: 'compare',
+                description: `Flipping bit at position ${bitLength - 1 - i}: NOT ${bitA} → ${resBit}`,
+                a: a,
+                b: null,
+                binA: binA,
+                binB: null,
+                activeBit: i,
+                resultBin: currentResultStr.join(''),
+                operation: operation
+            });
+        }
+        result = (~a) & 0xFF;
+    } else if (operation === 'LSHIFT') {
+        const shiftAmount = b;
+        steps.push({
+            type: 'shift-start',
+            description: `Preparing to left shift ${a} by ${shiftAmount} positions.`,
+            a: a,
+            b: shiftAmount,
+            binA: binA,
+            binB: null,
+            activeBit: -1,
+            resultBin: binA,
+            operation: operation
+        });
+
+        result = (a << shiftAmount) & 0xFF;
+        const resultBin = toBinary(result);
+
+        steps.push({
+            type: 'shift-end',
+            description: `Shifted left. Vacated spots on the right are filled with 0s.`,
+            a: a,
+            b: shiftAmount,
+            binA: binA,
+            binB: null,
+            activeBit: -1,
+            resultBin: resultBin,
+            operation: operation,
+            shiftDir: 'left',
+            shiftAmount: shiftAmount
+        });
+
+    } else if (operation === 'RSHIFT') {
+        const shiftAmount = b;
+        steps.push({
+            type: 'shift-start',
+            description: `Preparing to right shift ${a} by ${shiftAmount} positions.`,
+            a: a,
+            b: shiftAmount,
+            binA: binA,
+            binB: null,
+            activeBit: -1,
+            resultBin: binA,
+            operation: operation
+        });
+
+        result = (a >> shiftAmount) & 0xFF;
+        const resultBin = toBinary(result);
+
+        steps.push({
+            type: 'shift-end',
+            description: `Shifted right. Bits on the right fell off, signs filled from left.`,
+            a: a,
+            b: shiftAmount,
+            binA: binA,
+            binB: null,
+            activeBit: -1,
+            resultBin: resultBin,
+            operation: operation,
+            shiftDir: 'right',
+            shiftAmount: shiftAmount
+        });
     }
 
-    const isPowerOfTwo = number > 0 && (number & (number - 1)) === 0;
-    steps.push(buildStep({
-        operation: 'power2',
-        description: `Power-of-2 check: n > 0 and (n & (n - 1)) === 0.`,
-        number,
-        bitIndex,
-        mask: number > 0 ? number - 1 : 0,
-        resultText: `${number} is ${isPowerOfTwo ? '' : 'NOT '}a power of 2`
-    }));
-
-    steps.push(buildStep({
-        operation: 'completed',
-        description: 'Bit Manipulation walkthrough complete.',
-        number,
-        bitIndex,
-        mask,
-        resultText: 'Completed all core bit operations'
-    }));
+    steps.push({
+        type: 'complete',
+        description: `Operation complete. Final result in decimal: ${result}`,
+        a: a,
+        b: b,
+        binA: binA,
+        binB: operation === 'NOT' || operation === 'LSHIFT' || operation === 'RSHIFT' ? null : binB,
+        activeBit: -1,
+        resultBin: toBinary(result),
+        operation: operation,
+        finalResult: result
+    });
 
     return steps;
 };
-

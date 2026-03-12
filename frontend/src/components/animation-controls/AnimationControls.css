@@ -1,95 +1,240 @@
 .animation-controls {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    background: #1a1a1a;
-    padding: 22px;
-    border-radius: 16px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 20px;
+    background: var(--bg-surface, #1e1e24);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     width: 100%;
-    color: #f5f5f5;
+    color: var(--text-primary, #f3f4f6);
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .animation-controls {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    color: #1f2937;
+}
+
+.ac-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .controls-group {
     display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .controls-group {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary, #f3f4f6);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+}
+
+.control-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.play-btn {
+    background: #3b82f6;
+    color: white;
+    width: 54px;
+    height: 54px;
+    border: none;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.play-btn:hover:not(:disabled) {
+    background: #2563eb;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.speed-control-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 30px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .speed-control-group {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.speed-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #9ca3af);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.speed-btn.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.speed-btn:hover:not(.active) {
+    color: var(--text-primary, #f3f4f6);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .scrubber-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.15);
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .scrubber-container {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.step-tracker-badge {
+    background: #10b981;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .scrubber-input {
     flex: 1;
-    height: 6px;
-    border-radius: 2px;
+    height: 8px;
+    border-radius: 4px;
     appearance: none;
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.1);
     outline: none;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .scrubber-input {
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .scrubber-input::-webkit-slider-thumb {
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: #60a5fa;
+    background: #3b82f6;
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: all 0.2s;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .scrubber-input::-webkit-slider-thumb:hover {
     transform: scale(1.2);
+    background: #60a5fa;
 }
 
-.step-counter {
-    font-size: 0.92rem;
-    color: #cfcfcf;
-    font-weight: 600;
-    min-width: 60px;
-    text-align: right;
-}
-
-.speed-control {
+.ac-manual-input-box {
     display: flex;
+    gap: 12px;
     align-items: center;
-    justify-content: space-between;
-    font-size: 0.92rem;
-    color: #cfcfcf;
+    margin-top: 10px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .ac-manual-input-box {
+    border-top-color: rgba(0, 0, 0, 0.05);
+}
+
+.ac-action-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 0 20px;
+    border-radius: 12px;
+    height: 44px;
     font-weight: 600;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.animation-controls .speed-control,
-.animation-controls .speed-control label,
-.animation-controls .step-counter {
-    color: #d1d5db !important;
+[data-theme="light"] .ac-action-btn {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
 }
 
-.speed-control input[type="range"] {
-    max-width: 200px;
+.ac-action-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
-.animation-controls .control-btn {
-    min-width: 44px;
+.ac-action-btn.primary {
+    background: #10b981;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.animation-controls .play-btn {
-    min-width: 56px;
+.ac-action-btn.primary:hover {
+    background: #059669;
 }
 
 @media (max-width: 768px) {
-    .animation-controls {
-        padding: 16px;
-        gap: 14px;
+    .ac-top-row {
+        flex-direction: column;
+        justify-content: center;
     }
-
-    .controls-group {
-        gap: 10px;
+    .scrubber-container {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .step-tracker-badge {
+        text-align: center;
+    }
+    .ac-manual-input-box {
+        flex-direction: column;
+        align-items: stretch;
     }
 }

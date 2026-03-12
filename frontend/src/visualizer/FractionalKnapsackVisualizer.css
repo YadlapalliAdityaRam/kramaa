@@ -1,0 +1,427 @@
+/* ── Fractional Knapsack Visualizer ── */
+
+.fk-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    height: 100%;
+}
+
+/* ── Input Bar ── */
+.fk-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+}
+
+.fk-inputs {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.fk-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.fk-cap-group {
+    flex: 0 0 auto;
+    min-width: 120px;
+}
+
+.fk-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.fk-array-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.fk-array-input:focus {
+    border-color: #6366f1;
+}
+
+.fk-cap-input {
+    width: 70px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.fk-cap-input:focus {
+    border-color: #6366f1;
+}
+
+/* ── Main Area ── */
+.fk-main-area {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Items Panel ── */
+.fk-items-panel {
+    flex: 1.6;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.fk-panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+.fk-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.fk-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.fk-item-row.fk-active {
+    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+.fk-item-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.fk-item-bar-track {
+    flex: 1;
+    height: 32px;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.fk-item-bar {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.fk-item-bar.state-considering {
+    animation: fk-pulse 1s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.fk-item-bar.state-partial {
+    background-image: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 4px,
+            rgba(0, 0, 0, 0.15) 4px,
+            rgba(0, 0, 0, 0.15) 8px);
+}
+
+@keyframes fk-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.fk-bar-text {
+    font-size: 0.7rem;
+    color: #fff;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    font-weight: 500;
+}
+
+.fk-item-ratio {
+    font-size: 0.75rem;
+    color: #6366f1;
+    font-weight: 700;
+    width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Legend */
+.fk-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.fk-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.fk-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.fk-dot-skipped {
+    opacity: 0.4;
+}
+
+/* ── Right Panel ── */
+.fk-right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ── Gauge Card ── */
+.fk-gauge-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.fk-gauge-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+.fk-gauge-container {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    align-items: stretch;
+}
+
+.fk-gauge-track {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: hidden;
+    min-height: 120px;
+    position: relative;
+}
+
+.fk-gauge-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: height 0.5s ease;
+    position: relative;
+    min-height: 2px;
+}
+
+.fk-seg-label {
+    font-size: 0.7rem;
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.fk-gauge-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: height 0.5s ease;
+}
+
+.fk-empty-label {
+    font-size: 0.7rem;
+    color: #475569;
+    font-style: italic;
+}
+
+.fk-gauge-markers {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: #64748b;
+    width: 28px;
+    padding: 2px 0;
+    text-align: right;
+}
+
+/* Stats */
+.fk-gauge-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.fk-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.fk-stat-label {
+    display: block;
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.fk-stat-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.fk-stat-highlight {
+    color: #10b981;
+}
+
+/* ── Result Card ── */
+.fk-result-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.fk-result-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+}
+
+.fk-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.fk-result-table th {
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fk-result-table td {
+    padding: 5px 8px;
+    color: #cbd5e1;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.05);
+}
+
+.fk-result-table tfoot td {
+    color: #10b981;
+    border-bottom: none;
+    border-top: 1px solid rgba(16, 185, 129, 0.3);
+    padding-top: 8px;
+}
+
+.fk-dot-inline {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* ── Controls ── */
+.fk-controls-wrapper {
+    padding-top: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .fk-main-area {
+        flex-direction: column;
+    }
+
+    .fk-gauge-container {
+        min-height: 100px;
+    }
+}

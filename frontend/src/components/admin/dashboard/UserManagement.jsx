@@ -9,6 +9,15 @@ const UserManagement = () => {
     const [search, setSearch] = useState('');
     const [filterRole, setFilterRole] = useState('USER');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [isMobile, setIsMobile] = useState(() => (
+        typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    ));
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -71,12 +80,12 @@ const UserManagement = () => {
 
     return (
         <div className="glass-panel">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '10px' : undefined }}>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     <FaUserShield className="text-green-400" /> User Management
                 </h2>
-                <div className="flex gap-5">
-                    <div className="relative">
+                <div className="flex gap-5" style={{ width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+                    <div className="relative" style={{ width: isMobile ? '100%' : 'auto' }}>
                         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                         <input
                             type="text"
@@ -84,12 +93,14 @@ const UserManagement = () => {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="bg-[#252526] text-white pl-10 pr-4 py-2.5 rounded-lg border border-[#444] text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none w-64 transition-all"
+                            style={{ width: isMobile ? '100%' : undefined }}
                         />
                     </div>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
                         className="bg-[#252526] text-white px-4 py-2.5 rounded-lg border border-[#444] text-sm outline-none cursor-pointer hover:border-gray-500 transition-all min-w-[140px]"
+                        style={{ width: isMobile ? '100%' : undefined }}
                     >
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
@@ -129,7 +140,7 @@ const UserManagement = () => {
                                         {new Date(user.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="text-right">
-                                        <div className="flex justify-end gap-5">
+                                        <div className="flex justify-end gap-5" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                                             {user.role !== 'SUPER_ADMIN' && (
                                                 <>
                                                     <select

@@ -1,6 +1,8 @@
-// AVL Tree with step-by-step visualization of insertions and rotations
+// AVL Tree — Educational step-by-step insertion with rotation animations
+// Shows balance factor, height concepts, and 4 rotation cases clearly
 
 let idCounter = 0;
+
 const newNode = (val) => ({
     id: `avl_${idCounter++}`,
     value: val,
@@ -40,22 +42,33 @@ const leftRotate = (x) => {
     return y;
 };
 
-export const generateAVLTreeSteps = (values) => {
+export const generateAVLTreeSteps = (values, _t, _p, _g, customTreeData = null) => {
     const steps = [];
     const nodeStates = {};
     idCounter = 0;
 
+    if (customTreeData) {
+        return [{
+            type: 'tree-complete',
+            description: `Viewing Custom AVL Tree Structure.`,
+            treeData: cloneTree(customTreeData),
+            nodeStates: {}
+        }];
+    }
+
     let root = null;
 
-    const insert = (node, val) => {
+    const insert = (node, val, vals, activeIdx) => {
         if (!node) {
             const n = newNode(val);
             nodeStates[n.id] = 'inserted';
             steps.push({
                 type: 'tree',
-                description: `Inserted ${val} as a new leaf node.`,
+                description: `🍃 Created leaf node ${val}. Height = 1, Balance Factor = 0.`,
                 treeData: cloneTree(root || n),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
             return n;
         }
@@ -64,21 +77,27 @@ export const generateAVLTreeSteps = (values) => {
         if (val < node.value) {
             steps.push({
                 type: 'tree',
-                description: `${val} < ${node.value}, going left.`,
+                description: `🔍 ${val} < ${node.value} → Go LEFT. (BST rule: smaller values go left)`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
-            node.left = insert(node.left, val);
+            nodeStates[node.id] = 'default';
+            node.left = insert(node.left, val, vals, activeIdx);
         } else if (val > node.value) {
             steps.push({
                 type: 'tree',
-                description: `${val} > ${node.value}, going right.`,
+                description: `🔍 ${val} > ${node.value} → Go RIGHT. (BST rule: larger values go right)`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
-            node.right = insert(node.right, val);
+            nodeStates[node.id] = 'default';
+            node.right = insert(node.right, val, vals, activeIdx);
         } else {
-            return node; // Duplicate
+            return node;
         }
 
         updateHeight(node);
@@ -87,58 +106,72 @@ export const generateAVLTreeSteps = (values) => {
         nodeStates[node.id] = 'comparing';
         steps.push({
             type: 'tree',
-            description: `Checking balance at ${node.value}: BF = ${bf}.`,
+            description: `⚖️ Check balance at ${node.value}: BF = height(left) − height(right) = ${height(node.left)} − ${height(node.right)} = ${bf}. ${Math.abs(bf) > 1 ? '⚠️ UNBALANCED!' : '✅ Balanced.'}`,
             treeData: cloneTree(root),
-            nodeStates: { ...nodeStates }
+            nodeStates: { ...nodeStates },
+            arraySnapshot: [...vals],
+            activeArrayIndex: activeIdx
         });
 
-        // LL
+        // LL Case
         if (bf > 1 && val < node.left.value) {
+            nodeStates[node.id] = 'rotated';
+            if (node.left) nodeStates[node.left.id] = 'rotated';
             steps.push({
                 type: 'tree',
-                description: `Left-Left case at ${node.value}. Performing RIGHT rotation.`,
+                description: `🔄 Left-Left Case at ${node.value}: BF = ${bf}. Perform single RIGHT rotation. ${node.left.value} goes up, ${node.value} goes down-right.`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
-            nodeStates[node.id] = 'rotated';
             return rightRotate(node);
         }
 
-        // RR
+        // RR Case
         if (bf < -1 && val > node.right.value) {
+            nodeStates[node.id] = 'rotated';
+            if (node.right) nodeStates[node.right.id] = 'rotated';
             steps.push({
                 type: 'tree',
-                description: `Right-Right case at ${node.value}. Performing LEFT rotation.`,
+                description: `🔄 Right-Right Case at ${node.value}: BF = ${bf}. Perform single LEFT rotation. ${node.right.value} goes up, ${node.value} goes down-left.`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
-            nodeStates[node.id] = 'rotated';
             return leftRotate(node);
         }
 
-        // LR
+        // LR Case
         if (bf > 1 && val > node.left.value) {
+            nodeStates[node.id] = 'rotated';
+            nodeStates[node.left.id] = 'rotated';
             steps.push({
                 type: 'tree',
-                description: `Left-Right case at ${node.value}. LEFT rotate left child, then RIGHT rotate.`,
+                description: `🔄 Left-Right Case at ${node.value}: BF = ${bf}. First LEFT-rotate left child ${node.left.value}, then RIGHT-rotate ${node.value}.`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
             node.left = leftRotate(node.left);
-            nodeStates[node.id] = 'rotated';
             return rightRotate(node);
         }
 
-        // RL
+        // RL Case
         if (bf < -1 && val < node.right.value) {
+            nodeStates[node.id] = 'rotated';
+            nodeStates[node.right.id] = 'rotated';
             steps.push({
                 type: 'tree',
-                description: `Right-Left case at ${node.value}. RIGHT rotate right child, then LEFT rotate.`,
+                description: `🔄 Right-Left Case at ${node.value}: BF = ${bf}. First RIGHT-rotate right child ${node.right.value}, then LEFT-rotate ${node.value}.`,
                 treeData: cloneTree(root),
-                nodeStates: { ...nodeStates }
+                nodeStates: { ...nodeStates },
+                arraySnapshot: [...vals],
+                activeArrayIndex: activeIdx
             });
             node.right = rightRotate(node.right);
-            nodeStates[node.id] = 'rotated';
             return leftRotate(node);
         }
 
@@ -148,38 +181,53 @@ export const generateAVLTreeSteps = (values) => {
 
     const vals = values || [30, 20, 40, 10, 25, 35, 50, 5, 15];
 
+    // Concept introduction
     steps.push({
         type: 'tree',
-        description: `AVL Tree: Inserting values [${vals.join(', ')}] one by one, auto-balancing after each.`,
+        description: `📚 AVL Tree: A self-balancing BST. Rule: |Balance Factor| must be ≤ 1 at every node, where BF = height(left) − height(right).`,
         treeData: null,
         nodeStates: {}
     });
 
-    for (const val of vals) {
+    steps.push({
+        type: 'tree',
+        description: `📊 Inserting values: [${vals.join(', ')}]. After each insertion, we check balance and rotate if |BF| > 1.`,
+        treeData: null,
+        nodeStates: {}
+    });
+
+    for (let i = 0; i < vals.length; i++) {
+        const val = vals[i];
         steps.push({
             type: 'tree',
-            description: `--- Inserting value ${val} ---`,
+            description: `📥 --- Insert ${val} ---`,
             treeData: cloneTree(root),
-            nodeStates: { ...nodeStates }
+            nodeStates: { ...nodeStates },
+            arraySnapshot: [...vals],
+            activeArrayIndex: i
         });
-        root = insert(root, val);
 
-        // Reset states after insertion
+        root = insert(root, val, vals, i);
+
+        // Reset states and show balanced result
         Object.keys(nodeStates).forEach(k => { nodeStates[k] = 'default'; });
-
         steps.push({
             type: 'tree',
-            description: `After inserting ${val}, tree is balanced.`,
+            description: `✅ After inserting ${val}: tree is balanced. Root = ${root.value}.`,
             treeData: cloneTree(root),
-            nodeStates: { ...nodeStates }
+            nodeStates: { ...nodeStates },
+            arraySnapshot: [...vals],
+            activeArrayIndex: i
         });
     }
 
     steps.push({
         type: 'tree-complete',
-        description: `AVL Tree construction complete with ${vals.length} values. All nodes balanced.`,
+        description: `🎯 AVL Tree complete! ${vals.length} values inserted. All nodes have |BF| ≤ 1. Height = ${height(root)}, guaranteeing O(log n) operations.`,
         treeData: cloneTree(root),
-        nodeStates: { ...nodeStates }
+        nodeStates: { ...nodeStates },
+        arraySnapshot: [...vals],
+        activeArrayIndex: -1
     });
 
     return steps;

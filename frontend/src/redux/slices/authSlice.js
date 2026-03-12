@@ -55,6 +55,7 @@ export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) =
         if (response.data.success) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('krama:auth:last-login-at', String(Date.now()));
         }
         return response.data;
     } catch (error) {
@@ -65,16 +66,25 @@ export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) =
 });
 
 export const loadUser = createAsyncThunk('auth/loadUser', async (_, thunkAPI) => {
+    const tokenUsed = localStorage.getItem('token');
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            return thunkAPI.rejectWithValue('No active session');
+        if (!tokenUsed) {
+            return thunkAPI.rejectWithValue({
+                message: 'No active session',
+                tokenUsed: null
+            });
         }
 
         const response = await api.get('/auth/me');
-        return response.data;
+        return {
+            ...response.data,
+            tokenUsed
+        };
     } catch (error) {
-        return thunkAPI.rejectWithValue(extractApiErrorMessage(error, 'Session expired'));
+        return thunkAPI.rejectWithValue({
+            message: extractApiErrorMessage(error, 'Session expired'),
+            tokenUsed
+        });
     }
 });
 
@@ -138,6 +148,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
+                state.error = null;
                 state.registerMessage = null;
             })
             .addCase(login.rejected, (state, action) => {
@@ -151,12 +162,27 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isAuthenticated = true;
                 state.user = action.payload.user;
+                state.token = action.payload.tokenUsed || state.token;
+                state.error = null;
             })
-            .addCase(loadUser.rejected, (state) => {
+            .addCase(loadUser.rejected, (state, action) => {
+                const tokenUsed = action.payload?.tokenUsed || null;
+                const activeToken = state.token || localStorage.getItem('token') || null;
+
+                // Ignore stale bootstrap failures when user logged in after loadUser started.
+                // Covers both:
+                // 1) loadUser started with old token
+                // 2) loadUser started before any token existed (tokenUsed=null) and login finished meanwhile
+                if (activeToken && tokenUsed !== activeToken) {
+                    state.isLoading = false;
+                    return;
+                }
+
                 state.isLoading = false;
                 state.isAuthenticated = false;
                 state.user = null;
                 state.token = null;
+                state.error = action.payload?.message || null;
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 clearLegacyUnscopedEditorDrafts();

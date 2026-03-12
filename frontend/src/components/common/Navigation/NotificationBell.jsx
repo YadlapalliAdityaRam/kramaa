@@ -22,13 +22,14 @@ const timeAgo = (dateStr) => {
 };
 
 const groupNotifications = (list) => {
+    const safeList = Array.isArray(list) ? list : [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
     const groups = { today: [], yesterday: [], earlier: [] };
-    for (const n of list) {
+    for (const n of safeList) {
         const d = new Date(n.createdAt);
         d.setHours(0, 0, 0, 0);
         if (d.getTime() === today.getTime()) groups.today.push(n);
@@ -85,7 +86,7 @@ const NotificationBell = () => {
         setLoading(true);
         try {
             const res = await api.get('/notifications?limit=20');
-            setNotifications(res.data.notifications || []);
+            setNotifications(Array.isArray(res.data?.notifications) ? res.data.notifications : []);
             setUnreadCount(res.data.unreadCount ?? 0);
         } catch (_) { /* silent */ }
         setLoading(false);
@@ -180,18 +181,33 @@ const NotificationBell = () => {
         } catch (_) { /* silent */ }
     };
 
+    const handleClearAll = async () => {
+        try {
+            await api.delete('/notifications/all');
+            setNotifications([]);
+            setUnreadCount(0);
+        } catch (_) {
+            setNotifications([]);
+            setUnreadCount(0);
+        }
+    };
+
     if (!isAuthenticated) return null;
 
+    const safeNotifications = Array.isArray(notifications) ? notifications : [];
     const badgeText = unreadCount > 99 ? '99+' : String(unreadCount);
-    const filtered = filter === 'all' ? notifications : notifications.filter(n => n.type === filter);
+    const filtered = filter === 'all'
+        ? safeNotifications
+        : safeNotifications.filter((n) => n?.type === filter);
     const grouped = groupNotifications(filtered);
 
     const renderGroup = (label, items) => {
-        if (items.length === 0) return null;
+        const safeItems = Array.isArray(items) ? items : [];
+        if (safeItems.length === 0) return null;
         return (
             <div key={label}>
                 <div className="notification-group-heading">{label}</div>
-                {items.map((n) => (
+                {safeItems.map((n) => (
                     <button
                         key={n._id || n.createdAt}
                         className={`notification-item${n.isRead ? '' : ' unread'}`}
@@ -240,6 +256,16 @@ const NotificationBell = () => {
                                     Mark all read
                                 </button>
                             )}
+                            {safeNotifications.length > 0 && (
+                                <button
+                                    className="notification-mark-all-btn"
+                                    onClick={handleClearAll}
+                                    type="button"
+                                    style={{ color: '#ef4444' }}
+                                >
+                                    Clear all
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -259,12 +285,12 @@ const NotificationBell = () => {
 
                     {/* List */}
                     <div className="notification-list">
-                        {loading && notifications.length === 0 ? (
+                        {loading && safeNotifications.length === 0 ? (
                             <div className="notification-empty">
                                 <div className="notification-empty-icon">⏳</div>
                                 <p>Loading...</p>
                             </div>
-                        ) : notifications.length === 0 ? (
+                        ) : safeNotifications.length === 0 ? (
                             <div className="notification-empty">
                                 <div className="notification-empty-icon">🔔</div>
                                 <p>No notifications yet</p>

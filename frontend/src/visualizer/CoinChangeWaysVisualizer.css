@@ -1,0 +1,286 @@
+.ccw-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 15px;
+    padding: 10px;
+}
+
+.ccw-input-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e293b;
+    padding: 15px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ccw-inputs {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.ccw-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ccw-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.ccw-array-input {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    width: 200px;
+    transition: all 0.2s;
+}
+
+.ccw-target-input {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    width: 80px;
+    text-align: center;
+}
+
+.ccw-main-area {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+}
+
+.ccw-table-container {
+    flex: 2;
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: auto;
+    padding: 20px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.ccw-table {
+    border-collapse: separate;
+    border-spacing: 4px;
+}
+
+.ccw-table th {
+    background: rgba(15, 23, 42, 0.8);
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.ccw-table th.row-header {
+    left: 0;
+    z-index: 11;
+    min-width: 80px;
+}
+
+.ccw-cell {
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    color: #e2e8f0;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ccw-cell.cell-active {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: #eab308;
+    color: #fde047;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+    transform: scale(1.05);
+    z-index: 5;
+}
+
+.ccw-cell.cell-exclude {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #bae6fd;
+}
+
+.ccw-cell.cell-include {
+    background: rgba(244, 114, 182, 0.15);
+    border-color: #f472b6;
+    color: #fbcfe8;
+}
+
+.ccw-cell.cell-updated {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #6ee7b7;
+    animation: cellPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.ccw-cell.cell-result {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: #10b981;
+    color: #a7f3d0;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes cellPop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.ccw-side-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 250px;
+}
+
+.ccw-info-card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ccw-info-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+}
+
+.ccw-formula-box {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 3px solid #eab308;
+}
+
+.ccw-formula-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.ccw-formula-label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.ccw-formula-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.ccw-f-blue {
+    color: #38bdf8;
+}
+
+.ccw-f-pink {
+    color: #f472b6;
+}
+
+.ccw-f-green {
+    color: #10b981;
+}
+
+.ccw-calc-result {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ccw-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ccw-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.ccw-legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+.ccw-l-yellow {
+    background: rgba(234, 179, 8, 0.4);
+    border: 1px solid #eab308;
+}
+
+.ccw-l-blue {
+    background: rgba(56, 189, 248, 0.4);
+    border: 1px solid #38bdf8;
+}
+
+.ccw-l-pink {
+    background: rgba(244, 114, 182, 0.4);
+    border: 1px solid #f472b6;
+}
+
+.ccw-l-green {
+    background: rgba(16, 185, 129, 0.4);
+    border: 1px solid #10b981;
+}
+
+.ccw-controls-wrapper {
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+}

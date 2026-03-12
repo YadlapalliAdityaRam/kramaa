@@ -8,9 +8,9 @@ const LANGUAGES = [
     { id: 'java', label: 'JAVA' }
 ];
 
-const CodeViewer = ({ code, activeLine, activeLanguage = 'javascript', onLanguageChange }) => {
+const CodeViewer = ({ code = "", activeLine, activeLanguage = 'javascript', onLanguageChange }) => {
     // Basic syntax highlighting logic (can be expanded)
-    const lines = code.split('\n');
+    const lines = (code || "").split('\n');
 
     return (
         <div className="glass-panel" style={{
@@ -57,7 +57,6 @@ const CodeViewer = ({ code, activeLine, activeLanguage = 'javascript', onLanguag
             </div>
 
             <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
-
                 {lines.map((line, index) => {
                     const isActive = activeLine === index + 1; // 1-based index from step generator
                     return (

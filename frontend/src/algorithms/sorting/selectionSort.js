@@ -3,73 +3,108 @@ export const generateSelectionSortSteps = (array, ascending = true) => {
     const arr = [...array];
     const n = arr.length;
     const sortedIndices = [];
-
-    const shouldUpdate = (current, candidate) => ascending ? candidate < current : candidate > current;
+    
     const extremeLabel = ascending ? 'minimum' : 'maximum';
+
+    steps.push({
+        type: 'info',
+        description: `📚 Selection Sort: Repeatedly find the ${extremeLabel} element from the unsorted part and put it at the beginning.`,
+        arraySnapshot: [...arr],
+        sortedIndices: [...sortedIndices],
+        sortedBoundary: 0,
+        currentMin: null,
+        activeScan: null
+    });
 
     for (let i = 0; i < n; i++) {
         let extremeIdx = i;
 
-        // Highlight the current position we are looking to fill
         steps.push({
-            type: 'compare',
-            indices: [i],
+            type: 'start-pass',
+            description: `Starting pass ${i + 1}. The unsorted section begins at index ${i}. Assuming ${arr[i]} at index ${i} is the ${extremeLabel}.`,
+            arraySnapshot: [...arr],
             sortedIndices: [...sortedIndices],
-            description: `Looking for the ${extremeLabel} element starting from index ${i}.`,
-            arraySnapshot: [...arr]
+            sortedBoundary: i,
+            currentMin: extremeIdx,
+            activeScan: null
         });
 
         for (let j = i + 1; j < n; j++) {
             steps.push({
                 type: 'compare',
-                indices: [extremeIdx, j],
+                description: `Comparing current ${extremeLabel} ${arr[extremeIdx]} with element ${arr[j]} at index ${j}.`,
+                arraySnapshot: [...arr],
                 sortedIndices: [...sortedIndices],
-                description: `Comparing current ${extremeLabel} (${arr[extremeIdx]}) with element at index ${j} (${arr[j]}).`,
-                arraySnapshot: [...arr]
+                sortedBoundary: i,
+                currentMin: extremeIdx,
+                activeScan: j
             });
 
-            if (shouldUpdate(arr[extremeIdx], arr[j])) {
+            const condition = ascending ? arr[j] < arr[extremeIdx] : arr[j] > arr[extremeIdx];
+
+            if (condition) {
                 extremeIdx = j;
                 steps.push({
-                    type: 'compare',
-                    indices: [extremeIdx],
+                    type: 'new-min',
+                    description: `Found new ${extremeLabel}: ${arr[extremeIdx]} at index ${extremeIdx}. Updating tracking pointer.`,
+                    arraySnapshot: [...arr],
                     sortedIndices: [...sortedIndices],
-                    description: `Found new ${extremeLabel} element ${arr[extremeIdx]} at index ${extremeIdx}.`,
-                    arraySnapshot: [...arr]
+                    sortedBoundary: i,
+                    currentMin: extremeIdx,
+                    activeScan: j
                 });
             }
         }
 
         if (extremeIdx !== i) {
+            steps.push({
+                type: 'swap-start',
+                description: `Pass complete. Swapping the found ${extremeLabel} ${arr[extremeIdx]} with the first unsorted element ${arr[i]}.`,
+                arraySnapshot: [...arr],
+                sortedIndices: [...sortedIndices],
+                sortedBoundary: i,
+                currentMin: extremeIdx,
+                activeScan: null,
+                swapTargets: [i, extremeIdx]
+            });
+
             let temp = arr[i];
             arr[i] = arr[extremeIdx];
             arr[extremeIdx] = temp;
 
             steps.push({
                 type: 'swap',
-                indices: [i, extremeIdx],
+                description: `Swapped! ${arr[i]} is now in its correct sorted position.`,
+                arraySnapshot: [...arr],
                 sortedIndices: [...sortedIndices],
-                description: `Swapping ${extremeLabel} element ${arr[i]} with element at index ${i}.`,
-                arraySnapshot: [...arr]
+                sortedBoundary: i + 1,
+                currentMin: null,
+                activeScan: null,
+                swapTargets: null
+            });
+        } else {
+            steps.push({
+                type: 'sorted',
+                description: `${arr[i]} is already the ${extremeLabel} element in the unsorted section. No swap needed.`,
+                arraySnapshot: [...arr],
+                sortedIndices: [...sortedIndices],
+                sortedBoundary: i + 1,
+                currentMin: null,
+                activeScan: null
             });
         }
 
         sortedIndices.push(i);
-        steps.push({
-            type: 'sorted',
-            indices: [i],
-            sortedIndices: [...sortedIndices],
-            description: `Element ${arr[i]} is now at its correct sorted position.`,
-            arraySnapshot: [...arr]
-        });
     }
 
     steps.push({
         type: 'completed',
-        indices: [],
-        sortedIndices: [...sortedIndices],
         description: 'Array is fully sorted.',
-        arraySnapshot: [...arr]
+        arraySnapshot: [...arr],
+        sortedIndices: [...sortedIndices],
+        sortedBoundary: n,
+        currentMin: null,
+        activeScan: null
     });
 
     return steps;

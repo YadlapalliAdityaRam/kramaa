@@ -1,0 +1,230 @@
+.selsort-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.selsort-input-bar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background: var(--surface);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+}
+
+.selsort-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selsort-input-group label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.selsort-value-input {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    width: 280px;
+    transition: all 0.2s;
+}
+
+.selsort-value-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.selsort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selsort-visual-workspace {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.selsort-workspace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.selsort-tracking-badge {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    border: 1px solid #22c55e;
+}
+
+.selsort-main-array {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Wider gap for boundary divider */
+    margin: 2rem 0;
+    min-height: 120px;
+    align-items: flex-end;
+}
+
+.selsort-item-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.selsort-status-label {
+    position: absolute;
+    top: -30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--bg-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    z-index: 10;
+}
+
+.selsort-box {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: background-color 0.3s, border-color 0.3s;
+    position: relative;
+    z-index: 5;
+}
+
+.selsort-idx {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Status Colors */
+
+.unsorted-box {
+    border-color: var(--border-color);
+}
+
+.sorted-box {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+
+.min-box {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.2);
+    color: #2563eb;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.min-box + .selsort-status-label {
+    color: #2563eb;
+    border-color: #3b82f6;
+}
+
+.scan-box {
+    border-color: #eab308;
+    background: rgba(234, 179, 8, 0.2);
+    color: #ca8a04;
+}
+
+.scan-box + .selsort-status-label {
+    color: #ca8a04;
+    border-color: #eab308;
+}
+
+.swap-box {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.swap-box + .selsort-status-label {
+    color: #dc2626;
+    border-color: #ef4444;
+}
+
+/* Sorted Boundary Line */
+.selsort-boundary-divider {
+    position: absolute;
+    right: -9px; /* Half of gap */
+    top: -20px;
+    bottom: -20px;
+    width: 2px;
+    background-color: var(--text-secondary);
+    border-radius: 2px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.selsort-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.selsort-legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.leg-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.default { background: var(--border-color); }
+.dot.green { background: #22c55e; }
+.dot.yellow { background: #eab308; }
+.dot.blue { background: #3b82f6; }
+.dot.red { background: #ef4444; }

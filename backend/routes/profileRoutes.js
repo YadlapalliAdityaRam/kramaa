@@ -6,11 +6,17 @@ const Profile = require('../models/Profile');
 const UserAnalytics = require('../models/UserAnalytics');
 const Submission = require('../models/Submission');
 const Contest = require('../models/Contest');
+const ContestResult = require('../models/ContestResult');
 const Problem = require('../models/Problem');
 const badgeService = require('../services/badgeService');
 const RatingService = require('../services/ratingService');
 const globalRankService = require('../services/globalRankService');
 const analyticsService = require('../services/analyticsService');
+const {
+    ensureChallengesForRange,
+    getChallengesInRange,
+    serializeChallenge
+} = require('../services/dailyChallengeService');
 const mongoose = require('mongoose');
 const { buildPublishedProblemMatch } = require('../utils/problemPublication');
 
@@ -35,19 +41,6 @@ const formatUtcDateKey = (dateValue) => {
     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
     const day = String(date.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-};
-
-const getUtcChallengeIndex = (dateValue, totalProblems) => {
-    if (!totalProblems || totalProblems <= 0) return -1;
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return -1;
-    const utcDaysFromEpoch = Math.floor(Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate()
-    ) / 86400000);
-    const remainder = utcDaysFromEpoch % totalProblems;
-    return remainder < 0 ? remainder + totalProblems : remainder;
 };
 
 const extractProblemTopics = (problemDoc) => {
@@ -414,31 +407,25 @@ router.get('/contest-stats', protect, async (req, res) => {
 
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Get contests where user participated
-        const contests = await Contest.find({
-            'participants.user': req.user.id,
-            status: 'COMPLETED'
-        })
-            .select('title startTime endTime participants scoringRule')
-            .sort({ endTime: -1 })
-            .limit(20);
+        const contestResults = await ContestResult.find({ userId: req.user.id })
+            .populate('contestId', 'title startTime endTime')
+            .sort({ finalizedAt: -1, updatedAt: -1 })
+            .limit(50)
+            .lean();
 
-        // Build contest history with ranks
-        const contestHistory = contests.map(contest => {
-            const sortedParticipants = [...contest.participants]
-                .sort((a, b) => b.score - a.score);
-            const userEntry = sortedParticipants.find(p => p.user.toString() === req.user.id);
-            const rank = sortedParticipants.findIndex(p => p.user.toString() === req.user.id) + 1;
-
-            return {
-                contestId: contest._id,
-                title: contest.title,
-                date: contest.endTime,
-                rank,
-                totalParticipants: sortedParticipants.length,
-                score: userEntry ? userEntry.score : 0
-            };
-        });
+        const contestHistory = contestResults.map((entry) => ({
+            contestId: entry.contestId?._id || entry.contestId,
+            title: entry.contestId?.title || 'Contest',
+            date: entry.finalizedAt || entry.updatedAt || entry.createdAt || null,
+            rank: entry.rank || null,
+            totalParticipants: null,
+            score: Number(entry.score || 0),
+            problemsSolved: Number(entry.problemsSolved || 0),
+            penaltyTime: Number(entry.penaltyTime || 0),
+            submissionCount: Number(entry.submissionCount || 0),
+            status: entry.status || 'active',
+            source: entry.source || 'system'
+        }));
 
         res.json({
             participated: user.contestStats.participated,
@@ -930,12 +917,18 @@ router.get('/daily-challenge-calendar', protect, async (req, res) => {
         const monthEndUtc = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
         const todayDateKey = formatUtcDateKey(now);
 
-        const publishedProblems = await Problem.find(buildPublishedProblemMatch({}))
-            .select('title slug difficulty topic topics problemNumber createdAt')
-            .sort({ problemNumber: 1, createdAt: 1, _id: 1 })
-            .lean();
+        await ensureChallengesForRange({
+            startDate: monthStartUtc,
+            endDate: monthEndUtc
+        });
 
-        if (!publishedProblems.length) {
+        const scheduledChallenges = await getChallengesInRange({
+            startDate: monthStartUtc,
+            endDate: monthEndUtc,
+            populateProblem: true
+        });
+
+        if (!scheduledChallenges.length) {
             return res.json({
                 year,
                 month,
@@ -950,20 +943,17 @@ router.get('/daily-challenge-calendar', protect, async (req, res) => {
             });
         }
 
-        const challengeDays = [];
-        for (let cursor = new Date(monthStartUtc); cursor <= monthEndUtc; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-            const day = new Date(cursor);
-            const date = formatUtcDateKey(day);
-            const challengeIndex = getUtcChallengeIndex(day, publishedProblems.length);
-            const challengeProblem = challengeIndex >= 0 ? publishedProblems[challengeIndex] : null;
-
-            if (!date || !challengeProblem) continue;
-            challengeDays.push({
-                date,
-                problemId: String(challengeProblem._id),
-                problem: challengeProblem
-            });
-        }
+        const challengeDays = scheduledChallenges
+            .map((entry) => serializeChallenge(entry, now))
+            .filter((entry) => entry?.date && entry?.problem?._id)
+            .map((entry) => ({
+                date: entry.date,
+                problemId: String(entry.problem._id),
+                source: entry.source,
+                difficulty: entry.difficulty,
+                expectedDifficulty: entry.expectedDifficulty,
+                problem: entry.problem
+            }));
 
         const trackedProblemIds = [...new Set(challengeDays.map((entry) => entry.problemId))];
 
@@ -1004,6 +994,9 @@ router.get('/daily-challenge-calendar', protect, async (req, res) => {
                 date: entry.date,
                 solved: Boolean(solvedAt),
                 solvedAt,
+                source: entry.source,
+                difficulty: entry.difficulty,
+                expectedDifficulty: entry.expectedDifficulty,
                 problem: {
                     _id: entry.problem._id,
                     title: entry.problem.title,

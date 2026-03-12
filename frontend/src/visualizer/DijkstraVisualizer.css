@@ -1,0 +1,263 @@
+.dijk-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 10px;
+    color: var(--text-primary);
+}
+
+/* 1. Dashboard Row */
+.dijk-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .dijk-dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dijk-stats-card,
+.dijk-pq-card {
+    background: var(--bg-surface, var(--bg-card-dark));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 120px;
+}
+
+[data-theme="light"] .dijk-stats-card,
+[data-theme="light"] .dijk-pq-card {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dijk-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.dijk-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+}
+
+.dijk-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.dijk-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.dijk-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Priority Queue */
+.dijk-pq-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.dijk-pq-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    gap: 6px;
+}
+
+[data-theme="light"] .dijk-pq-item {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.dijk-pq-closest {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.dijk-pq-node {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.dijk-pq-dist {
+    color: #34d399;
+    font-weight: 600;
+}
+
+/* 2. Main Row (Canvas + Table) */
+.dijk-main-row {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    min-height: 500px;
+}
+
+@media (max-width: 900px) {
+    .dijk-main-row {
+        flex-direction: column;
+        height: auto;
+    }
+}
+
+.dijk-canvas-wrapper {
+    flex: 3;
+    background: var(--bg-surface, var(--bg-card-dark));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    min-height: 450px;
+}
+
+.dijk-graph-container {
+    flex: 1;
+    width: 100%;
+    min-height: 380px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dijk-controls-box {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+}
+
+[data-theme="light"] .dijk-controls-box {
+    background: rgba(0, 0, 0, 0.03);
+    border-top-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Distance Table Panel */
+.dijk-distance-panel {
+    flex: 1;
+    background: var(--bg-surface, var(--bg-card-dark));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    min-width: 250px;
+}
+
+.dijk-table-container {
+    margin-top: 10px;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.dijk-distance-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.dijk-distance-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface, var(--bg-card-dark));
+    z-index: 5;
+}
+
+[data-theme="light"] .dijk-distance-table th {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+    background: #fdfdfd;
+}
+
+.dijk-table-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background-color 0.2s;
+}
+
+[data-theme="light"] .dijk-table-row {
+    border-bottom-color: rgba(0, 0, 0, 0.03);
+}
+
+.dijk-table-row td {
+    padding: 10px 12px;
+}
+
+.dijk-node-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    font-weight: 700;
+}
+
+[data-theme="light"] .dijk-node-badge {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.dijk-td-dist {
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* Row States */
+.dijk-row-source .dijk-node-badge {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.dijk-row-current .dijk-node-badge {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+.dijk-row-visited .dijk-node-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    opacity: 0.7;
+}
+
+[data-theme="light"] .dijk-row-visited .dijk-node-badge {
+    background: rgba(0, 0, 0, 0.1);
+    color: #6b7280;
+}

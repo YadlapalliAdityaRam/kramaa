@@ -1,0 +1,202 @@
+.man-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: #e2e8f0;
+}
+
+.man-input-bar {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.man-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.man-input-group label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.man-input-group input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: white;
+}
+
+.man-visual-area {
+    background: rgba(15, 23, 42, 0.4);
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-x: auto;
+}
+
+.man-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.man-row-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.man-cells-container {
+    display: flex;
+    gap: 4px;
+}
+
+.man-cell-wrapper {
+    width: 38px;
+    display: flex;
+    justify-content: center;
+}
+
+.man-cell {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.man-idx {
+    font-size: 0.65rem;
+    color: #475569;
+}
+
+.char-cell {
+    background: #1e293b;
+    border: 1px solid #334155;
+}
+
+.radius-cell {
+    background: rgba(148, 163, 184, 0.05);
+    color: #94a3b8;
+    border: 1px solid transparent;
+}
+
+.radius-cell.active {
+    background: #6366f1;
+    color: white;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+/* States */
+.state-hash {
+    color: #475569;
+}
+
+.state-center {
+    background: #f59e0b;
+    color: #0f172a;
+    border-color: #f59e0b;
+}
+
+.state-current {
+    box-shadow: 0 0 0 2px #6366f1;
+}
+
+.state-expanding {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #6366f1;
+    color: #818cf8;
+    animation: expandPulse 0.5s infinite alternate;
+}
+
+.state-in-box {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.state-mirror {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+.man-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.stat-pill {
+    padding: 6px 12px;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    border: 1px solid #334155;
+}
+
+.stat-pill strong {
+    color: #e2e8f0;
+}
+
+.man-result-card {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 12px;
+    border: 1px solid #10b981;
+    animation: fadeIn 0.5s ease;
+}
+
+.man-result-card h4 {
+    margin: 0 0 8px 0;
+    color: #10b981;
+}
+
+.man-result-card p {
+    margin: 4px 0;
+    font-size: 0.95rem;
+}
+
+@keyframes expandPulse {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.man-controls-wrapper {
+    margin-top: auto;
+}

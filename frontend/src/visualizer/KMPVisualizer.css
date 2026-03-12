@@ -1,0 +1,422 @@
+/* ── KMP Algorithm Visualizer ── */
+
+.kmp-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    height: 100%;
+}
+
+/* ── Input Bar ── */
+.kmp-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+}
+
+.kmp-inputs {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.kmp-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.kmp-pattern-group {
+    flex: 0 0 auto;
+    min-width: 140px;
+}
+
+.kmp-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.kmp-text-input,
+.kmp-pattern-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 1px;
+}
+
+.kmp-text-input:focus,
+.kmp-pattern-input:focus {
+    border-color: #6366f1;
+}
+
+.kmp-pattern-input {
+    width: 100px;
+}
+
+/* ── Main Area ── */
+.kmp-main-area {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Alignment Panel ── */
+.kmp-alignment-panel {
+    flex: 2;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: auto;
+}
+
+.kmp-panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+/* Character rows */
+.kmp-char-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.kmp-index-row {
+    margin-bottom: 2px;
+}
+
+.kmp-cell {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 4px;
+    transition: all 0.25s;
+    flex-shrink: 0;
+}
+
+.kmp-index-cell {
+    font-size: 0.6rem;
+    color: #475569;
+    font-weight: 500;
+    height: 20px;
+}
+
+.kmp-text-cell {
+    background: rgba(15, 23, 42, 0.5);
+    color: #94a3b8;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.kmp-text-cell.state-in-range {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.25);
+    color: #c7d2fe;
+}
+
+.kmp-text-cell.state-comparing {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+}
+
+.kmp-text-cell.state-match {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #34d399;
+}
+
+.kmp-text-cell.state-matched-prefix {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #6ee7b7;
+}
+
+.kmp-text-cell.state-mismatch {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
+    animation: kmp-shake 0.3s ease;
+}
+
+.kmp-text-cell.state-found {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #a5b4fc;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+}
+
+@keyframes kmp-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
+}
+
+.kmp-pattern-row {
+    margin-top: 2px;
+}
+
+.kmp-pattern-cell {
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.kmp-pattern-cell.state-match {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #34d399;
+}
+
+.kmp-pattern-cell.state-matched-prefix {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+}
+
+.kmp-pattern-cell.state-mismatch {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
+}
+
+.kmp-pattern-cell.state-found {
+    background: rgba(99, 102, 241, 0.3);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #c7d2fe;
+}
+
+.kmp-empty-cell {
+    background: transparent;
+    border: none;
+}
+
+/* Match badges */
+.kmp-matches-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.kmp-match-badge {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    color: #a5b4fc;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Side Panel ── */
+.kmp-side-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 200px;
+}
+
+/* LPS Card */
+.kmp-lps-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.kmp-lps-table {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kmp-lps-row {
+    display: flex;
+    gap: 2px;
+}
+
+.kmp-lps-header .kmp-lps-cell {
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    font-weight: 700;
+}
+
+.kmp-lps-cell {
+    flex: 1;
+    min-width: 28px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.5);
+    color: #64748b;
+    border: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.kmp-lps-val {
+    font-weight: 600;
+}
+
+.kmp-lps-nonzero {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.kmp-lps-empty {
+    color: #475569;
+    font-style: italic;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Stats Card */
+.kmp-stats-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.kmp-stats-grid {
+    display: flex;
+    gap: 10px;
+}
+
+.kmp-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.kmp-stat-label {
+    display: block;
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.kmp-stat-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.kmp-stat-green {
+    color: #10b981;
+}
+
+/* Legend Card */
+.kmp-legend-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+
+.kmp-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.kmp-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.kmp-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.kmp-lg-match {
+    background: #10b981;
+}
+
+.kmp-lg-mismatch {
+    background: #ef4444;
+}
+
+.kmp-lg-found {
+    background: #6366f1;
+}
+
+.kmp-lg-prefix {
+    background: rgba(16, 185, 129, 0.4);
+}
+
+/* Controls */
+.kmp-controls-wrapper {
+    padding-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .kmp-main-area {
+        flex-direction: column;
+    }
+
+    .kmp-cell {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+    }
+}

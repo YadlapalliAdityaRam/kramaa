@@ -2,22 +2,38 @@ export const generateBubbleSortSteps = (array, ascending = true) => {
     const steps = [];
     const arr = [...array];
     const n = arr.length;
-    // Keep track of indices that are known to be sorted
     const sortedIndices = [];
 
     const compare = (a, b) => ascending ? a > b : a < b;
     const compareSymbol = ascending ? '>' : '<';
     const sortParams = ascending ? 'ascending' : 'descending';
 
+    steps.push({
+        type: 'info',
+        description: `📚 Bubble Sort: Each pass compares adjacent elements and swaps them if they are in the wrong order. The largest elements "bubble up" to the end.`,
+        arraySnapshot: [...arr],
+        indices: [],
+        sortedIndices: [...sortedIndices]
+    });
+
     for (let i = 0; i < n - 1; i++) {
         let swapped = false;
+        
+        steps.push({
+            type: 'pass-start',
+            description: `🔄 Starting Pass ${i + 1}. We will compare up to index ${n - 1 - i}.`,
+            arraySnapshot: [...arr],
+            indices: [],
+            sortedIndices: [...sortedIndices]
+        });
+
         for (let j = 0; j < n - i - 1; j++) {
             // Comparison Step
             steps.push({
                 type: 'compare',
                 indices: [j, j + 1],
                 sortedIndices: [...sortedIndices],
-                description: `Comparing ${arr[j]} and ${arr[j + 1]}. ${arr[j]} ${compare(arr[j], arr[j + 1]) ? compareSymbol : (ascending ? '<=' : '>=')} ${arr[j + 1]}?`,
+                description: `🔍 Comparing ${arr[j]} and ${arr[j + 1]}. Is ${arr[j]} ${compareSymbol} ${arr[j + 1]}?`,
                 arraySnapshot: [...arr]
             });
 
@@ -32,7 +48,15 @@ export const generateBubbleSortSteps = (array, ascending = true) => {
                     type: 'swap',
                     indices: [j, j + 1],
                     sortedIndices: [...sortedIndices],
-                    description: `Swapping to correct order (${sortParams}).`,
+                    description: `🔄 Yes, they are out of order. Swapping ${arr[j + 1]} and ${arr[j]}.`,
+                    arraySnapshot: [...arr]
+                });
+            } else {
+                steps.push({
+                    type: 'no-swap',
+                    indices: [j, j + 1],
+                    sortedIndices: [...sortedIndices],
+                    description: `✅ No, they are in the correct order. Moving forward.`,
                     arraySnapshot: [...arr]
                 });
             }
@@ -48,13 +72,12 @@ export const generateBubbleSortSteps = (array, ascending = true) => {
             type: 'sorted',
             indices: [sortedIdx],
             sortedIndices: [...sortedIndices],
-            description: `Element ${arr[sortedIdx]} is now in its correct sorted position.`,
+            description: `🔒 Pass complete. Element ${arr[sortedIdx]} has bubbled to its final sorted position.`,
             arraySnapshot: [...arr]
         });
 
         // Optimization: If no swaps occurred, the array is sorted
         if (!swapped) {
-            // Mark all remaining elements as sorted
             for (let k = 0; k < sortedIdx; k++) {
                 if (!sortedIndices.includes(k)) sortedIndices.push(k);
             }
@@ -62,21 +85,20 @@ export const generateBubbleSortSteps = (array, ascending = true) => {
                 type: 'completed',
                 indices: [],
                 sortedIndices: [...sortedIndices],
-                description: 'No swaps needed in this pass. Array is fully sorted!',
+                description: `✨ No swaps occurred in the last pass. The array is fully sorted early!`,
                 arraySnapshot: [...arr]
             });
             return steps;
         }
     }
 
-    // Ensure the first element (index 0) is marked sorted at the end if not already
     if (!sortedIndices.includes(0)) sortedIndices.push(0);
 
     steps.push({
         type: 'completed',
         indices: [],
         sortedIndices: [...sortedIndices],
-        description: 'Array is fully sorted.',
+        description: `🎉 Array is fully sorted.`,
         arraySnapshot: [...arr]
     });
 

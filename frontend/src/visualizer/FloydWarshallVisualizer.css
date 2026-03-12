@@ -1,0 +1,197 @@
+.fw-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    height: 100%;
+}
+
+.fw-main {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.fw-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 300px;
+}
+
+.fw-panel {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.fw-panel h4 {
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.fw-matrix-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 350px;
+}
+
+.fw-matrix {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+.fw-matrix th,
+.fw-matrix td {
+    padding: 8px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.fw-matrix th {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.fw-cell {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+/* Cell States */
+.fw-cell.evaluating {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+.fw-cell.updating {
+    background: rgba(72, 187, 120, 0.2);
+    border-color: #48bb78;
+    color: #48bb78;
+    transform: scale(1.05);
+    font-weight: 700;
+    z-index: 10;
+    position: relative;
+    box-shadow: 0 0 15px rgba(72, 187, 120, 0.3);
+}
+
+.fw-cell.k-row-col {
+    background: rgba(66, 153, 225, 0.1);
+    border-color: rgba(66, 153, 225, 0.3);
+    color: #90cdf4;
+}
+
+.fw-cell.neg-cycle {
+    background: rgba(245, 101, 101, 0.2);
+    border-color: #f56565;
+    color: #fc8181;
+    animation: negPulse 1.5s infinite;
+}
+
+@keyframes negPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(245, 101, 101, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 101, 101, 0);
+    }
+}
+
+/* Formula & Legend */
+.fw-formula {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #f6ad55;
+    margin-bottom: 15px;
+}
+
+.fw-formula code {
+    white-space: pre-wrap;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+}
+
+.fw-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+}
+
+.legend-box.updating {
+    background: rgba(72, 187, 120, 0.3);
+    border-color: #48bb78;
+}
+
+.legend-box.evaluating {
+    background: rgba(251, 191, 36, 0.3);
+    border-color: #f59e0b;
+}
+
+.legend-box.k-row-col {
+    background: rgba(66, 153, 225, 0.2);
+    border-color: #4299e1;
+}
+
+/* UI Controls */
+.fw-select {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.fw-select:focus {
+    border-color: #4299e1;
+}
+
+.fw-select option {
+    background: #1e293b;
+    color: #fff;
+}
+
+@media (max-width: 1024px) {
+    .fw-layout {
+        flex-direction: column;
+    }
+
+    .fw-sidebar {
+        min-width: 100%;
+    }
+}

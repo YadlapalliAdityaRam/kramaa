@@ -6,7 +6,9 @@ const ACTIVITY_TYPES = Object.freeze([
     'solution_posted',
     'discussion_created',
     'contest_joined',
-    'contest_ranked'
+    'contest_ranked',
+    'contest_finished',
+    'contest_exited'
 ]);
 
 const ActivityEventSchema = new mongoose.Schema({

@@ -1,14 +1,25 @@
 const mongoose = require('mongoose');
 const Contest = require('../models/Contest');
 const ContestParticipant = require('../models/ContestParticipant');
+const ContestResult = require('../models/ContestResult');
 const Problem = require('../models/Problem');
 const User = require('../models/User');
 const notificationService = require('../services/notificationService');
+const { recordActivity } = require('../services/social/activityService');
 const {
     computeContestStatus,
     sortByLeaderboardRules,
     syncAllContestStatuses,
-    syncContestStatus
+    syncContestStatus,
+    markParticipantExited,
+    markParticipantFinished,
+    rejoinParticipant,
+    touchParticipantActivity,
+    finalizeContest,
+    getContestProgressSummary,
+    getContestHistoryForUser,
+    getFriendsContestLeaderboard,
+    getContestAnalyticsSnapshot
 } = require('../services/contestService');
 
 const buildActionLabel = (status) => {
@@ -22,9 +33,44 @@ const toParticipantCount = (value) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const normalizeDifficultyLabel = (difficulty) => {
+    const normalized = String(difficulty || '').trim().toLowerCase();
+    if (normalized === 'hard') return 'Hard';
+    if (normalized === 'medium') return 'Medium';
+    return 'Easy';
+};
+
+const normalizeScoringConfig = (scoringConfig = {}) => ({
+    easyBaseScore: Math.max(0, Number(scoringConfig?.easyBaseScore ?? 5)),
+    mediumBaseScore: Math.max(0, Number(scoringConfig?.mediumBaseScore ?? 7)),
+    hardBaseScore: Math.max(0, Number(scoringConfig?.hardBaseScore ?? 10)),
+    timePenaltyPerMinute: Math.max(0, Number(scoringConfig?.timePenaltyPerMinute ?? 0.02)),
+    wrongAttemptPenalty: Math.max(0, Number(scoringConfig?.wrongAttemptPenalty ?? 0.05))
+});
+
+const getDifficultyBaseScore = (difficultyLabel, scoringConfig) => {
+    const label = normalizeDifficultyLabel(difficultyLabel);
+    if (label === 'Hard') return Number(scoringConfig.hardBaseScore || 10);
+    if (label === 'Medium') return Number(scoringConfig.mediumBaseScore || 7);
+    return Number(scoringConfig.easyBaseScore || 5);
+};
+
 const normalizeRole = (role) => String(role || '').trim().toUpperCase();
 
 const canViewNonApprovedContest = (role) => ['ADMIN', 'SUPER_ADMIN'].includes(normalizeRole(role));
+
+const mapContestServiceErrorToHttp = (error) => {
+    const code = String(error?.code || '').toUpperCase();
+    if (code === 'INVALID_CONTEST_ID' || code === 'INVALID_CONTEST_OR_USER') return 400;
+    if (code === 'CONTEST_NOT_FOUND' || code === 'NOT_FOUND') return 404;
+    if (code === 'NOT_REGISTERED') return 403;
+    if (code === 'CONTEST_NOT_RUNNING' || code === 'CONTEST_NOT_COMPLETED') return 400;
+    if (code === 'REJOIN_DISABLED') return 403;
+    if (code === 'PARTICIPANT_EXITED') return 400;
+    if (code === 'PARTICIPANT_FINISHED') return 409;
+    if (code === 'ALREADY_FINISHED') return 409;
+    return Number(error?.httpStatus || 500);
+};
 
 const isContestRegistrationOpen = (contestLike, status) => {
     if (!contestLike) return false;
@@ -45,6 +91,7 @@ const mapContestCard = (contestDoc, options = {}) => {
     const status = computeContestStatus(contestDoc);
     const participantsCount = toParticipantCount(contestDoc.participantsCount);
     const isRegistrationOpen = isContestRegistrationOpen(contestDoc, status);
+    const exitRules = contestDoc.exitRules || {};
 
     return {
         _id: contestDoc._id,
@@ -62,6 +109,14 @@ const mapContestCard = (contestDoc, options = {}) => {
         approvalStatus: contestDoc.approvalStatus || 'APPROVED',
         isRegistrationOpen,
         isRegistered: Boolean(options.isRegistered),
+        leaderboardLocked: Boolean(contestDoc.leaderboardLocked),
+        resultsFinalizedAt: contestDoc.resultsFinalizedAt || null,
+        exitRules: {
+            allowRejoin: exitRules.allowRejoin !== false,
+            autoExitOnInactivity: Boolean(exitRules.autoExitOnInactivity),
+            inactivityTimeoutMinutes: Number(exitRules.inactivityTimeoutMinutes || 20)
+        },
+        scoringConfig: normalizeScoringConfig(contestDoc?.scoringConfig || {}),
         action: buildActionLabel(status),
         createdAt: contestDoc.createdAt
     };
@@ -72,6 +127,22 @@ const getUserRating = (user) => {
     const rating = Number(user?.rating?.current ?? user?.rating ?? 0);
     return Number.isFinite(rating) ? rating : 0;
 };
+
+const mapParticipantRow = (participant, rank = null) => ({
+    userId: participant.userId?._id || participant.userId,
+    username: participant.userId?.username || 'Unknown',
+    rating: getUserRating(participant.userId),
+    registrationTime: participant.registeredAt || null,
+    score: Number(participant.score || 0),
+    solvedCount: Number(participant.solvedCount || 0),
+    totalTime: Number(participant.totalTime ?? participant.penalty ?? 0),
+    penalty: Number(participant.totalTime ?? participant.penalty ?? 0),
+    wrongSubmissions: Number(participant.wrongSubmissions || 0),
+    submissionCount: Number(participant.submissionCount || 0),
+    status: participant.status || 'active',
+    exitTime: participant.exitTime || null,
+    rank
+});
 
 const ensureValidProblemIds = async (problemIds) => {
     const normalized = [...new Set((problemIds || []).map((id) => String(id)))];
@@ -100,9 +171,14 @@ const mapLeaderboardRow = (participant, index) => ({
     rank: index + 1,
     userId: participant.userId?._id || participant.userId,
     username: participant.userId?.username || 'Unknown',
+    rating: getUserRating(participant.userId),
     score: Number(participant.score || 0),
-    solved: Number(participant.solvedCount || 0),
-    penalty: Number(participant.penalty || 0),
+    solvedCount: Number(participant.solvedCount || 0),
+    totalTime: Number(participant.totalTime ?? participant.penalty ?? 0),
+    penalty: Number(participant.totalTime ?? participant.penalty ?? 0),
+    wrongSubmissions: Number(participant.wrongSubmissions || 0),
+    submissionCount: Number(participant.submissionCount || 0),
+    status: participant.status || 'active',
     lastSubmissionTime: participant.lastSubmissionTime || null
 });
 
@@ -131,7 +207,9 @@ exports.createContest = async (req, res) => {
             registrationOpenDate,
             problems,
             rules = [],
-            wrongSubmissionPenalty
+            wrongSubmissionPenalty,
+            exitRules,
+            scoringConfig
         } = req.body;
 
         // Validate dates
@@ -158,8 +236,11 @@ exports.createContest = async (req, res) => {
             }
         }
 
-        // Normalize problems: frontend sends [{problem, points, order}] objects
-        const problemIds = (problems || []).map(p => typeof p === 'object' ? (p.problem || p.id || p._id) : p);
+        const normalizedScoringConfig = normalizeScoringConfig(scoringConfig || {});
+
+        // Normalize problems: frontend may send [{problem, points/baseScore, order, difficulty}] objects.
+        const rawProblems = Array.isArray(problems) ? problems : [];
+        const problemIds = rawProblems.map((p) => (typeof p === 'object' ? (p.problem || p.id || p._id) : p));
         const problemValidation = await ensureValidProblemIds(problemIds);
         if (!problemValidation.isValid) {
             return res.status(400).json({
@@ -167,6 +248,45 @@ exports.createContest = async (req, res) => {
                 message: problemValidation.message
             });
         }
+
+        const problemDocs = await Problem.find({ _id: { $in: problemValidation.problemIds } })
+            .select('_id difficulty')
+            .lean();
+        const difficultyById = new Map(
+            problemDocs.map((entry) => [String(entry._id), normalizeDifficultyLabel(entry?.difficulty)])
+        );
+
+        const scoringByProblemId = new Map();
+        rawProblems.forEach((entry) => {
+            const row = entry && typeof entry === 'object' ? entry : { problem: entry };
+            const problemId = String(row.problem || row.id || row._id || '').trim();
+            if (!problemId || !mongoose.Types.ObjectId.isValid(problemId)) return;
+
+            const difficulty = normalizeDifficultyLabel(row.difficulty || difficultyById.get(problemId));
+            const providedBaseScore = Number(row.baseScore ?? row.points);
+            const baseScore = Number.isFinite(providedBaseScore)
+                ? Math.max(0, providedBaseScore)
+                : getDifficultyBaseScore(difficulty, normalizedScoringConfig);
+
+            scoringByProblemId.set(problemId, {
+                problemId: new mongoose.Types.ObjectId(problemId),
+                difficulty,
+                baseScore
+            });
+        });
+
+        problemValidation.problemIds.forEach((problemObjectId) => {
+            const key = String(problemObjectId);
+            if (scoringByProblemId.has(key)) return;
+            const difficulty = normalizeDifficultyLabel(difficultyById.get(key));
+            scoringByProblemId.set(key, {
+                problemId: new mongoose.Types.ObjectId(key),
+                difficulty,
+                baseScore: getDifficultyBaseScore(difficulty, normalizedScoringConfig)
+            });
+        });
+
+        const normalizedProblemScoring = [...scoringByProblemId.values()];
 
         // Super admins auto-approve, regular admins go to pending
         const userRole = String(req.user.role || '').toUpperCase();
@@ -180,7 +300,14 @@ exports.createContest = async (req, res) => {
             registrationOpenDate: registrationOpen,
             problems: problemValidation.problemIds,
             rules,
+            scoringConfig: normalizedScoringConfig,
+            problemScoring: normalizedProblemScoring,
             wrongSubmissionPenalty: wrongSubmissionPenalty || { enabled: false, minutes: 10 },
+            exitRules: {
+                allowRejoin: exitRules?.allowRejoin !== false,
+                autoExitOnInactivity: Boolean(exitRules?.autoExitOnInactivity),
+                inactivityTimeoutMinutes: Math.max(5, Number(exitRules?.inactivityTimeoutMinutes || 20))
+            },
             participantsCount: 0,
             status: computeContestStatus({ startTime: start, endTime: end }),
             approvalStatus,
@@ -276,11 +403,21 @@ exports.getContest = async (req, res) => {
         }
 
         let isRegistered = false;
-        if (req.user?._id) {
-            isRegistered = Boolean(await ContestParticipant.exists({
-                contestId: contest._id,
-                userId: req.user._id
-            }));
+        let currentParticipant = null;
+        const currentUserId = req.user?._id || req.user?.id;
+
+        const participantDocs = await ContestParticipant.find({ contestId: contest._id })
+            .populate('userId', 'username rating')
+            .lean();
+        const sortedParticipants = sortByLeaderboardRules(participantDocs);
+        const participants = sortedParticipants.map((participant, index) => mapParticipantRow(
+            participant,
+            computeContestStatus(contest) === 'completed' ? index + 1 : null
+        ));
+
+        if (currentUserId) {
+            currentParticipant = sortedParticipants.find((entry) => String(entry.userId?._id || entry.userId) === String(currentUserId)) || null;
+            isRegistered = Boolean(currentParticipant);
         }
 
         const contestStatus = computeContestStatus(contest);
@@ -289,11 +426,31 @@ exports.getContest = async (req, res) => {
         const durationMs = new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime();
         const durationMinutes = Math.max(0, Math.floor(durationMs / (1000 * 60)));
 
-        const problems = (contest.problems || []).map((problem) => ({
-            id: problem?._id,
-            title: problem?.title || 'Untitled Problem',
-            difficulty: problem?.difficulty || 'Unknown'
-        }));
+        const scoringByProblemId = new Map(
+            (contest.problemScoring || []).map((entry) => [
+                String(entry.problemId),
+                {
+                    baseScore: Number(entry.baseScore || 0),
+                    difficulty: normalizeDifficultyLabel(entry.difficulty)
+                }
+            ])
+        );
+
+        const problems = (contest.problems || []).map((problem) => {
+            const pid = String(problem?._id || '');
+            const scoring = scoringByProblemId.get(pid);
+            const resolvedDifficulty = scoring?.difficulty || normalizeDifficultyLabel(problem?.difficulty);
+            return {
+                id: problem?._id,
+                title: problem?.title || 'Untitled Problem',
+                difficulty: resolvedDifficulty,
+                baseScore: Number(scoring?.baseScore ?? getDifficultyBaseScore(resolvedDifficulty, contest?.scoringConfig || {}))
+            };
+        });
+
+        const progressSummary = currentUserId
+            ? await getContestProgressSummary({ contestId: contest._id, userId: currentUserId })
+            : null;
 
         return res.json({
             success: true,
@@ -308,10 +465,19 @@ exports.getContest = async (req, res) => {
                 approvalStatus: contest.approvalStatus || 'APPROVED',
                 isRegistrationOpen,
                 isRegistered,
-                participantsCount: toParticipantCount(contest.participantsCount),
-                participantCount: toParticipantCount(contest.participantsCount),
+                participantsCount: Math.max(toParticipantCount(contest.participantsCount), participants.length),
+                participantCount: Math.max(toParticipantCount(contest.participantsCount), participants.length),
+                leaderboardLocked: Boolean(contest.leaderboardLocked),
+                resultsFinalizedAt: contest.resultsFinalizedAt || null,
+                scoringConfig: normalizeScoringConfig(contest?.scoringConfig || {}),
+                exitRules: {
+                    allowRejoin: contest?.exitRules?.allowRejoin !== false,
+                    autoExitOnInactivity: Boolean(contest?.exitRules?.autoExitOnInactivity),
+                    inactivityTimeoutMinutes: Number(contest?.exitRules?.inactivityTimeoutMinutes || 20)
+                },
                 createdAt: contest.createdAt,
-                problems
+                problems,
+                participants
             },
             overview: {
                 description: contest.description,
@@ -319,13 +485,24 @@ exports.getContest = async (req, res) => {
                 rules: Array.isArray(contest.rules) && contest.rules.length > 0
                     ? contest.rules
                     : [
-                        'Score is based on solved problems and difficulty.',
-                        'Penalty adds 10 minutes per wrong attempt before accepted solution.',
-                        'Leaderboard ranking uses score, then penalty, then earliest last submission.'
-                    ],
+                        'Score uses baseScore - time penalty - wrong submission penalty for each solved problem.',
+                        'Total time is the sum of solve time (minutes from contest start) for solved problems.',
+                        'Leaderboard ranking uses total score, then total time, then fewer wrong submissions.'
+                ],
                 totalProblems: problems.length
             },
-            problems
+            problems,
+            participation: progressSummary?.result || (currentParticipant ? {
+                rank: null,
+                score: Number(currentParticipant.score || 0),
+                problemsSolved: Number(currentParticipant.solvedCount || 0),
+                totalTime: Number(currentParticipant.totalTime ?? currentParticipant.penalty ?? 0),
+                penaltyTime: Number(currentParticipant.totalTime ?? currentParticipant.penalty ?? 0),
+                wrongSubmissions: Number(currentParticipant.wrongSubmissions || 0),
+                submissionCount: Number(currentParticipant.submissionCount || 0),
+                status: currentParticipant.status || 'active',
+                exitTime: currentParticipant.exitTime || null
+            } : null)
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message || 'Failed to fetch contest details' });
@@ -334,6 +511,7 @@ exports.getContest = async (req, res) => {
 
 exports.registerForContest = async (req, res) => {
     const session = await mongoose.startSession();
+    let registeredContestId = null;
 
     try {
         await session.withTransaction(async () => {
@@ -382,13 +560,39 @@ exports.registerForContest = async (req, res) => {
                 {
                     contestId: contest._id,
                     userId: req.user.id,
-                    registeredAt: new Date()
+                    registeredAt: new Date(),
+                    status: 'active',
+                    lockNewSubmissions: false,
+                    lastActiveAt: new Date(),
+                    submissionCount: 0
                 }
             ], { session });
 
             contest.participantsCount = toParticipantCount(contest.participantsCount) + 1;
             await contest.save({ session });
+            registeredContestId = contest._id;
         });
+
+        if (registeredContestId) {
+            try {
+                const contestForActivity = await Contest.findById(registeredContestId)
+                    .select('_id title')
+                    .lean();
+                await recordActivity(req, {
+                    userId: req.user.id,
+                    activityType: 'contest_joined',
+                    contestId: registeredContestId,
+                    metadata: {
+                        contestTitle: contestForActivity?.title || '',
+                        link: `/contest/${registeredContestId}`
+                    },
+                    dedupeKey: `contest_joined:${registeredContestId}`,
+                    dedupeWindowMinutes: 60 * 24
+                });
+            } catch (activityError) {
+                console.error('Activity event create failed (contest_joined):', activityError.message);
+            }
+        }
 
         return res.status(201).json({
             success: true,
@@ -419,22 +623,10 @@ exports.getContestParticipants = async (req, res) => {
 
         const sorted = sortByLeaderboardRules(participants);
 
-        const rows = sorted.map((participant, index) => {
-            const base = {
-                username: participant.userId?.username || 'Unknown',
-                rating: getUserRating(participant.userId),
-                registrationTime: participant.registeredAt,
-                score: Number(participant.score || 0),
-                solvedCount: Number(participant.solvedCount || 0),
-                penalty: Number(participant.penalty || 0)
-            };
-
-            if (contest.status === 'completed') {
-                base.rank = index + 1;
-            }
-
-            return base;
-        });
+        const rows = sorted.map((participant, index) => mapParticipantRow(
+            participant,
+            contest.status === 'completed' ? index + 1 : null
+        ));
 
         return res.json({
             success: true,
@@ -457,14 +649,50 @@ exports.getLeaderboard = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Contest not found' });
         }
 
-        const participants = await ContestParticipant.find({ contestId: contest._id })
-            .populate('userId', 'username rating')
-            .lean();
+        const contestStatus = computeContestStatus(contest);
+        let leaderboard = [];
+        let participantCount = 0;
 
-        const sorted = sortByLeaderboardRules(participants);
-        const leaderboard = sorted.map(mapLeaderboardRow);
+        if (contestStatus === 'completed') {
+            // Auto-finalize once after contest completion so rankings are locked and profile stats are synced.
+            try {
+                await finalizeContest({ contestId: contest._id, source: 'system', force: false });
+            } catch (finalizeError) {
+                if (finalizeError?.code !== 'CONTEST_NOT_COMPLETED') {
+                    console.error('Contest auto-finalize failed:', finalizeError.message);
+                }
+            }
 
-        const winners = contest.status === 'completed'
+            const finalizedRows = await ContestResult.find({ contestId: contest._id })
+                .populate('userId', 'username rating')
+                .sort({ rank: 1, score: -1, totalTime: 1, wrongSubmissions: 1 })
+                .lean();
+            participantCount = finalizedRows.length;
+            leaderboard = finalizedRows.map((row, index) => ({
+                rank: Number(row.rank || index + 1),
+                userId: row.userId?._id || row.userId,
+                username: row.userId?.username || 'Unknown',
+                rating: getUserRating(row.userId),
+                score: Number(row.score || 0),
+                solvedCount: Number(row.problemsSolved || 0),
+                totalTime: Number(row.totalTime || row.penaltyTime || 0),
+                penalty: Number(row.totalTime || row.penaltyTime || 0),
+                wrongSubmissions: Number(row.wrongSubmissions || 0),
+                submissionCount: Number(row.submissionCount || 0),
+                status: row.status || 'finished',
+                lastSubmissionTime: row.updatedAt || null,
+                registrationTime: row.createdAt || null
+            }));
+        } else {
+            const participants = await ContestParticipant.find({ contestId: contest._id })
+                .populate('userId', 'username rating')
+                .lean();
+            const sorted = sortByLeaderboardRules(participants);
+            participantCount = sorted.length;
+            leaderboard = sorted.map(mapLeaderboardRow);
+        }
+
+        const winners = contestStatus === 'completed'
             ? leaderboard.slice(0, 3).map((entry, index) => ({
                 ...entry,
                 medal: index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze'
@@ -476,7 +704,15 @@ exports.getLeaderboard = async (req, res) => {
             contest: {
                 id: contest._id,
                 title: contest.title,
-                status: contest.status
+                status: contestStatus
+            },
+            contestMeta: {
+                contestId: contest._id,
+                title: contest.title,
+                participantCount,
+                isCompleted: contestStatus === 'completed',
+                leaderboardLocked: Boolean(contest.leaderboardLocked || contestStatus === 'completed'),
+                resultsFinalizedAt: contest.resultsFinalizedAt || null
             },
             winners,
             leaderboard
@@ -556,10 +792,312 @@ exports.deleteContest = async (req, res) => {
         }
 
         await ContestParticipant.deleteMany({ contestId: contest._id });
+        await ContestResult.deleteMany({ contestId: contest._id });
         await Contest.findByIdAndDelete(contest._id);
 
         return res.json({ success: true, message: 'Contest deleted successfully' });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message || 'Failed to delete contest' });
+    }
+};
+
+exports.exitContest = async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        const reason = String(req.body?.reason || 'manual_exit').trim() || 'manual_exit';
+        let resultPayload = null;
+        await session.withTransaction(async () => {
+            resultPayload = await markParticipantExited({
+                contestId: req.params.id,
+                userId: req.user.id,
+                reason,
+                session
+            });
+        });
+
+        try {
+            await recordActivity(req, {
+                userId: req.user.id,
+                activityType: 'contest_exited',
+                contestId: req.params.id,
+                metadata: {
+                    reason,
+                    score: Number(resultPayload?.participant?.score || 0),
+                    problemsSolved: Number(resultPayload?.participant?.solvedCount || 0),
+                    totalTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                    wrongSubmissions: Number(resultPayload?.participant?.wrongSubmissions || 0),
+                    link: `/contest/${req.params.id}`
+                },
+                dedupeKey: `contest_exited:${req.params.id}`,
+                dedupeWindowMinutes: 5
+            });
+        } catch (activityError) {
+            console.error('Activity event create failed (contest_exited):', activityError.message);
+        }
+
+        return res.json({
+            success: true,
+            message: 'You have exited the contest. Your current progress has been saved.',
+            progress: {
+                contestId: req.params.id,
+                status: 'exited',
+                score: Number(resultPayload?.participant?.score || 0),
+                problemsSolved: Number(resultPayload?.participant?.solvedCount || 0),
+                totalTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                penaltyTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                wrongSubmissions: Number(resultPayload?.participant?.wrongSubmissions || 0),
+                submissionCount: Number(resultPayload?.participant?.submissionCount || 0),
+                exitTime: resultPayload?.participant?.exitTime || new Date()
+            }
+        });
+    } catch (error) {
+        const status = mapContestServiceErrorToHttp(error);
+        return res.status(status).json({ success: false, message: error.message || 'Failed to exit contest' });
+    } finally {
+        session.endSession();
+    }
+};
+
+exports.submitContest = async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        const reason = String(req.body?.reason || 'manual_submit').trim() || 'manual_submit';
+        let resultPayload = null;
+        await session.withTransaction(async () => {
+            resultPayload = await markParticipantFinished({
+                contestId: req.params.id,
+                userId: req.user.id,
+                reason,
+                session
+            });
+        });
+
+        try {
+            await recordActivity(req, {
+                userId: req.user.id,
+                activityType: 'contest_finished',
+                contestId: req.params.id,
+                metadata: {
+                    reason,
+                    score: Number(resultPayload?.participant?.score || 0),
+                    problemsSolved: Number(resultPayload?.participant?.solvedCount || 0),
+                    totalTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                    wrongSubmissions: Number(resultPayload?.participant?.wrongSubmissions || 0),
+                    link: `/contest/${req.params.id}/leaderboard`
+                },
+                dedupeKey: `contest_submitted:${req.params.id}`,
+                dedupeWindowMinutes: 60
+            });
+        } catch (activityError) {
+            console.error('Activity event create failed (contest_finished):', activityError.message);
+        }
+
+        return res.json({
+            success: true,
+            message: 'Contest submitted successfully. Your progress is locked and saved.',
+            progress: {
+                contestId: req.params.id,
+                status: 'finished',
+                score: Number(resultPayload?.participant?.score || 0),
+                problemsSolved: Number(resultPayload?.participant?.solvedCount || 0),
+                totalTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                penaltyTime: Number(resultPayload?.participant?.totalTime ?? resultPayload?.participant?.penalty ?? 0),
+                wrongSubmissions: Number(resultPayload?.participant?.wrongSubmissions || 0),
+                submissionCount: Number(resultPayload?.participant?.submissionCount || 0),
+                finishedAt: resultPayload?.participant?.finishedAt || new Date()
+            }
+        });
+    } catch (error) {
+        const status = mapContestServiceErrorToHttp(error);
+        return res.status(status).json({ success: false, message: error.message || 'Failed to submit contest' });
+    } finally {
+        session.endSession();
+    }
+};
+
+exports.rejoinContest = async (req, res) => {
+    const session = await mongoose.startSession();
+    try {
+        let rejoinResult = null;
+        await session.withTransaction(async () => {
+            rejoinResult = await rejoinParticipant({
+                contestId: req.params.id,
+                userId: req.user.id,
+                session
+            });
+        });
+
+        return res.json({
+            success: true,
+            message: 'Rejoined contest successfully',
+            status: rejoinResult?.participant?.status || 'active'
+        });
+    } catch (error) {
+        const status = mapContestServiceErrorToHttp(error);
+        return res.status(status).json({ success: false, message: error.message || 'Failed to rejoin contest' });
+    } finally {
+        session.endSession();
+    }
+};
+
+exports.heartbeatContest = async (req, res) => {
+    try {
+        const touchedAt = await touchParticipantActivity({
+            contestId: req.params.id,
+            userId: req.user.id
+        });
+        return res.json({ success: true, touchedAt: touchedAt || new Date() });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to update contest activity' });
+    }
+};
+
+exports.getMyContestSummary = async (req, res) => {
+    try {
+        const contest = await Contest.findById(req.params.id).select('startTime endTime status');
+        if (contest && computeContestStatus(contest) === 'completed') {
+            try {
+                await finalizeContest({ contestId: req.params.id, source: 'system', force: false });
+            } catch (finalizeError) {
+                if (finalizeError?.code !== 'CONTEST_NOT_COMPLETED') {
+                    console.error('Contest finalize on summary failed:', finalizeError.message);
+                }
+            }
+        }
+
+        const summary = await getContestProgressSummary({
+            contestId: req.params.id,
+            userId: req.user.id
+        });
+        if (!summary) {
+            return res.status(404).json({ success: false, message: 'Contest participation not found' });
+        }
+        return res.json({ success: true, summary });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to load contest summary' });
+    }
+};
+
+exports.getMyContestHistory = async (req, res) => {
+    try {
+        const limit = Number(req.query.limit || 25);
+        const history = await getContestHistoryForUser({ userId: req.user.id, limit });
+        return res.json({ success: true, history });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to load contest history' });
+    }
+};
+
+exports.getFriendsContestResults = async (req, res) => {
+    try {
+        const limit = Number(req.query.limit || 50);
+        const includeSelf = String(req.query.includeSelf || 'true').toLowerCase() !== 'false';
+        const leaderboard = await getFriendsContestLeaderboard({
+            contestId: req.params.id,
+            userId: req.user.id,
+            includeSelf,
+            limit
+        });
+        return res.json({ success: true, leaderboard });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to fetch friends contest leaderboard' });
+    }
+};
+
+exports.finalizeContestResults = async (req, res) => {
+    try {
+        const finalized = await finalizeContest({
+            contestId: req.params.id,
+            source: normalizeRole(req.user?.role) === 'SUPER_ADMIN' ? 'admin' : 'system',
+            force: false
+        });
+
+        // Contest-level activity for top users
+        const leaderboardRows = finalized?.leaderboardRows || [];
+        const candidateUserIds = leaderboardRows.map((row) => row.userId).filter(Boolean);
+        const users = candidateUserIds.length > 0
+            ? await User.find({ _id: { $in: candidateUserIds } })
+                .select('_id contestStats.participated')
+                .lean()
+            : [];
+        const participatedMap = new Map(
+            users.map((entry) => [String(entry._id), Number(entry?.contestStats?.participated || 0)])
+        );
+
+        const topRows = leaderboardRows.filter((row) => {
+            const rank = Number(row.rank || 0);
+            const solvedCount = Number(row.solvedCount || 0);
+            const participated = Number(participatedMap.get(String(row.userId)) || 0);
+            return rank > 0 && (rank <= 100 || solvedCount > 3 || participated <= 1);
+        });
+        const contestTitle = finalized?.contest?.title || '';
+        await Promise.all(topRows.map(async (row) => {
+            try {
+                await recordActivity(req, {
+                    userId: row.userId,
+                    activityType: 'contest_finished',
+                    contestId: req.params.id,
+                    metadata: {
+                        rank: Number(row.rank || 0),
+                        score: Number(row.score || 0),
+                        problemsSolved: Number(row.solvedCount || 0),
+                        contestTitle,
+                        link: `/contest/${req.params.id}/leaderboard`
+                    },
+                    dedupeKey: `contest_finished:${req.params.id}:${row.userId}`,
+                    dedupeWindowMinutes: 60 * 24 * 365
+                });
+            } catch (activityError) {
+                console.error('Activity event create failed (contest_finished):', activityError.message);
+            }
+        }));
+
+        return res.json({
+            success: true,
+            message: 'Contest results finalized',
+            contest: {
+                id: finalized?.contest?._id || req.params.id,
+                title: finalized?.contest?.title || '',
+                finalizedAt: finalized?.finalizedAt || new Date(),
+                leaderboardLocked: true
+            },
+            participantCount: Number(finalized?.participantCount || 0),
+            syncedUsers: Number(finalized?.syncedUsers || 0)
+        });
+    } catch (error) {
+        const status = mapContestServiceErrorToHttp(error);
+        return res.status(status).json({ success: false, message: error.message || 'Failed to finalize contest results' });
+    }
+};
+
+exports.recalculateContestResults = async (req, res) => {
+    try {
+        const finalized = await finalizeContest({
+            contestId: req.params.id,
+            source: 'admin',
+            force: true
+        });
+        return res.json({
+            success: true,
+            message: 'Contest rankings recalculated',
+            participantCount: Number(finalized?.participantCount || 0),
+            syncedUsers: Number(finalized?.syncedUsers || 0),
+            finalizedAt: finalized?.finalizedAt || new Date()
+        });
+    } catch (error) {
+        const status = mapContestServiceErrorToHttp(error);
+        return res.status(status).json({ success: false, message: error.message || 'Failed to recalculate contest results' });
+    }
+};
+
+exports.getContestAnalytics = async (req, res) => {
+    try {
+        const analytics = await getContestAnalyticsSnapshot({ contestId: req.params.id });
+        if (!analytics) {
+            return res.status(404).json({ success: false, message: 'Contest not found' });
+        }
+        return res.json({ success: true, analytics });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to fetch contest analytics' });
     }
 };

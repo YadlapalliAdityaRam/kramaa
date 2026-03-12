@@ -5,7 +5,7 @@ import { register, clearError, clearRegisterMessage } from '../../redux/slices/a
 import { motion } from 'framer-motion';
 import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa';
 
-const RECAPTCHA_SCRIPT_ID = 'krama-recaptcha-script';
+const RECAPTCHA_SCRIPT_ID = 'algoverse-recaptcha-script';
 const RECAPTCHA_SCRIPT_SRC = 'https://www.google.com/recaptcha/api.js?render=explicit';
 
 const Register = () => {
@@ -131,7 +131,7 @@ const Register = () => {
                 style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '400px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Join Krama</h2>
+                    <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Join AlgoVerse</h2>
                     <p style={{ color: 'var(--text-secondary)' }}>Start your coding journey today</p>
                 </div>
 
@@ -166,6 +166,7 @@ const Register = () => {
                             placeholder="Username"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="username"
                             required
                             minLength="3"
                         />
@@ -181,6 +182,7 @@ const Register = () => {
                             placeholder="Email Address"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="email"
                             required
                         />
                     </div>
@@ -195,6 +197,7 @@ const Register = () => {
                             placeholder="Password"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="new-password"
                             required
                         />
                     </div>
@@ -209,6 +212,7 @@ const Register = () => {
                             placeholder="Confirm Password"
                             className="search-input"
                             style={{ width: '100%', paddingLeft: '40px' }}
+                            autoComplete="new-password"
                             required
                         />
                     </div>

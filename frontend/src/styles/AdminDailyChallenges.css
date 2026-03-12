@@ -1,0 +1,368 @@
+.dc-admin-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.dc-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dc-panel-head h2,
+.dc-panel-head h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.dc-panel-head p {
+    margin: 0.35rem 0 0;
+    color: #cbd5e1;
+}
+
+.dc-head-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.dc-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.dc-switch-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.dc-switch-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+}
+
+.dc-switch-item input {
+    width: 16px;
+    height: 16px;
+}
+
+.dc-warning-box {
+    grid-column: 1 / -1;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #fde68a;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.dc-form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.dc-help-text {
+    margin-top: 0.4rem;
+    color: #cbd5e1;
+    display: inline-block;
+}
+
+.dc-loading-inline {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.dc-pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    gap: 0.65rem;
+}
+
+.dc-pattern-card {
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(15, 23, 42, 0.55);
+    border-radius: 12px;
+    padding: 0.7rem;
+}
+
+.dc-pattern-day {
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.dc-pattern-meta {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+}
+
+.dc-insights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 0.8rem;
+}
+
+.dc-insight-card {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 12px;
+    padding: 0.85rem;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.dc-insight-card h4 {
+    margin: 0 0 0.5rem;
+    color: #f8fafc;
+}
+
+.dc-insight-card p,
+.dc-insight-card li {
+    color: #dbeafe;
+}
+
+.dc-insight-card ul {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.dc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.45rem;
+}
+
+.dc-dot.easy {
+    background: #22c55e;
+}
+
+.dc-dot.medium {
+    background: #f59e0b;
+}
+
+.dc-dot.hard {
+    background: #ef4444;
+}
+
+.dc-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.dc-chip {
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    color: #bfdbfe;
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    font-size: 0.78rem;
+}
+
+.dc-recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.dc-recent-list li {
+    display: grid;
+    grid-template-columns: 92px 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.dc-row-actions {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.dc-danger-btn {
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #fecaca;
+}
+
+.dc-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    gap: 0.5rem;
+}
+
+.dc-calendar-weekday {
+    color: #cbd5e1;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.86rem;
+    padding-bottom: 0.2rem;
+}
+
+.dc-calendar-cell {
+    min-height: 122px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(15, 23, 42, 0.45);
+    padding: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.dc-calendar-cell.blank {
+    visibility: hidden;
+}
+
+.dc-calendar-cell.empty {
+    opacity: 0.72;
+}
+
+.dc-cell-date {
+    font-size: 0.85rem;
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.dc-cell-title {
+    color: #e2e8f0;
+    font-size: 0.78rem;
+    line-height: 1.25;
+    min-height: 30px;
+}
+
+.dc-cell-source {
+    margin-top: auto;
+    color: #93c5fd;
+    font-size: 0.72rem;
+}
+
+.dc-cell-empty {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: auto;
+}
+
+.dc-difficulty-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.dc-difficulty-easy {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.17);
+    border-color: rgba(34, 197, 94, 0.45);
+}
+
+.dc-difficulty-medium {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.48);
+}
+
+.dc-difficulty-hard {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.46);
+}
+
+@media (max-width: 1180px) {
+    .dc-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dc-switch-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dc-pattern-grid {
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+    }
+
+    .dc-insights-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .dc-panel-head {
+        flex-direction: column;
+    }
+
+    .dc-calendar-grid {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+
+    .dc-calendar-weekday {
+        display: none;
+    }
+
+    .dc-pattern-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .dc-calendar-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dc-pattern-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dc-recent-list li {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+    }
+}
+
+[data-theme="light"] .dc-panel-head h2,
+[data-theme="light"] .dc-panel-head h3,
+[data-theme="light"] .dc-pattern-day,
+[data-theme="light"] .dc-insight-card h4,
+[data-theme="light"] .dc-cell-date {
+    color: #0f172a;
+}
+
+[data-theme="light"] .dc-panel-head p,
+[data-theme="light"] .dc-help-text,
+[data-theme="light"] .dc-pattern-meta,
+[data-theme="light"] .dc-cell-title,
+[data-theme="light"] .dc-cell-source,
+[data-theme="light"] .dc-cell-empty,
+[data-theme="light"] .dc-insight-card p,
+[data-theme="light"] .dc-insight-card li,
+[data-theme="light"] .dc-calendar-weekday {
+    color: #334155;
+}
+
+[data-theme="light"] .dc-pattern-card,
+[data-theme="light"] .dc-insight-card,
+[data-theme="light"] .dc-calendar-cell {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+}

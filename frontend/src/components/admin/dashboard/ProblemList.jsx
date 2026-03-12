@@ -14,8 +14,17 @@ const AUTO_REFRESH_SECTIONS = new Set(['dashboard', 'activity', 'stats', 'analyt
 const ProblemList = () => {
     const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(() => (
+        typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    ));
     const { user } = useSelector(state => state.auth);
     const isAdminOrSuper = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const fetchProblems = useCallback(async (silent = false) => {
         if (!silent) setLoading(true);
@@ -84,10 +93,10 @@ const ProblemList = () => {
 
     return (
         <div className="glass-panel">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '10px' : undefined }}>
                 <h2 className="text-xl font-bold text-white">Problem Management</h2>
                 {isAdminOrSuper && (
-                    <Link to="/admin/create-problem" className="btn-primary flex items-center gap-2">
+                    <Link to="/admin/create-problem" className="btn-primary flex items-center gap-2" style={{ width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}>
                         <FaPlus /> Create New
                     </Link>
                 )}

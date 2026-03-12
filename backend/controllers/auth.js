@@ -43,7 +43,7 @@ const toApiSafeUser = (user) => ({
     role: user.role,
     avatar: user.avatar,
     isVerified: Boolean(user.isVerified),
-    accountStatus: user.accountStatus,
+    accountStatus: user.accountStatus || 'Active',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
 });
@@ -477,7 +477,7 @@ exports.login = async (req, res) => {
             });
         }
 
-        if (String(user.accountStatus || '').toLowerCase() !== 'active') {
+        if (user.accountStatus && String(user.accountStatus).toLowerCase() !== 'active') {
             return res.status(403).json({
                 success: false,
                 message: 'Your account is not active. Please contact support.'

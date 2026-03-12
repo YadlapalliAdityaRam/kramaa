@@ -72,6 +72,14 @@ const createContestValidation = [
         .optional()
         .isNumeric()
         .withMessage('points must be a number'),
+    body('problems.*.baseScore')
+        .optional()
+        .isNumeric()
+        .withMessage('baseScore must be a number'),
+    body('problems.*.difficulty')
+        .optional()
+        .isIn(['Easy', 'Medium', 'Hard', 'easy', 'medium', 'hard'])
+        .withMessage('difficulty must be Easy, Medium, or Hard'),
     body('problems.*.order')
         .optional()
         .isNumeric()
@@ -83,7 +91,47 @@ const createContestValidation = [
     body('rules.*')
         .optional()
         .isString()
-        .withMessage('each rule must be a string')
+        .withMessage('each rule must be a string'),
+    body('scoringConfig')
+        .optional()
+        .isObject()
+        .withMessage('scoringConfig must be an object'),
+    body('scoringConfig.easyBaseScore')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('scoringConfig.easyBaseScore must be >= 0'),
+    body('scoringConfig.mediumBaseScore')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('scoringConfig.mediumBaseScore must be >= 0'),
+    body('scoringConfig.hardBaseScore')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('scoringConfig.hardBaseScore must be >= 0'),
+    body('scoringConfig.timePenaltyPerMinute')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('scoringConfig.timePenaltyPerMinute must be >= 0'),
+    body('scoringConfig.wrongAttemptPenalty')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('scoringConfig.wrongAttemptPenalty must be >= 0'),
+    body('exitRules')
+        .optional()
+        .isObject()
+        .withMessage('exitRules must be an object'),
+    body('exitRules.allowRejoin')
+        .optional()
+        .isBoolean()
+        .withMessage('exitRules.allowRejoin must be boolean'),
+    body('exitRules.autoExitOnInactivity')
+        .optional()
+        .isBoolean()
+        .withMessage('exitRules.autoExitOnInactivity must be boolean'),
+    body('exitRules.inactivityTimeoutMinutes')
+        .optional()
+        .isInt({ min: 5, max: 120 })
+        .withMessage('exitRules.inactivityTimeoutMinutes must be between 5 and 120')
 ];
 
 module.exports = {

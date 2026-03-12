@@ -1,0 +1,328 @@
+/* ── Kruskal's MST Visualizer ── */
+
+/* Step badge in description */
+.kruskal-step-badge {
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Dual Graph Panels ── */
+.kruskal-dual-graphs {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    min-height: 280px;
+}
+
+.kruskal-graph-panel {
+    flex: 1;
+    position: relative;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    min-height: 250px;
+}
+
+.kruskal-mst-panel {
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.kruskal-graph-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    z-index: 5;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+
+.kruskal-mst-label {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.kruskal-graph-canvas-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* ── Info Row (edge list, sets, weight, legend) ── */
+.kruskal-info-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.kruskal-info-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.kruskal-card-title {
+    margin: 0 0 10px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ── Sorted Edge List ── */
+.kruskal-edge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.kruskal-edge-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.kruskal-edge-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.kruskal-edge-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 3px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.25s ease;
+}
+
+.kruskal-edge-item .ke-nodes {
+    flex: 1;
+}
+
+.kruskal-edge-item .ke-weight {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.kruskal-edge-item .ke-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+/* Considering */
+.kruskal-edge-item.edge-considering {
+    background: rgba(59, 130, 246, 0.12);
+    border-left-color: #3b82f6;
+    color: #93c5fd;
+    font-weight: 600;
+}
+
+.ke-badge-cur {
+    background: rgba(59, 130, 246, 0.25);
+    color: #60a5fa;
+}
+
+/* Accepted */
+.kruskal-edge-item.edge-accepted {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: #10b981;
+    color: #a7f3d0;
+}
+
+.ke-badge-ok {
+    background: rgba(16, 185, 129, 0.25);
+    color: #34d399;
+}
+
+/* Rejected */
+.kruskal-edge-item.edge-rejected {
+    background: rgba(239, 68, 68, 0.08);
+    border-left-color: #ef4444;
+    color: #fca5a5;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.ke-badge-no {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+/* ── Disjoint Sets ── */
+.kruskal-sets-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.kruskal-set-group {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 55px;
+}
+
+.ks-root {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ks-members {
+    padding: 5px 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: center;
+}
+
+.ks-member {
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.ks-member.ks-member-active {
+    color: #fef08a;
+    background: rgba(234, 179, 8, 0.2);
+    transform: scale(1.1);
+}
+
+/* ── MST Weight Card ── */
+.kruskal-weight-card {
+    text-align: center;
+    background: rgba(16, 185, 129, 0.04) !important;
+    border-color: rgba(16, 185, 129, 0.15) !important;
+    min-width: 120px;
+    flex: 0.5;
+}
+
+.kruskal-total-weight {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #10b981;
+    text-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+    line-height: 1;
+}
+
+.kruskal-edge-count {
+    font-size: 0.75rem;
+    color: #6ee7b7;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* ── Legend ── */
+.kruskal-legend-card {
+    min-width: 130px;
+    flex: 0.5;
+}
+
+.kruskal-legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kl-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.kl-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.kl-grey {
+    background: #4b5563;
+}
+
+.kl-blue {
+    background: #3b82f6;
+}
+
+.kl-green {
+    background: #10b981;
+}
+
+.kl-red {
+    background: #ef4444;
+}
+
+/* ── Controls Bar ── */
+.kruskal-controls-bar {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .kruskal-dual-graphs {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .kruskal-graph-panel {
+        min-height: 200px;
+    }
+
+    .kruskal-info-row {
+        flex-wrap: nowrap;
+    }
+
+    .kruskal-info-card {
+        min-width: 200px;
+    }
+}

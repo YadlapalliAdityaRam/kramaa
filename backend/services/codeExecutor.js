@@ -1048,7 +1048,33 @@ if (typeof module !== 'undefined' && module.exports) {
         const parameters = problemDetails?.parameters || [];
 
         // Input payload must already be structured JSON types.
-        const inputs = testCases.map((tc) => tc.input);
+        const inputs = testCases.map((tc) => {
+            let parsedInput;
+            try {
+                parsedInput = typeof tc.input === 'string' ? JSON.parse(tc.input) : tc.input;
+            } catch {
+                parsedInput = tc.input;
+            }
+
+            // Auto-wrap legacy formats into {paramName: value} objects
+            if (parameters.length > 0) {
+                if (parsedInput === null || typeof parsedInput !== 'object' || Array.isArray(parsedInput)) {
+                    if (Array.isArray(parsedInput) && parsedInput.length === parameters.length) {
+                        const wrapped = {};
+                        for (let j = 0; j < parameters.length; j++) {
+                            wrapped[parameters[j].name] = parsedInput[j];
+                        }
+                        parsedInput = wrapped;
+                    } else if (parameters.length === 1) {
+                        const wrapped = {};
+                        wrapped[parameters[0].name] = parsedInput;
+                        parsedInput = wrapped;
+                    }
+                }
+            }
+
+            return parsedInput;
+        });
 
         // Enforce rigid parameter schema validation
         if (parameters.length > 0) {
@@ -1138,6 +1164,7 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         const actualVal = parseExecutionValue(returnedStr);
+        const expectedVal = parseExecutionValue(expectedStr);
         const validationType = normalizeOutputValidationType(
             testCase?.validationType || problemDetails?.validationType
         );
@@ -1147,7 +1174,7 @@ if (typeof module !== 'undefined' && module.exports) {
             validationKey: problemDetails?.validationKey,
             tolerance: problemDetails?.tolerance,
             actualOutput: actualVal,
-            expectedOutput: expectedStr,
+            expectedOutput: expectedVal,
             testCaseInput: testCase?.input,
             declaredType
         });

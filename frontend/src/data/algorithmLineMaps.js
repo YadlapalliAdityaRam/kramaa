@@ -1,4 +1,10 @@
 export const algorithmLineMaps = {
+    ratInMaze: {
+        javascript: { compare: 12, backtrack: 15, completed: 21 }
+    },
+    rabinKarp: {
+        javascript: { compare: 15, match: 23, mismatch: 20, completed: 33 }
+    },
     bubbleSort: {
         javascript: { compare: 6, swap: 8, sorted: 14, completed: 16 },
         python: { compare: 5, swap: 6, sorted: 9, completed: 10 },
@@ -150,5 +156,14 @@ export const algorithmLineMaps = {
         python: { tree: 9, 'tree-complete': 13 },
         cpp: { tree: 16, 'tree-complete': 23 },
         java: { tree: 17, 'tree-complete': 23 }
+    },
+    nQueens: {
+        javascript: { compare: 5, backtrack: 20, completed: 13 }
+    },
+    sieve: {
+        javascript: { compare: 4, mark: 8, completed: 11 }
+    },
+    shellSort: {
+        javascript: { compare: 7, swap: 8, completed: 14 }
     }
 };

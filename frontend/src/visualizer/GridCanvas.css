@@ -1,0 +1,74 @@
+.grid-canvas {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    overflow: auto;
+}
+
+.grid-container {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1;
+    /* Keep it square if possible */
+}
+
+.grid-cell {
+    background: var(--surface-bg, #1e293b);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-primary, #f8fafc);
+    aspect-ratio: 1;
+    /* Keep individual cells square */
+    transition: all 0.2s ease-in-out;
+}
+
+/* Base states */
+.grid-cell-default {}
+
+.grid-cell-empty {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.grid-cell-active-path {
+    background: var(--primary, #3b82f6);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.grid-cell-crossed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+/* Active Highlight States */
+.grid-cell-current {
+    background: var(--warning, #f59e0b) !important;
+    color: #000;
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.grid-cell-compare {
+    background: var(--info, #06b6d4) !important;
+    color: #000;
+    transform: scale(1.05);
+    z-index: 5;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+}
+
+.grid-cell-completed {
+    background: var(--success, #10b981) !important;
+    color: #000;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}

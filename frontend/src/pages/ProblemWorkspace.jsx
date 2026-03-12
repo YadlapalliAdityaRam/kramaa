@@ -8,6 +8,7 @@ import SubmissionResultModal from '../components/coding/SubmissionResultModal';
 import ReportModal from '../components/common/ReportModal';
 import PerformanceGraphModal from '../components/coding/PerformanceGraphModal';
 import CodeEditor from '../components/coding/CodeEditor';
+import FollowButton from '../components/social/FollowButton';
 import api, { getCurrentSocketBaseUrl, getSocketClientOptions } from '../utils/api';
 import { fetchProblem, likeProblem, unlikeProblem } from '../redux/slices/problemSlice';
 import { loadUser } from '../redux/slices/authSlice';
@@ -82,6 +83,13 @@ const ProblemWorkspace = () => {
     // Submissions state
     const [userSubmissions, setUserSubmissions] = useState([]);
     const [fetchingSubmissions, setFetchingSubmissions] = useState(false);
+    const [publicSolutions, setPublicSolutions] = useState([]);
+    const [fetchingSolutions, setFetchingSolutions] = useState(false);
+    const [solutionsPage, setSolutionsPage] = useState(1);
+    const [solutionsHasMore, setSolutionsHasMore] = useState(false);
+    const [solutionsSort, setSolutionsSort] = useState('latest');
+    const [expandedSolutions, setExpandedSolutions] = useState({});
+    const [solutionsFollowMap, setSolutionsFollowMap] = useState({});
 
     // Problem list state
     const [allProblems, setAllProblems] = useState([]);
@@ -181,6 +189,11 @@ const ProblemWorkspace = () => {
             setSubmissionResult(null);
             setDoubts([]);
             setEditorialData(null);
+            setPublicSolutions([]);
+            setSolutionsPage(1);
+            setSolutionsHasMore(false);
+            setExpandedSolutions({});
+            setSolutionsFollowMap({});
             setActiveTab('Description');
 
             try {
@@ -284,6 +297,11 @@ const ProblemWorkspace = () => {
             fetchUserSubmissions();
         }
     }, [activeTab, problem, isAuthenticated]);
+
+    useEffect(() => {
+        if (activeTab !== 'Solutions' || !problem?._id) return;
+        fetchPublicSolutions(1, false);
+    }, [activeTab, problem?._id, solutionsSort]);
 
     // Check solved status when submissions change
     useEffect(() => {
@@ -436,6 +454,67 @@ const ProblemWorkspace = () => {
         } finally {
             setFetchingSubmissions(false);
         }
+    };
+
+    const fetchPublicSolutions = async (pageNum = 1, append = false) => {
+        if (!problem?._id) return;
+
+        if (!append) setFetchingSolutions(true);
+        try {
+            const res = await api.get(`/submissions/problem/${problem._id}/solutions`, {
+                params: {
+                    page: pageNum,
+                    limit: 12,
+                    sort: solutionsSort
+                }
+            });
+
+            const items = Array.isArray(res.data?.items) ? res.data.items : [];
+            const pagination = res.data?.pagination || {};
+
+            setPublicSolutions((prev) => append ? [...(Array.isArray(prev) ? prev : []), ...items] : items);
+            setSolutionsPage(Number(pagination.page || pageNum));
+            setSolutionsHasMore(Number(pagination.page || pageNum) < Number(pagination.pages || 1));
+
+            setSolutionsFollowMap((prev) => {
+                const next = { ...(prev || {}) };
+                items.forEach((entry) => {
+                    const uid = String(entry?.user?._id || '');
+                    if (uid) next[uid] = Boolean(entry?.user?.isFollowing);
+                });
+                return next;
+            });
+        } catch (error) {
+            if (!append) {
+                setPublicSolutions([]);
+                setSolutionsHasMore(false);
+                setSolutionsPage(1);
+            }
+            toast.error(error?.response?.data?.message || 'Failed to load solutions');
+        } finally {
+            setFetchingSolutions(false);
+        }
+    };
+
+    const handleSolutionFollowStateChange = (targetUserId, nextState) => {
+        const normalizedId = String(targetUserId || '');
+        if (!normalizedId) return;
+
+        setSolutionsFollowMap((prev) => ({ ...(prev || {}), [normalizedId]: Boolean(nextState) }));
+        setPublicSolutions((prev) => (Array.isArray(prev) ? prev : []).map((entry) => (
+            String(entry?.user?._id || '') === normalizedId
+                ? { ...entry, user: { ...(entry.user || {}), isFollowing: Boolean(nextState) } }
+                : entry
+        )));
+    };
+
+    const toggleSolutionExpand = (solutionId) => {
+        const normalizedId = String(solutionId || '');
+        if (!normalizedId) return;
+        setExpandedSolutions((prev) => ({
+            ...(prev || {}),
+            [normalizedId]: !prev?.[normalizedId]
+        }));
     };
 
     const closePerformanceGraph = () => {
@@ -792,17 +871,58 @@ const ProblemWorkspace = () => {
     }, [problem?._id, currentUserId]);
 
     // Navigation helpers
-    const sortedProblems = [...allProblems].sort((a, b) => (a.problemNumber || 0) - (b.problemNumber || 0));
-    const currentIndex = sortedProblems.findIndex(p => p._id === id);
+    const sortedProblems = useMemo(() => {
+        const source = Array.isArray(allProblems) ? allProblems : [];
+        return source
+            .map((entry, index) => ({
+                entry,
+                index,
+                numericOrder: Number(entry?.problemNumber)
+            }))
+            .sort((left, right) => {
+                const leftHasOrder = Number.isFinite(left.numericOrder) && left.numericOrder > 0;
+                const rightHasOrder = Number.isFinite(right.numericOrder) && right.numericOrder > 0;
+
+                if (leftHasOrder && rightHasOrder && left.numericOrder !== right.numericOrder) {
+                    return left.numericOrder - right.numericOrder;
+                }
+                if (leftHasOrder !== rightHasOrder) {
+                    return leftHasOrder ? -1 : 1;
+                }
+
+                return left.index - right.index;
+            })
+            .map(({ entry }) => entry);
+    }, [allProblems]);
+    const normalizedRouteProblemKey = String(problemId || id || '').trim();
+    const isSameProblem = useCallback((candidate) => {
+        if (!candidate) return false;
+        const candidateId = String(candidate._id || '').trim();
+        const candidateSlug = String(candidate.slug || '').trim();
+        return candidateId === normalizedRouteProblemKey || candidateSlug === normalizedRouteProblemKey;
+    }, [normalizedRouteProblemKey]);
+    const currentIndex = useMemo(() => {
+        const routeMatchIndex = sortedProblems.findIndex((p) => isSameProblem(p));
+        if (routeMatchIndex >= 0) return routeMatchIndex;
+
+        const currentProblemId = String(problem?._id || '').trim();
+        if (!currentProblemId) return -1;
+        return sortedProblems.findIndex((p) => String(p?._id || '').trim() === currentProblemId);
+    }, [isSameProblem, problem?._id, sortedProblems]);
     const prevProblem = currentIndex > 0 ? sortedProblems[currentIndex - 1] : null;
-    const nextProblem = currentIndex !== -1 && currentIndex < sortedProblems.length - 1 ? sortedProblems[currentIndex + 1] : (currentIndex === -1 && sortedProblems.length > 0 ? sortedProblems[0] : null);
+    const nextProblem = currentIndex >= 0 && currentIndex < sortedProblems.length - 1
+        ? sortedProblems[currentIndex + 1]
+        : null;
+    const displayedProblemNumber = Number.isFinite(Number(problem?.problemNumber)) && Number(problem?.problemNumber) > 0
+        ? Number(problem?.problemNumber)
+        : (currentIndex >= 0 ? currentIndex + 1 : null);
 
     // DEBUG LOGS
     // console.log("Navigation Debug:", { allProblemsLen: allProblems.length, currentIndex, id, prev: prevProblem?._id, next: nextProblem?._id });
 
     const handleRandomProblem = () => {
         if (sortedProblems.length < 2) {
-            if (sortedProblems.length === 1 && sortedProblems[0]._id !== id) {
+            if (sortedProblems.length === 1 && !isSameProblem(sortedProblems[0])) {
                 navigate(`/coding-platform/${sortedProblems[0]._id}`);
             }
             return;
@@ -812,13 +932,13 @@ const ProblemWorkspace = () => {
         do {
             randomIdx = Math.floor(Math.random() * sortedProblems.length);
             attempts++;
-        } while (sortedProblems[randomIdx]._id === id && attempts < 10);
+        } while (isSameProblem(sortedProblems[randomIdx]) && attempts < 10);
 
         navigate(`/coding-platform/${sortedProblems[randomIdx]._id}`);
     };
 
     const filteredProblems = sortedProblems.filter(p =>
-        p.title.toLowerCase().includes(problemSearchQuery.toLowerCase())
+        String(p?.title || '').toLowerCase().includes(problemSearchQuery.toLowerCase())
     );
 
     const getDifficultyColor = (diff) => {
@@ -840,6 +960,16 @@ const ProblemWorkspace = () => {
     const mobileRightPanelDefault = 100 - mobileLeftPanelDefault;
     const mobileEditorPanelDefault = isCompactMobile ? 50 : 54;
     const mobileConsolePanelDefault = 100 - mobileEditorPanelDefault;
+    const resultCases = Array.isArray(submissionResult?.testResults) ? submissionResult.testResults : [];
+    const passedResultCases = resultCases.filter((entry) => entry?.passed).length;
+
+    useEffect(() => {
+        const shouldLockBody = Boolean(expandedPanel);
+        document.body.style.overflow = shouldLockBody ? 'hidden' : '';
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [expandedPanel]);
 
     if (loading) {
         return (
@@ -1210,6 +1340,43 @@ const ProblemWorkspace = () => {
                         {isRunning && loadingType === 'submit' ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaCheckCircle />} {isAdmin ? 'View Only' : 'Submit'}
                     </button>
                 </div>
+
+                {isMobile && (
+                    <div style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        padding: '2px 2px 0',
+                        minWidth: 0
+                    }}>
+                        <div style={{
+                            fontSize: '12px',
+                            color: '#e5e7eb',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            flex: 1,
+                            minWidth: 0
+                        }}>
+                            {displayedProblemNumber ? `${displayedProblemNumber}. ` : ''}{problem.title}
+                        </div>
+                        <span style={{
+                            fontSize: '10px',
+                            color: getDifficultyColor(problem.difficulty),
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '999px',
+                            padding: '3px 8px',
+                            fontWeight: 700,
+                            flexShrink: 0
+                        }}>
+                            {problem.difficulty}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* ═══════════ PROBLEM LIST DROPDOWN ═══════════ */}
@@ -1254,14 +1421,16 @@ const ProblemWorkspace = () => {
                                 style={{
                                     padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                     borderBottom: '1px solid rgba(255,255,255,0.03)',
-                                    background: p._id === id ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                    background: isSameProblem(p) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                                     transition: 'background 0.15s'
                                 }}
-                                onMouseEnter={(e) => { if (p._id !== id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                                onMouseLeave={(e) => { if (p._id !== id) e.currentTarget.style.background = 'transparent'; }}
+                                onMouseEnter={(e) => { if (!isSameProblem(p)) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                onMouseLeave={(e) => { if (!isSameProblem(p)) e.currentTarget.style.background = 'transparent'; }}
                             >
-                                <span style={{ fontSize: '13px', color: p._id === id ? '#3b82f6' : '#d1d5db' }}>
-                                    {p.problemNumber}. {p.title}
+                                <span style={{ fontSize: '13px', color: isSameProblem(p) ? '#3b82f6' : '#d1d5db' }}>
+                                    {Number.isFinite(Number(p?.problemNumber)) && Number(p?.problemNumber) > 0
+                                        ? `${Number(p.problemNumber)}. ${p.title}`
+                                        : p.title}
                                 </span>
                                 <span style={{ fontSize: '12px', color: getDifficultyColor(p.difficulty), fontWeight: '500' }}>
                                     {p.difficulty === 'Medium' ? 'Med.' : p.difficulty}
@@ -1279,8 +1448,18 @@ const ProblemWorkspace = () => {
                     <Panel ref={leftPanelRef} defaultSize={isMobile ? mobileLeftPanelDefault : 33} minSize={isMobile ? 24 : 20} collapsible={true}>
                         <div style={{
                             height: '100%', background: '#1f2937', display: 'flex', flexDirection: 'column',
-                            ...(expandedPanel === 'left' && !isMobile ? {
-                                position: 'fixed', top: 48, left: 0, right: 0, bottom: 0, zIndex: 50
+                            ...(expandedPanel === 'left' ? {
+                                position: 'fixed',
+                                top: isMobile ? 0 : 48,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 250,
+                                background: '#1f2937',
+                                width: '100vw',
+                                maxWidth: '100vw',
+                                height: isMobile ? '100dvh' : 'auto',
+                                overflow: 'hidden'
                             } : {})
                         }}>
                             {/* Tabs */}
@@ -1312,7 +1491,7 @@ const ProblemWorkspace = () => {
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px', position: 'relative' }} className="custom-scrollbar" ref={descriptionScrollRef}>
                                     {/* Title */}
                                     <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'white', marginBottom: '12px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        {problem.problemNumber}. {problem.title}
+                                        {displayedProblemNumber ? `${displayedProblemNumber}. ` : ''}{problem.title}
                                         {isSolved && <FaCheckCircle style={{ color: '#22c55e', fontSize: '18px' }} title="Solved" />}
                                     </h1>
 
@@ -1975,7 +2154,177 @@ const ProblemWorkspace = () => {
                                     )}
                                 </div>
 
-                                /* ═══ SOLUTIONS TAB (coming soon) ═══ */
+                                /* Solutions Tab */
+                            ) : activeTab === 'Solutions' ? (
+                                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: '14px', gap: '10px', flexDirection: isMobile ? 'column' : 'row' }}>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Community Solutions</h2>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+                                            <select
+                                                value={solutionsSort}
+                                                onChange={(event) => setSolutionsSort(event.target.value)}
+                                                style={{
+                                                    background: '#1f2937',
+                                                    color: '#d1d5db',
+                                                    border: '1px solid rgba(255,255,255,0.12)',
+                                                    borderRadius: '8px',
+                                                    padding: '6px 10px',
+                                                    fontSize: '12px',
+                                                    outline: 'none',
+                                                    minWidth: isMobile ? '100%' : '160px'
+                                                }}
+                                            >
+                                                <option value="latest">Latest</option>
+                                                <option value="runtime">Fastest Runtime</option>
+                                                <option value="memory">Least Memory</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={() => fetchPublicSolutions(1, false)}
+                                                style={{
+                                                    border: '1px solid rgba(59,130,246,0.45)',
+                                                    background: 'rgba(59,130,246,0.15)',
+                                                    color: '#93c5fd',
+                                                    borderRadius: '8px',
+                                                    padding: '6px 10px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                Refresh
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {fetchingSolutions && publicSolutions.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '36px', color: '#6b7280' }}>
+                                            <FaSpinner style={{ animation: 'spin 1s linear infinite', fontSize: '22px', color: '#60a5fa', marginBottom: '10px' }} />
+                                            <div>Loading solutions...</div>
+                                        </div>
+                                    ) : !Array.isArray(publicSolutions) || publicSolutions.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '36px', color: '#6b7280', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                                            <FaCode style={{ fontSize: '30px', marginBottom: '10px', opacity: 0.4 }} />
+                                            <p style={{ margin: 0, fontSize: '13px' }}>No accepted public solutions yet for this problem.</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            {publicSolutions.map((solution) => {
+                                                const solutionId = String(solution?._id || '');
+                                                const authorId = String(solution?.user?._id || '');
+                                                const expanded = Boolean(expandedSolutions?.[solutionId]);
+                                                const isSelf = authorId && authorId === currentUserId;
+                                                const followState = Boolean(solutionsFollowMap?.[authorId] ?? solution?.user?.isFollowing);
+
+                                                return (
+                                                    <div
+                                                        key={solutionId || `${authorId}-${solution?.createdAt}`}
+                                                        style={{
+                                                            border: '1px solid rgba(255,255,255,0.08)',
+                                                            borderRadius: '12px',
+                                                            background: 'rgba(255,255,255,0.02)',
+                                                            padding: isMobile ? '12px' : '14px'
+                                                        }}
+                                                    >
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '10px', flexDirection: isMobile ? 'column' : 'row' }}>
+                                                            <div style={{ minWidth: 0 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                    <Link to={`/profile/${solution?.user?.username || ''}`} style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 700, fontSize: '0.9rem' }}>
+                                                                        {solution?.user?.username || 'Unknown'}
+                                                                    </Link>
+                                                                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                                                                        {getRelativeTime(solution?.createdAt)}
+                                                                    </span>
+                                                                    <span style={{ fontSize: '0.7rem', color: '#cbd5e1', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', padding: '2px 8px' }}>
+                                                                        {solution?.language || 'unknown'}
+                                                                    </span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px', color: '#9ca3af', fontSize: '0.74rem' }}>
+                                                                    <span>Runtime: {Number(solution?.runtime || 0).toFixed(2)} ms</span>
+                                                                    <span>Memory: {Number(solution?.memory || 0).toFixed(2)} MB</span>
+                                                                    <span>Tests: {Number(solution?.testCasesPassed || 0)}/{Number(solution?.totalTestCases || 0)}</span>
+                                                                    <span>Solved: {Number(solution?.user?.problemsSolved || 0)}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleSolutionExpand(solutionId)}
+                                                                    style={{
+                                                                        border: '1px solid rgba(59,130,246,0.4)',
+                                                                        background: 'rgba(59,130,246,0.15)',
+                                                                        color: '#93c5fd',
+                                                                        borderRadius: '8px',
+                                                                        padding: '7px 10px',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: 600,
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    {expanded ? 'Hide Solution' : 'View Solution'}
+                                                                </button>
+                                                                {isAuthenticated && (
+                                                                    <FollowButton
+                                                                        targetUserId={authorId}
+                                                                        isSelf={isSelf}
+                                                                        initialFollowing={followState}
+                                                                        size="sm"
+                                                                        onStateChange={(nextState) => handleSolutionFollowStateChange(authorId, nextState)}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {expanded && (
+                                                            <pre
+                                                                style={{
+                                                                    marginTop: '10px',
+                                                                    background: '#0f172a',
+                                                                    border: '1px solid rgba(255,255,255,0.08)',
+                                                                    borderRadius: '8px',
+                                                                    padding: isMobile ? '10px' : '12px',
+                                                                    fontSize: '12px',
+                                                                    color: '#e2e8f0',
+                                                                    overflowX: 'auto',
+                                                                    whiteSpace: 'pre'
+                                                                }}
+                                                            >
+                                                                <code>{String(solution?.code || '').trim() || '// Solution not available'}</code>
+                                                            </pre>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {solutionsHasMore && (
+                                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px' }}>
+                                                    <button
+                                                        type="button"
+                                                        disabled={fetchingSolutions}
+                                                        onClick={() => fetchPublicSolutions((solutionsPage || 1) + 1, true)}
+                                                        style={{
+                                                            border: '1px solid rgba(59,130,246,0.45)',
+                                                            background: 'rgba(59,130,246,0.15)',
+                                                            color: '#93c5fd',
+                                                            borderRadius: '8px',
+                                                            padding: '8px 14px',
+                                                            fontSize: '12px',
+                                                            fontWeight: 600,
+                                                            cursor: fetchingSolutions ? 'not-allowed' : 'pointer',
+                                                            opacity: fetchingSolutions ? 0.6 : 1
+                                                        }}
+                                                    >
+                                                        {fetchingSolutions ? 'Loading...' : 'Load More Solutions'}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                /* Fallback Tab */
                             ) : (
                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', flexDirection: 'column' }}>
                                     <FaCode style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.3 }} />
@@ -2005,8 +2354,18 @@ const ProblemWorkspace = () => {
                             >
                                 <div style={{
                                     height: '100%', display: 'flex', flexDirection: 'column',
-                                    ...(expandedPanel === 'editor' && !isMobile ? {
-                                        position: 'fixed', top: 48, left: 0, right: 0, bottom: 0, zIndex: 50, background: '#1f2937'
+                                    ...(expandedPanel === 'editor' ? {
+                                        position: 'fixed',
+                                        top: isMobile ? 0 : 48,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 250,
+                                        background: '#1f2937',
+                                        width: '100vw',
+                                        maxWidth: '100vw',
+                                        height: isMobile ? '100dvh' : 'auto',
+                                        overflow: 'hidden'
                                     } : {})
                                 }}>
                                     <div style={{
@@ -2045,8 +2404,18 @@ const ProblemWorkspace = () => {
                             >
                                 <div style={{
                                     height: '100%', background: '#111827', display: 'flex', flexDirection: 'column',
-                                    ...(expandedPanel === 'console' && !isMobile ? {
-                                        position: 'fixed', top: 48, left: 0, right: 0, bottom: 0, zIndex: 50
+                                    ...(expandedPanel === 'console' ? {
+                                        position: 'fixed',
+                                        top: isMobile ? 0 : 48,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 250,
+                                        background: '#111827',
+                                        width: '100vw',
+                                        maxWidth: '100vw',
+                                        height: isMobile ? '100dvh' : 'auto',
+                                        overflow: 'hidden'
                                     } : {})
                                 }}>
                                     <div style={{
@@ -2078,10 +2447,15 @@ const ProblemWorkspace = () => {
                                                 ) : (
                                                     <div>
                                                         <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            {submissionResult.testResults?.every(r => r.passed) ? (
+                                                            {resultCases.length > 0 && resultCases.every(r => r.passed) ? (
                                                                 <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '14px' }}>All Tests Passed</span>
                                                             ) : (
                                                                 <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '14px' }}>Tests Failed</span>
+                                                            )}
+                                                            {resultCases.length > 0 && (
+                                                                <span style={{ color: '#9ca3af', fontSize: '12px' }}>
+                                                                    ({passedResultCases}/{resultCases.length} passed)
+                                                                </span>
                                                             )}
                                                         </div>
                                                         {submissionResult.firstFailedTestCase && (
@@ -2099,14 +2473,25 @@ const ProblemWorkspace = () => {
                                                                 )}
                                                             </div>
                                                         )}
-                                                        {submissionResult.testResults?.map((res, idx) => (
+                                                        {resultCases.map((res, idx) => (
                                                             <div key={idx} style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                                                                     <span style={{ fontSize: '11px', color: '#9ca3af' }}>Case {res.testCaseNumber || (idx + 1)}</span>
                                                                     <span style={{ color: res.passed ? '#22c55e' : '#ef4444', fontSize: '11px' }}>{res.passed ? 'Passed' : 'Failed'}</span>
                                                                 </div>
-                                                                {!res.passed && <div style={{ fontSize: '11px', color: '#6b7280' }}>Expected: {formatOutputDisplay(res.expectedOutput)}</div>}
-                                                                {!res.passed && <div style={{ fontSize: '11px', color: '#6b7280' }}>Actual: {formatOutputDisplay(res.actualOutput)}</div>}
+                                                                {res.isHidden ? (
+                                                                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                                                                        Hidden test case {res.passed ? 'passed' : 'failed'}.
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <div style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'pre-wrap' }}>
+                                                                            Input: {formatInputDisplay(res.input, problem?.parameters || [])}
+                                                                        </div>
+                                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Expected: {formatOutputDisplay(res.expectedOutput)}</div>
+                                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Actual: {formatOutputDisplay(res.actualOutput)}</div>
+                                                                    </>
+                                                                )}
                                                                 {res.printedOutput && (
                                                                     <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
                                                                         stdout: {res.printedOutput}

@@ -24,3 +24,19 @@
     font-size: 1.05rem;
     font-weight: 600;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .tree-canvas {
+        min-height: 250px;
+        padding: 5px 0;
+    }
+
+    .tree-svg {
+        min-height: 250px;
+    }
+
+    .tree-canvas-empty {
+        font-size: 0.9rem;
+    }
+}

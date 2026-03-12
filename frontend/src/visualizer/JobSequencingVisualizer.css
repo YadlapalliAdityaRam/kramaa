@@ -1,0 +1,375 @@
+/* ── Job Sequencing Visualizer ── */
+
+.js-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    height: 100%;
+}
+
+/* ── Input Bar ── */
+.js-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+}
+
+.js-inputs {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    align-items: center;
+}
+
+.js-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.js-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.js-array-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.js-array-input:focus {
+    border-color: #6366f1;
+}
+
+/* ── Main Area ── */
+.js-main-area {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Jobs Panel ── */
+.js-jobs-panel {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    max-width: 280px;
+}
+
+.js-panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+.js-jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.js-job-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid transparent;
+    transition: all 0.3s;
+}
+
+.js-job-card.js-active {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.js-job-card.state-scheduled {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.js-job-card.state-rejected {
+    border-color: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.04);
+    opacity: 0.6;
+}
+
+.js-job-card.state-considering {
+    animation: js-pulse 1s ease-in-out infinite;
+}
+
+@keyframes js-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.js-job-color {
+    width: 6px;
+    height: 32px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.js-job-info {
+    flex: 1;
+}
+
+.js-job-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.js-job-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.js-job-profit {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.js-job-status-badge {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* ── Timeline Panel ── */
+.js-timeline-panel {
+    flex: 1.5;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.js-slots-grid {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    align-items: stretch;
+    flex-wrap: wrap;
+    padding: 8px 0;
+}
+
+.js-slot {
+    flex: 1;
+    min-width: 80px;
+    max-width: 140px;
+    border-radius: 10px;
+    border: 2px solid rgba(99, 102, 241, 0.15);
+    background: rgba(15, 23, 42, 0.4);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+.js-slot-filled {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.04);
+}
+
+.js-slot-searching {
+    border-color: rgba(245, 158, 11, 0.6) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    animation: js-slot-glow 1s ease-in-out infinite;
+}
+
+@keyframes js-slot-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+    }
+}
+
+.js-slot-header {
+    padding: 6px 0;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.js-slot-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+    min-height: 80px;
+}
+
+.js-slot-job {
+    width: 100%;
+    padding: 10px 8px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.4s;
+}
+
+.js-slot-job-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.js-slot-job-profit {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 2px;
+}
+
+.js-slot-placeholder {
+    font-size: 1.2rem;
+    color: #334155;
+}
+
+.js-slot-searching .js-slot-placeholder {
+    color: #f59e0b;
+    animation: js-bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes js-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(4px);
+    }
+}
+
+/* ── Stats ── */
+.js-stats-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.js-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.js-stat-label {
+    display: block;
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.js-stat-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.js-stat-highlight {
+    color: #10b981;
+}
+
+.js-stat-rejected {
+    color: #ef4444;
+}
+
+/* ── Legend ── */
+.js-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.js-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.js-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+/* ── Controls ── */
+.js-controls-wrapper {
+    padding-top: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .js-main-area {
+        flex-direction: column;
+    }
+
+    .js-jobs-panel {
+        max-width: none;
+    }
+
+    .js-slots-grid {
+        justify-content: center;
+    }
+}

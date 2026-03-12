@@ -14,7 +14,7 @@ const DualView = ({ children, code, activeLine, algorithmName, description, acti
 
     return (
         <div
-            className="visualizer-ui"
+            className="visualizer-ui theatre-mode"
             style={{
                 display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
@@ -26,7 +26,7 @@ const DualView = ({ children, code, activeLine, algorithmName, description, acti
         >
             <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
                 <div
-                    className="glass-panel"
+                    className="glass-panel theatre-stage"
                     style={{
                         flex: 1,
                         padding: isMobile ? '14px' : '20px 22px',

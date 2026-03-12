@@ -1,0 +1,138 @@
+.rk-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: #e2e8f0;
+}
+
+.rk-input-bar {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.rk-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.rk-input-group label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.rk-input-group input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: white;
+}
+
+.rk-visual-area {
+    background: rgba(15, 23, 42, 0.4);
+    padding: 24px;
+    border-radius: 12px;
+    position: relative;
+    overflow-x: auto;
+    min-height: 250px;
+}
+
+.rk-hashes {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.rk-hash-box {
+    padding: 10px 20px;
+    background: #1e293b;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.rk-hash-box.match {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+.rk-hash-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-bottom: 2px;
+}
+
+.rk-hash-val {
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.rk-text-display,
+.rk-pattern-display {
+    display: flex;
+    gap: 4px;
+}
+
+.rk-cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: bold;
+    border-radius: 4px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.rk-text-cell .rk-idx {
+    position: absolute;
+    bottom: -18px;
+    font-size: 0.65rem;
+    color: #64748b;
+}
+
+.state-window {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: #6366f1;
+}
+
+.state-comparing {
+    background: #fbbf24;
+    color: #1e293b;
+}
+
+.state-mismatch {
+    background: #ef4444;
+    color: white;
+}
+
+.state-matched {
+    background: #10b981;
+    color: white;
+}
+
+.rk-pattern-display {
+    margin-top: 10px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rk-pat-cell {
+    background: #334155;
+}
+
+.rk-controls-wrapper {
+    margin-top: auto;
+}

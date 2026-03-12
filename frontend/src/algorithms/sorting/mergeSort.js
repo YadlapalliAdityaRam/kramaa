@@ -1,4 +1,4 @@
-const merge = (arr, l, m, r, steps, ascending) => {
+const merge = (arr, l, m, r, level, steps, ascending) => {
     const n1 = m - l + 1;
     const n2 = r - m;
 
@@ -11,9 +11,11 @@ const merge = (arr, l, m, r, steps, ascending) => {
     let i = 0, j = 0, k = l;
 
     steps.push({
-        type: 'compare',
+        type: 'merge_start',
         indices: [l, r],
-        description: `Merging subarrays from index ${l} to ${m} and ${m + 1} to ${r}.`,
+        range: { left: l, mid: m, right: r },
+        level,
+        description: `Merging subarrays [${l}...${m}] and [${m + 1}...${r}].`,
         arraySnapshot: [...arr]
     });
 
@@ -23,25 +25,31 @@ const merge = (arr, l, m, r, steps, ascending) => {
         steps.push({
             type: 'compare',
             indices: [l + i, m + 1 + j],
-            description: `Comparing left array value ${L[i]} and right array value ${R[j]}.`,
+            range: { left: l, mid: m, right: r },
+            level,
+            description: `Comparing ${L[i]} (left) and ${R[j]} (right).`,
             arraySnapshot: [...arr]
         });
 
         if (shouldPickLeft(L[i], R[j])) {
             arr[k] = L[i];
             steps.push({
-                type: 'swap', // Overwriting
+                type: 'overwrite',
                 indices: [k],
-                description: `Taking ${L[i]} from left subarray to position ${k}.`,
+                range: { left: l, mid: m, right: r },
+                level,
+                description: `Placing ${L[i]} back into main array at index ${k}.`,
                 arraySnapshot: [...arr]
             });
             i++;
         } else {
             arr[k] = R[j];
             steps.push({
-                type: 'swap',
+                type: 'overwrite',
                 indices: [k],
-                description: `Taking ${R[j]} from right subarray to position ${k}.`,
+                range: { left: l, mid: m, right: r },
+                level,
+                description: `Placing ${R[j]} back into main array at index ${k}.`,
                 arraySnapshot: [...arr]
             });
             j++;
@@ -52,9 +60,11 @@ const merge = (arr, l, m, r, steps, ascending) => {
     while (i < n1) {
         arr[k] = L[i];
         steps.push({
-            type: 'swap',
+            type: 'overwrite',
             indices: [k],
-            description: `Copying remaining element ${L[i]} from left subarray to position ${k}.`,
+            range: { left: l, mid: m, right: r },
+            level,
+            description: `Copying remaining element ${L[i]} to index ${k}.`,
             arraySnapshot: [...arr]
         });
         i++;
@@ -64,9 +74,11 @@ const merge = (arr, l, m, r, steps, ascending) => {
     while (j < n2) {
         arr[k] = R[j];
         steps.push({
-            type: 'swap',
+            type: 'overwrite',
             indices: [k],
-            description: `Copying remaining element ${R[j]} from right subarray to position ${k}.`,
+            range: { left: l, mid: m, right: r },
+            level,
+            description: `Copying remaining element ${R[j]} to index ${k}.`,
             arraySnapshot: [...arr]
         });
         j++;
@@ -74,18 +86,29 @@ const merge = (arr, l, m, r, steps, ascending) => {
     }
 };
 
-const mergeSortHelper = (arr, l, r, steps, ascending) => {
+const mergeSortHelper = (arr, l, r, level, steps, ascending) => {
     if (l >= r) return;
-    const m = l + parseInt((r - l) / 2);
-    mergeSortHelper(arr, l, m, steps, ascending);
-    mergeSortHelper(arr, m + 1, r, steps, ascending);
-    merge(arr, l, m, r, steps, ascending);
+
+    const m = l + Math.floor((r - l) / 2);
+
+    steps.push({
+        type: 'split',
+        indices: [l, r],
+        range: { left: l, mid: m, right: r },
+        level,
+        description: `Splitting array [${l}...${r}] into two halves.`,
+        arraySnapshot: [...arr]
+    });
+
+    mergeSortHelper(arr, l, m, level + 1, steps, ascending);
+    mergeSortHelper(arr, m + 1, r, level + 1, steps, ascending);
+    merge(arr, l, m, r, level, steps, ascending);
 };
 
 export const generateMergeSortSteps = (array, ascending = true) => {
     const steps = [];
     const arr = [...array];
-    mergeSortHelper(arr, 0, arr.length - 1, steps, ascending);
+    mergeSortHelper(arr, 0, arr.length - 1, 0, steps, ascending);
 
     steps.push({
         type: 'completed',

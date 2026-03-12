@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
@@ -41,6 +41,8 @@ const ContestProblemView = () => {
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
+    const [isExiting, setIsExiting] = useState(false);
+    const exitTriggeredRef = useRef(false);
 
     // Tab state
     const [activeTab, setActiveTab] = useState('Description');
@@ -71,6 +73,15 @@ const ContestProblemView = () => {
         };
         fetchData();
     }, [contestId, problemId]);
+
+    const isContestLive = useCallback(() => {
+        if (!contest) return false;
+        const now = Date.now();
+        const startMs = new Date(contest.startTime).getTime();
+        const endMs = new Date(contest.endTime).getTime();
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return false;
+        return now >= startMs && now <= endMs;
+    }, [contest]);
 
     const getStarterTemplate = useCallback((problemData, lang) => {
         const fromProblem = problemData?.starterCode?.[lang];
@@ -152,6 +163,60 @@ const ContestProblemView = () => {
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
     }, [contest]);
+
+    // Heartbeat to keep participant active while user is on contest page.
+    useEffect(() => {
+        if (!contest || !isAuthenticated) return undefined;
+        if (!isContestLive()) return undefined;
+
+        let mounted = true;
+        const beat = async () => {
+            if (!mounted) return;
+            try {
+                await api.post(`/contests/${contestId}/heartbeat`);
+            } catch (_) {
+                // Best effort; do not interrupt coding flow.
+            }
+        };
+
+        beat();
+        const interval = setInterval(beat, 60000);
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [contest, contestId, isAuthenticated, isContestLive]);
+
+    // If user closes the tab during a live contest, send an exit snapshot request.
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (!isAuthenticated) return;
+            if (!contestId || !isContestLive()) return;
+            if (exitTriggeredRef.current) return;
+            exitTriggeredRef.current = true;
+
+            try {
+                const base = String(api?.defaults?.baseURL || '/api').replace(/\/+$/, '');
+                const url = `${base}/contests/${contestId}/exit`;
+                const token = localStorage.getItem('token');
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({ reason: 'page_unload' }),
+                    credentials: 'include',
+                    keepalive: true
+                }).catch(() => {});
+            } catch (_) {
+                // no-op
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [contestId, isAuthenticated, isContestLive]);
 
     // Fetch Submissions
     const fetchUserSubmissions = async () => {
@@ -266,6 +331,29 @@ const ContestProblemView = () => {
         }
     };
 
+    const handleExitContest = async () => {
+        if (!contestId || isExiting) return;
+        setIsExiting(true);
+        exitTriggeredRef.current = true;
+        try {
+            const res = await api.post(`/contests/${contestId}/exit`, { reason: 'manual_exit' });
+            const progress = res?.data?.progress || null;
+            toast.success(res?.data?.message || 'Contest progress saved.');
+            navigate(`/contest/${contestId}`, {
+                replace: true,
+                state: {
+                    contestExitSummary: progress
+                }
+            });
+        } catch (error) {
+            const message = getRequestErrorMessage(error, 'Failed to exit contest');
+            toast.error(message);
+            exitTriggeredRef.current = false;
+        } finally {
+            setIsExiting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div style={{ minHeight: '100dvh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -342,6 +430,9 @@ const ContestProblemView = () => {
 
                     <button onClick={handleResetCode} style={{ background: '#dc2626', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer' }}>
                         Reset
+                    </button>
+                    <button onClick={handleExitContest} disabled={isExiting} style={{ background: '#6b7280', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: isExiting ? 'not-allowed' : 'pointer', opacity: isExiting ? 0.7 : 1 }}>
+                        {isExiting ? 'Exiting...' : 'Exit'}
                     </button>
                     <button onClick={handleRun} disabled={isRunning} style={{
                         background: 'linear-gradient(to right, #2563eb, #3b82f6)', color: 'white', padding: '4px 12px', borderRadius: '6px',

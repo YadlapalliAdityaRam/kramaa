@@ -79,10 +79,28 @@ const buildNotificationForEvent = (activity, actor) => {
             return {
                 type: 'system',
                 title: 'Contest Rank Update',
-                message: `${actorName} received a new contest rank.`,
+                message: `${actorName} ranked ${activity?.metadata?.rank ? `#${activity.metadata.rank}` : 'in'} ${contest?.title ? `"${contest.title}"` : 'a contest'}.`,
                 link: contest?._id ? `/contest/${contest._id}/leaderboard` : defaultLink,
                 icon: '🏆',
                 shouldNotify: true
+            };
+        case 'contest_finished':
+            return {
+                type: 'system',
+                title: 'Contest Finished',
+                message: `${actorName} finished ${contest?.title ? `"${contest.title}"` : 'a contest'}${activity?.metadata?.rank ? ` at rank #${activity.metadata.rank}` : ''}.`,
+                link: contest?._id ? `/contest/${contest._id}/leaderboard` : defaultLink,
+                icon: 'ðŸ',
+                shouldNotify: true
+            };
+        case 'contest_exited':
+            return {
+                type: 'system',
+                title: 'Contest Exit',
+                message: `${actorName} exited ${contest?.title ? `"${contest.title}"` : 'a contest'} after solving ${Number(activity?.metadata?.problemsSolved || 0)} problem(s).`,
+                link: contest?._id ? `/contest/${contest._id}` : defaultLink,
+                icon: 'â¹ï¸',
+                shouldNotify: false
             };
         default:
             return {

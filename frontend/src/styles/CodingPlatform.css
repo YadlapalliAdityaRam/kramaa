@@ -1128,6 +1128,95 @@
     color: #cbd5e1;
 }
 
+@media (max-width: 960px) {
+    .cp-root {
+        padding: 18px 12px 36px;
+    }
+
+    .cp-filter-bar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .cp-search-box,
+    .cp-filter-pill,
+    .cp-sort-pill {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .cp-filter-count {
+        padding: 2px 2px 0;
+        font-size: 0.76rem;
+    }
+
+    .cp-problem-header {
+        display: none;
+    }
+
+    .cp-problem-row {
+        grid-template-columns: 28px minmax(0, 1fr) 28px;
+        gap: 8px;
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .cp-problem-num,
+    .cp-accept-col,
+    .cp-company-chips {
+        display: none;
+    }
+
+    .cp-problem-title-col {
+        min-width: 0;
+        gap: 6px;
+    }
+
+    .cp-problem-title {
+        white-space: normal;
+        line-height: 1.35;
+    }
+
+    .cp-problem-tags {
+        overflow-x: auto;
+        white-space: nowrap;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+    }
+
+    .cp-diff-badge {
+        justify-self: start;
+        margin-top: 2px;
+        font-size: 0.68rem;
+        padding: 2px 8px;
+    }
+
+    .cp-bookmark-btn {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .cp-daily-card,
+    .cp-calendar-card,
+    .cp-contest-banner {
+        padding: 14px 12px;
+        border-radius: 14px;
+    }
+
+    .cp-contest-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .cp-contest-btn {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+}
+
 /* ══ LIGHT THEME OVERRIDES ══ */
 [data-theme="light"] .cp-root { color: #0f172a; }
 [data-theme="light"] .cp-hero h1, [data-theme="light"] .cp-daily-title, [data-theme="light"] .cp-calendar-title, [data-theme="light"] .cp-problem-title, [data-theme="light"] .cp-p-title { color: #0f172a !important; }

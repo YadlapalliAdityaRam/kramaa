@@ -10,12 +10,15 @@ import {
     FaCog,
     FaUser,
     FaBars,
-    FaTimes
+    FaTimes,
+    FaCode
 } from 'react-icons/fa';
 import BackForward from './BackForward';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from '../ThemeToggle';
+import { algorithmList } from '../../../data/algorithmsData';
 import './Navbar.css';
+import './SearchSuggestions.css';
 
 const Navbar = () => {
     const location = useLocation();
@@ -29,10 +32,15 @@ const Navbar = () => {
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
+
     const drawerRef = useRef(null);
     const triggerRef = useRef(null);
     const mobileMenuRef = useRef(null);
     const mobileMenuTriggerRef = useRef(null);
+    const searchRef = useRef(null);
     const isMobile = viewportWidth <= 1024;
 
     // Smart scroll-aware navbar
@@ -120,7 +128,57 @@ const Navbar = () => {
     useEffect(() => {
         closeProfileDrawer();
         setIsMobileMenuOpen(false);
+        setShowSuggestions(false);
+        setSearchQuery('');
     }, [location.pathname]);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        const filtered = algorithmList
+            .filter(algo => 
+                algo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                algo.category.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .slice(0, 8);
+        
+        setSuggestions(filtered);
+        setShowSuggestions(true);
+        setActiveIndex(-1);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveIndex(prev => (prev > 0 ? prev - 1 : prev));
+        } else if (e.key === 'Enter') {
+            if (activeIndex >= 0 && suggestions[activeIndex]) {
+                e.preventDefault();
+                navigate(suggestions[activeIndex].path);
+                setShowSuggestions(false);
+                setSearchQuery('');
+            }
+        } else if (e.key === 'Escape') {
+            setShowSuggestions(false);
+        }
+    };
 
     const quickActions = [
         { label: 'Progress', icon: <FaChartLine />, onClick: () => navigateAndClose('/profile?view=progress') },
@@ -197,21 +255,53 @@ const Navbar = () => {
                         <BackForward />
                     </div>
                     <Link to="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                        <img src="/assets/krama-logo.png" alt="Krama" style={{ height: '32px', width: 'auto' }} />
-                        <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Krama</span>
+                        <img src="/assets/algoverse-logo.png" alt="AlgoVerse" style={{ height: '32px', width: 'auto' }} onError={(e) => { e.target.src = '/assets/krama-logo.png'; }} />
+                        <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AlgoVerse</span>
                     </Link>
 
-                    <form className="search-container" onSubmit={handleSearchSubmit}>
-                        <FaSearch className="nav-search-icon" style={{ position: 'absolute', left: '14px', top: '13px', color: '#64748b' }} />
-                        <input
-                            type="text"
-                            placeholder={isMobile ? 'Search...' : 'Search algorithms...'}
-                            className="search-input"
-                            value={searchQuery}
-                            onChange={(event) => setSearchQuery(event.target.value)}
-                            aria-label="Search algorithms"
-                        />
-                    </form>
+                    <div className="search-wrapper" style={{ position: 'relative', width: isMobile ? '100%' : '300px' }} ref={searchRef}>
+                        <form className="search-container" onSubmit={handleSearchSubmit}>
+                            <FaSearch className="nav-search-icon" style={{ position: 'absolute', left: '14px', top: '13px', color: '#64748b' }} />
+                            <input
+                                type="text"
+                                placeholder={isMobile ? 'Search...' : 'Search algorithms...'}
+                                className="search-input"
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                                onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                                onKeyDown={handleKeyDown}
+                                aria-label="Search algorithms"
+                                autoComplete="off"
+                            />
+                        </form>
+                        {showSuggestions && (
+                            <div className="search-suggestions-dropdown">
+                                {suggestions.length > 0 ? (
+                                    suggestions.map((algo, index) => (
+                                        <Link 
+                                            key={algo.id} 
+                                            to={algo.path} 
+                                            className={`suggestion-item ${index === activeIndex ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setShowSuggestions(false);
+                                                setSearchQuery('');
+                                            }}
+                                        >
+                                            <div className="suggestion-icon">
+                                                <FaCode size={14} />
+                                            </div>
+                                            <div className="suggestion-info">
+                                                <div className="suggestion-name">{algo.name}</div>
+                                                <div className="suggestion-category">{algo.category}</div>
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <div className="suggestion-empty">No results found</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <div className="nav-right">
                     {/* Standard Links - Only for Regular Users or Guests */}
@@ -381,7 +471,7 @@ const Navbar = () => {
                             </div>
                             <div className="profile-drawer-userinfo">
                                 <h3>{user?.fullName || user?.username}</h3>
-                                <p className="profile-drawer-subtitle">Access all features with our Premium subscription!</p>
+                                <p className="profile-drawer-subtitle">Welcome to AlgoVerse!</p>
                             </div>
                         </div>
 

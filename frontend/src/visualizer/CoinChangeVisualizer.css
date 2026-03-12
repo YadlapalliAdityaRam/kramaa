@@ -1,0 +1,163 @@
+.coin-change-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: #0f172a;
+    min-height: 85vh;
+}
+
+.dp-array-container {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    overflow-x: auto;
+    display: flex;
+    gap: 10px;
+    min-height: 120px;
+    align-items: center;
+}
+
+.dp-cell {
+    min-width: 60px;
+    height: 70px;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.dp-cell.computing {
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+.dp-cell.dependency {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.dp-cell.filled {
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.dp-cell.optimal-path {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.cell-index {
+    font-size: 0.65rem;
+    color: #64748b;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+.cell-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #f8fafc;
+}
+
+.dp-cell.optimal-path .cell-value {
+    color: white;
+}
+
+.coins-info-panel {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
+}
+
+.coins-display {
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.25rem;
+}
+
+.coins-grid {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.coin-chip {
+    width: 50px;
+    height: 50px;
+    background: #334155;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #94a3b8;
+    border: 2px solid transparent;
+}
+
+.coin-chip.active {
+    border-color: #fbbf24;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+.decision-box {
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid #38bdf8;
+    padding: 1.25rem;
+    color: #38bdf8;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.logic-step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-field {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    width: 150px;
+}
+
+.btn-coin {
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+}

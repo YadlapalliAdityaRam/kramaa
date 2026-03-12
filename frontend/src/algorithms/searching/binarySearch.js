@@ -5,9 +5,9 @@ export const generateBinarySearchSteps = (array, target) => {
     let high = arr.length - 1;
 
     steps.push({
-        type: 'info',
-        indices: [],
-        description: `Binary search initiated for target ${target}. Array must be sorted.`,
+        type: 'initialization',
+        indices: { low, high, mid: null },
+        description: `Binary search initiated for target ${target}. Array is sorted.`,
         arraySnapshot: [...arr]
     });
 
@@ -16,16 +16,16 @@ export const generateBinarySearchSteps = (array, target) => {
 
         steps.push({
             type: 'compare',
-            indices: [low, high, mid], // Highlight bounds and mid
-            description: `Searching between index ${low} and ${high}. Middle element is ${arr[mid]}.`,
+            indices: { low, high, mid },
+            description: `Analyzing middle element ${arr[mid]} at index ${mid}. Range: [${low}, ${high}].`,
             arraySnapshot: [...arr]
         });
 
         if (arr[mid] === target) {
             steps.push({
                 type: 'found',
-                indices: [mid],
-                description: `Found target ${target} at index ${mid}.`,
+                indices: { low, high, mid },
+                description: `Success! Target ${target} found at index ${mid}.`,
                 arraySnapshot: [...arr]
             });
             return steps;
@@ -34,16 +34,16 @@ export const generateBinarySearchSteps = (array, target) => {
         if (arr[mid] < target) {
             steps.push({
                 type: 'move',
-                indices: [mid],
-                description: `${arr[mid]} is less than ${target}, ignoring left half. Moving low to ${mid + 1}.`,
+                indices: { low, high, mid },
+                description: `${arr[mid]} is less than ${target}. Searching in the right half.`,
                 arraySnapshot: [...arr]
             });
             low = mid + 1;
         } else {
             steps.push({
                 type: 'move',
-                indices: [mid],
-                description: `${arr[mid]} is greater than ${target}, ignoring right half. Moving high to ${mid - 1}.`,
+                indices: { low, high, mid },
+                description: `${arr[mid]} is greater than ${target}. Searching in the left half.`,
                 arraySnapshot: [...arr]
             });
             high = mid - 1;
@@ -52,8 +52,8 @@ export const generateBinarySearchSteps = (array, target) => {
 
     steps.push({
         type: 'not-found',
-        indices: [],
-        description: `Target ${target} not found in the array.`,
+        indices: { low, high: high < 0 ? 0 : high, mid: null },
+        description: `Target ${target} not found in the array. Search space exhausted.`,
         arraySnapshot: [...arr]
     });
 

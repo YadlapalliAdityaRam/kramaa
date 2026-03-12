@@ -9,17 +9,25 @@ const AnimationControls = ({
     onPause,
     onStepForward,
     onStepBackward,
+    onNext, // Alias for onStepForward
+    onPrev, // Alias for onStepBackward
     onReset,
     speed,
     onSpeedChange,
-    currentStep,
-    totalSteps,
+    currentStep = 0,
+    totalSteps = 0,
     onScrub,
     onManualInput,
     onGenerateRandom,
     onOpenGraphModal,
+    onOpenTreeModal,
     inputType = 'array'
 }) => {
+    const handleForward = onStepForward || onNext;
+    const handleBackward = onStepBackward || onPrev;
+    const safeTotalSteps = Number.isFinite(totalSteps) ? totalSteps : 0;
+    const safeCurrentStep = Number.isFinite(currentStep) ? currentStep : 0;
+
     const [manualInput, setManualInput] = useState('');
     const MAX_INPUT_ELEMENTS = 10;
 
@@ -52,78 +60,103 @@ const AnimationControls = ({
 
     return (
         <div className="animation-controls">
-            <div className="controls-group">
-                <button onClick={onReset} title="Reset" className="control-btn icon-btn">
-                    <FaRedo />
-                </button>
-                <button onClick={onStepBackward} disabled={currentStep === 0} title="Step Back" className="control-btn icon-btn">
-                    <FaStepBackward />
-                </button>
-                <button onClick={isPlaying ? onPause : onPlay} className="control-btn play-btn" title={isPlaying ? 'Pause' : 'Play'}>
-                    {isPlaying ? <FaPause /> : <FaPlay />}
-                </button>
-                <button onClick={onStepForward} disabled={currentStep === totalSteps - 1} title="Step Forward" className="control-btn icon-btn">
-                    <FaStepForward />
-                </button>
+            <div className="ac-top-row">
+                {/* Control Buttons (Reset, Back, Play/Pause, Forward) */}
+                <div className="controls-group">
+                    <button onClick={onReset} title="Reset" className="control-btn icon-btn">
+                        <FaRedo />
+                    </button>
+                    <button onClick={handleBackward} disabled={safeCurrentStep === 0} title="Step Back" className="control-btn icon-btn">
+                        <FaStepBackward />
+                    </button>
+                    <button onClick={isPlaying ? onPause : onPlay} className="control-btn play-btn" title={isPlaying ? 'Pause' : 'Play'}>
+                        {isPlaying ? <FaPause /> : <FaPlay />}
+                    </button>
+                    <button onClick={handleForward} disabled={safeCurrentStep === Math.max(0, safeTotalSteps - 1)} title="Step Forward" className="control-btn icon-btn">
+                        <FaStepForward />
+                    </button>
+                </div>
+
+                {/* Speed Controls */}
+                <div className="speed-control-group">
+                    {[0.5, 1, 1.5, 2, 4].map(s => (
+                        <button
+                            key={s}
+                            className={`speed-btn ${speed === s ? 'active' : ''}`}
+                            onClick={() => onSpeedChange(s)}
+                            title={`${s}x Speed`}
+                        >
+                            {s}x
+                        </button>
+                    ))}
+                </div>
             </div>
 
+            {/* Scrubber and Step Tracker */}
             <div className="scrubber-container">
                 <input
                     type="range"
                     min="0"
-                    max={Math.max(0, totalSteps - 1)}
-                    value={currentStep}
-                    onChange={(e) => onScrub(parseInt(e.target.value, 10))}
+                    max={Math.max(0, safeTotalSteps - 1)}
+                    value={safeCurrentStep}
+                    onChange={(e) => onScrub && onScrub(parseInt(e.target.value, 10))}
                     className="scrubber-input"
+                    title="Scrub through steps"
                 />
-                <span className="step-counter">{currentStep + 1} / {totalSteps || 1}</span>
+                <div className="step-tracker-badge">
+                    Step {safeCurrentStep + 1} / {safeTotalSteps || 1}
+                </div>
             </div>
 
-            <div className="speed-control">
-                <label>Speed: {speed}x</label>
-                <input
-                    type="range"
-                    min="0.5"
-                    max="4"
-                    step="0.5"
-                    value={speed}
-                    onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
-                />
-            </div>
-
-            <div style={{ marginTop: '12px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+            {/* Input Configuration Box */}
+            <div>
                 {inputType === 'graph' ? (
                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <button onClick={onOpenGraphModal} className="control-btn play-btn">
                             Configure Custom Graph
                         </button>
                     </div>
-                ) : (
+                ) : inputType === 'tree' ? (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <button onClick={onOpenTreeModal} className="control-btn play-btn">
+                            Configure Custom Tree
+                        </button>
+                    </div>
+                ) : (inputType === 'string' || inputType === 'none') ? null : (
                     <>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <div className="ac-manual-input-box">
                             <input
                                 type="text"
-                                placeholder="e.g. 50, 10, 20 (max 10)"
+                                placeholder="Auto Array (e.g. 50, 10, 20 max 10)"
                                 value={manualInput}
                                 onChange={(event) => setManualInput(event.target.value)}
                                 style={{
-                                    background: '#1e1e1e',
+                                    background: 'rgba(0,0,0,0.15)',
                                     border: '1px solid rgba(255,255,255,0.12)',
                                     color: '#f5f5f5',
-                                    padding: '0 12px',
-                                    borderRadius: '14px',
+                                    padding: '0 16px',
+                                    borderRadius: '12px',
                                     flex: 1,
                                     height: '44px',
                                     fontSize: '0.92rem',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
+                                    outline: 'none'
                                 }}
                             />
-                            <button onClick={applyManualInput} className="control-btn">
-                                Set
-                            </button>
-                            <button onClick={onGenerateRandom} title="Randomize Input" className="control-btn">
-                                Random
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={applyManualInput} className="ac-action-btn primary">
+                                    Set array
+                                </button>
+                                <button onClick={() => {
+                                    const count = Math.floor(Math.random() * 6) + 5; // 5-10
+                                    const arr = Array.from({ length: count }, () => Math.floor(Math.random() * 99) + 1);
+                                    setManualInput(arr.join(', '));
+                                    if (onManualInput) onManualInput(arr);
+                                    else if (onGenerateRandom) onGenerateRandom();
+                                }} title="Randomize" className="ac-action-btn">
+                                    Randomize
+                                </button>
+                            </div>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: '#cfcfcf', marginTop: '6px', fontWeight: '500' }}>
                             Enter up to 10 numbers separated by commas or spaces.

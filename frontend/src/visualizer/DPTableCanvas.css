@@ -71,3 +71,31 @@
 .dp-cell-active {
     box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.26);
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .dp-canvas {
+        padding: 8px;
+    }
+
+    .dp-table {
+        border-spacing: 2px;
+    }
+
+    .dp-corner {
+        width: 25px;
+        height: 25px;
+    }
+
+    .dp-col-label,
+    .dp-row-label {
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+
+    .dp-cell {
+        min-width: 25px;
+        min-height: 25px;
+        font-size: 0.75rem;
+    }
+}

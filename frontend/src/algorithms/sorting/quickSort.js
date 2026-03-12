@@ -3,9 +3,11 @@ const partition = (arr, low, high, steps, ascending) => {
     let i = low - 1;
 
     steps.push({
-        type: 'compare',
+        type: 'select-pivot',
+        pivotIndex: high,
         indices: [high],
-        description: `Selected pivot element ${pivot} at index ${high}.`,
+        range: { low, high },
+        description: `Partitioning range [${low}, ${high}]. Selected pivot element ${pivot} at index ${high}.`,
         arraySnapshot: [...arr]
     });
 
@@ -15,32 +17,36 @@ const partition = (arr, low, high, steps, ascending) => {
         steps.push({
             type: 'compare',
             indices: [j, high],
+            pivotIndex: high,
+            pointers: { i: i === low - 1 ? null : i, j },
+            range: { low, high },
             description: `Comparing element ${arr[j]} with pivot ${pivot}.`,
             arraySnapshot: [...arr]
         });
 
         if (shouldSwap(arr[j], pivot)) {
             i++;
-            let temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
+            [arr[i], arr[j]] = [arr[j], arr[i]];
 
             steps.push({
                 type: 'swap',
                 indices: [i, j],
-                description: `${arr[i]} is on the wrong side of pivot, swapping.`,
+                pivotIndex: high,
+                pointers: { i, j },
+                range: { low, high },
+                description: `${arr[i]} is ${ascending ? 'less' : 'greater'} than pivot, moving it to the left side (index ${i}).`,
                 arraySnapshot: [...arr]
             });
         }
     }
 
-    let temp = arr[i + 1];
-    arr[i + 1] = arr[high];
-    arr[high] = temp;
+    [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
 
     steps.push({
-        type: 'swap',
+        type: 'place-pivot',
         indices: [i + 1, high],
+        pivotIndex: i + 1,
+        range: { low, high },
         description: `Placing pivot ${pivot} in its correct sorted position at index ${i + 1}.`,
         arraySnapshot: [...arr]
     });
@@ -48,7 +54,7 @@ const partition = (arr, low, high, steps, ascending) => {
     steps.push({
         type: 'sorted',
         indices: [i + 1],
-        description: `Pivot ${pivot} is now sorted.`,
+        description: `Pivot ${pivot} is now at its final sorted position.`,
         arraySnapshot: [...arr]
     });
 
@@ -60,18 +66,28 @@ const quickSortHelper = (arr, low, high, steps, ascending) => {
         const pi = partition(arr, low, high, steps, ascending);
         quickSortHelper(arr, low, pi - 1, steps, ascending);
         quickSortHelper(arr, pi + 1, high, steps, ascending);
+    } else if (low === high) {
+        steps.push({
+            type: 'sorted',
+            indices: [low],
+            description: `Single element at index ${low} is trivially sorted.`,
+            arraySnapshot: [...arr]
+        });
     }
 };
 
 export const generateQuickSortSteps = (array, ascending = true) => {
     const steps = [];
     const arr = [...array];
+
+    if (arr.length === 0) return [];
+
     quickSortHelper(arr, 0, arr.length - 1, steps, ascending);
 
     steps.push({
         type: 'completed',
         indices: [],
-        description: 'Array is fully sorted.',
+        description: 'Quick Sort algorithm complete. Array is fully sorted.',
         arraySnapshot: [...arr]
     });
 

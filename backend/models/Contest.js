@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const CONTEST_STATUSES = ['upcoming', 'running', 'completed'];
+const DEFAULT_BASE_SCORES = Object.freeze({
+    easy: 5,
+    medium: 7,
+    hard: 10
+});
 
 const computeContestStatus = ({ startTime, endTime }, referenceTime = new Date()) => {
     const now = new Date(referenceTime);
@@ -75,6 +80,30 @@ const ContestSchema = new mongoose.Schema({
         ref: 'Problem',
         required: true
     }],
+    problemScoring: [{
+        problemId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Problem',
+            required: true
+        },
+        difficulty: {
+            type: String,
+            enum: ['Easy', 'Medium', 'Hard'],
+            default: 'Easy'
+        },
+        baseScore: {
+            type: Number,
+            min: 0,
+            default: 5
+        }
+    }],
+    scoringConfig: {
+        easyBaseScore: { type: Number, default: DEFAULT_BASE_SCORES.easy, min: 0 },
+        mediumBaseScore: { type: Number, default: DEFAULT_BASE_SCORES.medium, min: 0 },
+        hardBaseScore: { type: Number, default: DEFAULT_BASE_SCORES.hard, min: 0 },
+        timePenaltyPerMinute: { type: Number, default: 0.02, min: 0 },
+        wrongAttemptPenalty: { type: Number, default: 0.05, min: 0 }
+    },
     participantsCount: {
         type: Number,
         default: 0,
@@ -88,6 +117,20 @@ const ContestSchema = new mongoose.Schema({
     wrongSubmissionPenalty: {
         enabled: { type: Boolean, default: false },
         minutes: { type: Number, default: 10, min: 1, max: 60 }
+    },
+    exitRules: {
+        allowRejoin: { type: Boolean, default: true },
+        autoExitOnInactivity: { type: Boolean, default: false },
+        inactivityTimeoutMinutes: { type: Number, default: 20, min: 5, max: 120 }
+    },
+    leaderboardLocked: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    resultsFinalizedAt: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true
@@ -128,6 +171,7 @@ ContestSchema.statics.syncStatuses = async function syncStatuses(referenceTime =
 
 ContestSchema.index({ startTime: 1, endTime: 1 });
 ContestSchema.index({ createdAt: -1 });
+ContestSchema.index({ 'problemScoring.problemId': 1 });
 
 const Contest = mongoose.model('Contest', ContestSchema);
 

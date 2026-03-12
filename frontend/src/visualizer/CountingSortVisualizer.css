@@ -1,0 +1,198 @@
+.counting-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Dashboard */
+.counting-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.counting-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.counting-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.counting-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.counting-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.counting-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.counting-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Array Containers */
+.counting-section {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px dashed var(--border-color);
+}
+
+.counting-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.counting-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.counting-array-display {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: 80px;
+    align-items: center;
+}
+
+/* Elements */
+.counting-element {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    position: relative;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.counting-idx-label {
+    position: absolute;
+    bottom: -20px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* States */
+.counting-active {
+    border-color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.1) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+.counting-count-active {
+    border-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+    animation: pulse-blue 1.5s infinite;
+}
+
+.counting-output-active {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.counting-empty {
+    opacity: 0.3;
+    border-style: dotted;
+}
+
+@keyframes pulse-blue {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Arrows / Flow visual (Simplified) */
+.flow-indicator {
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+/* Controls */
+.counting-inputs {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.counting-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.counting-input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--text-primary);
+    width: 100%;
+}
+
+.counting-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.counting-btn-primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.counting-btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}

@@ -1,0 +1,355 @@
+.fib-search-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: #e2e8f0;
+    height: 100%;
+}
+
+.fib-input-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.6);
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.target-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.target-control label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.target-control input {
+    width: 60px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+}
+
+.apply-target-btn,
+.toggle-intuition-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.apply-target-btn {
+    background: #3b82f6;
+    color: white;
+}
+
+.toggle-intuition-btn {
+    background: #475569;
+    color: white;
+}
+
+.fib-intuition-panel {
+    background: rgba(99, 102, 241, 0.1);
+    border-left: 4px solid #6366f1;
+    padding: 20px;
+    border-radius: 8px;
+    animation: slideDown 0.4s ease-out;
+}
+
+.fib-intuition-panel h4 {
+    margin: 0 0 10px 0;
+    color: #818cf8;
+}
+
+.fib-intuition-panel p {
+    font-size: 0.92rem;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.edu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.edu-item {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edu-item strong {
+    color: #818cf8;
+    font-weight: 600;
+}
+
+.fib-dashboard {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.fib-gear {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 80px;
+}
+
+.fib-gear .label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 800;
+}
+
+.fib-gear .val {
+    width: 50px;
+    height: 50px;
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.3s;
+}
+
+.offset-gear .val {
+    border-color: #94a3b8;
+    border-style: dashed;
+}
+
+.pulse {
+    animation: pulseVal 0.4s ease-out;
+    border-color: #6366f1 !important;
+    color: #818cf8;
+}
+
+.fib-visual-area {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 16px;
+    padding: 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+}
+
+.fib-array {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1000px;
+}
+
+.fib-cell-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    width: 45px;
+}
+
+.fib-cell {
+    width: 45px;
+    height: 45px;
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.fib-idx {
+    font-size: 0.7rem;
+    color: #475569;
+    font-weight: 600;
+}
+
+.fib-pointer {
+    position: absolute;
+    top: -30px;
+    font-size: 1.2rem;
+    animation: bounce 0.5s infinite alternate;
+}
+
+/* States */
+.state-probe {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #f59e0b;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(245, 158, 11, 0.2);
+}
+
+.state-active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: #334155;
+}
+
+.state-eliminated {
+    opacity: 0.15;
+    transform: scale(0.9);
+}
+
+.state-found {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: white;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Footer */
+.fib-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 16px 24px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.fib-complexity {
+    display: flex;
+    gap: 24px;
+}
+
+.comp-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.comp-item .label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.comp-item .val {
+    font-weight: 700;
+    color: #e2e8f0;
+}
+
+.fib-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+}
+
+.leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.yellow {
+    background: #f59e0b;
+}
+
+.dot.blue {
+    background: #3b82f6;
+}
+
+.dot.gray {
+    background: #475569;
+}
+
+.dot.green {
+    background: #22c55e;
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulseVal {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes successPop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fib-controls-wrapper {
+    margin-top: auto;
+}

@@ -1,0 +1,403 @@
+/* ── Bellman-Ford Visualizer ── */
+
+/* ── Iteration Badge ── */
+.bf-iter-badge {
+    font-size: 0.82rem;
+    background: rgba(99, 102, 241, 0.15);
+    padding: 4px 12px;
+    border-radius: 6px;
+    color: #a5b4fc;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* ── Source selector row ── */
+.bf-source-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.bf-source-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.bf-source-select {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.bf-source-select:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+.bf-source-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.bf-run-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    color: #fff;
+    padding: 6px 18px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bf-run-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Graph Panel ── */
+.bf-graph-panel {
+    flex: 1;
+    position: relative;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    min-height: 280px;
+}
+
+.bf-graph-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    z-index: 5;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+
+.bf-graph-canvas-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* ── Info Row (bottom panels) ── */
+.bf-info-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.bf-info-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bf-card-title {
+    margin: 0 0 10px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ── Formula Card ── */
+.bf-formula-card {
+    flex: 1.6;
+    border-color: rgba(99, 102, 241, 0.15);
+}
+
+.bf-formula-text {
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.88rem;
+    color: #c7d2fe;
+    background: rgba(99, 102, 241, 0.08);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border-left: 3px solid #6366f1;
+    line-height: 1.6;
+    word-break: break-all;
+}
+
+.bf-formula-text.bf-relaxed {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+    color: #6ee7b7;
+}
+
+.bf-formula-text.bf-no-update {
+    border-left-color: #64748b;
+    background: rgba(100, 116, 139, 0.08);
+    color: #94a3b8;
+}
+
+/* ── Edge List ── */
+.bf-edge-list-card {
+    flex: 1.2;
+}
+
+.bf-edge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 4px;
+    flex: 1;
+}
+
+.bf-edge-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.bf-edge-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.bf-edge-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 3px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.25s ease;
+}
+
+.bf-edge-item.bf-edge-relaxed {
+    background: rgba(16, 185, 129, 0.12);
+    border-left-color: #10b981;
+    color: #6ee7b7;
+    font-weight: 700;
+}
+
+.bf-edge-item.bf-edge-skip {
+    background: rgba(100, 116, 139, 0.08);
+    border-left-color: #475569;
+    color: #64748b;
+}
+
+.bf-edge-item.bf-edge-cycle {
+    background: rgba(239, 68, 68, 0.15);
+    border-left-color: #ef4444;
+    color: #fca5a5;
+    font-weight: 700;
+}
+
+.bf-edge-item .bf-edge-nodes {
+    flex: 1;
+}
+
+.bf-edge-item .bf-edge-weight {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* ── Shortest Path Table ── */
+.bf-path-table-card {
+    flex: 1.4;
+}
+
+.bf-path-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.78rem;
+}
+
+.bf-path-table thead th {
+    padding: 6px 8px;
+    text-align: left;
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bf-path-table tbody td {
+    padding: 5px 8px;
+    color: #e2e8f0;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.bf-path-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.bf-path-table .bf-dist-val {
+    color: #a5b4fc;
+    font-weight: 800;
+}
+
+.bf-path-table .bf-dist-inf {
+    color: #64748b;
+}
+
+.bf-path-table .bf-source-row-cell {
+    color: #60a5fa;
+}
+
+/* ── Legend ── */
+.bf-legend-card {
+    min-width: 150px;
+    flex: 0.6;
+}
+
+.bf-legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.bf-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+    color: #94a3b8;
+}
+
+.bf-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.bf-dot-source {
+    background: #3b82f6;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+}
+
+.bf-dot-relaxed {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.bf-dot-skip {
+    background: #64748b;
+}
+
+.bf-dot-cycle {
+    background: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+}
+
+.bf-dot-shortest {
+    background: #fbbf24;
+    box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+
+.bf-dot-default {
+    background: #334155;
+}
+
+/* ── Negative Cycle Alert ── */
+.bf-neg-cycle-alert {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    animation: bf-pulse-red 2s ease-in-out infinite;
+}
+
+.bf-neg-cycle-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.bf-neg-cycle-text {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fca5a5;
+    line-height: 1.4;
+}
+
+.bf-neg-cycle-text span {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #f87171;
+    margin-top: 3px;
+}
+
+@keyframes bf-pulse-red {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 20px 2px rgba(239, 68, 68, 0.15);
+    }
+}
+
+/* ── Controls Bar ── */
+.bf-controls-bar {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .bf-graph-panel {
+        min-height: 220px;
+    }
+
+    .bf-info-row {
+        flex-wrap: nowrap;
+    }
+
+    .bf-info-card {
+        min-width: 200px;
+    }
+}

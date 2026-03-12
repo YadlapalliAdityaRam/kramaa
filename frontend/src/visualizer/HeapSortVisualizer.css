@@ -1,0 +1,235 @@
+.heapsort-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.heapsort-input-bar {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background: var(--surface);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.heapsort-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.heapsort-input-group label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.heapsort-value-input {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    width: 250px;
+    transition: all 0.2s;
+}
+
+.heapsort-value-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.hs-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.heapsort-visual-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.heapsort-tree-area,
+.heapsort-array-panel {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.heapsort-tree-area {
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tree-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.panel-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Array Styling */
+.heapsort-array-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.array-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.array-box {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-hover);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.array-idx {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Base Colors matched to Tree Canvas */
+.array-box.root-box,
+.node.root-node circle {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+    color: #3b82f6;
+    stroke: #3b82f6;
+    fill: rgba(59, 130, 246, 0.2);
+}
+
+.array-box.compare-box,
+.node.compare-node circle {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: #eab308;
+    color: #ca8a04;
+    stroke: #eab308;
+    fill: rgba(234, 179, 8, 0.2);
+}
+
+.array-box.swap-box,
+.node.swap-node circle {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #ef4444;
+    stroke: #ef4444;
+    fill: rgba(239, 68, 68, 0.2);
+}
+
+.array-box.sorted-box {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+    color: #16a34a;
+}
+
+.array-box.dim-box {
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+
+/* Footer & Legend */
+.heapsort-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.heapsort-legend {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.leg-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.blue { background: #3b82f6; }
+.dot.yellow { background: #eab308; }
+.dot.red { background: #ef4444; }
+.dot.green { background: #22c55e; }
+
+/* Responsive */
+@media (min-width: 1024px) {
+    .heapsort-visual-grid {
+        flex-direction: row;
+    }
+    .heapsort-tree-area {
+        flex: 2;
+    }
+    .heapsort-array-panel {
+        flex: 1;
+    }
+}

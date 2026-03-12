@@ -5,10 +5,19 @@ import { FaEye, FaFilter, FaUserShield, FaCheck, FaTimes, FaClock } from 'react-
 const SubmissionMonitor = () => {
     const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(() => (
+        typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+    ));
     const [filters, setFilters] = useState({
         scope: 'all', // 'all' or 'my_problems'
         status: 'all' // 'all', 'accepted', 'failed'
     });
+
+    useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
 
     const fetchSubmissions = async () => {
         setLoading(true);
@@ -37,10 +46,10 @@ const SubmissionMonitor = () => {
 
     return (
         <div className="glass-panel">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '10px' : undefined }}>
                 <h2 className="text-2xl font-bold text-white">Submission Monitor</h2>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3" style={{ width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
                     {/* Scope Filter */}
                     <button
                         onClick={() => setFilters(prev => ({ ...prev, scope: prev.scope === 'all' ? 'my_problems' : 'all' }))}
@@ -48,27 +57,31 @@ const SubmissionMonitor = () => {
                             ? 'bg-purple-900/50 border-purple-500 text-purple-300'
                             : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
                             }`}
+                        style={{ justifyContent: 'center' }}
                     >
                         <FaUserShield /> {filters.scope === 'my_problems' ? 'My Problems Only' : 'All Problems'}
                     </button>
 
                     {/* Status Filter */}
-                    <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700">
+                    <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700" style={{ width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
                         <button
                             onClick={() => setFilters(prev => ({ ...prev, status: 'all' }))}
                             className={`px-3 py-1 text-xs font-medium rounded ${filters.status === 'all' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+                            style={{ flex: isMobile ? 1 : undefined }}
                         >
                             All
                         </button>
                         <button
                             onClick={() => setFilters(prev => ({ ...prev, status: 'accepted' }))}
                             className={`px-3 py-1 text-xs font-medium rounded flex items-center gap-1 ${filters.status === 'accepted' ? 'bg-green-900/50 text-green-400' : 'text-gray-400 hover:text-white'}`}
+                            style={{ flex: isMobile ? 1 : undefined, justifyContent: 'center' }}
                         >
                             <FaCheck size={10} /> Success
                         </button>
                         <button
                             onClick={() => setFilters(prev => ({ ...prev, status: 'failed' }))}
                             className={`px-3 py-1 text-xs font-medium rounded flex items-center gap-1 ${filters.status === 'failed' ? 'bg-red-900/50 text-red-400' : 'text-gray-400 hover:text-white'}`}
+                            style={{ flex: isMobile ? 1 : undefined, justifyContent: 'center' }}
                         >
                             <FaTimes size={10} /> Failed
                         </button>

@@ -171,7 +171,12 @@ app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    // Allow resources (e.g., uploaded images) to be rendered across frontend/backend domains.
+    // "same-site" blocks <img> loads when frontend and backend are hosted on different origins.
+    res.setHeader(
+        'Cross-Origin-Resource-Policy',
+        String(process.env.CROSS_ORIGIN_RESOURCE_POLICY || 'cross-origin').trim() || 'cross-origin'
+    );
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     next();
 });
@@ -179,6 +184,9 @@ app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: process.env.REQUEST_BODY_LIMIT || '10mb' }));
 app.use(requestSanitizer);
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Frontend deployments often proxy only /api/* to backend.
+// Expose uploads on /api/uploads as well so image URLs work through the same proxy path.
+app.use('/api/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use(superAdminRealtimeEmitter());
 
 app.get('/api/health', (req, res) => {
@@ -274,6 +282,18 @@ io.on('connection', (socket) => {
 
     socket.on('admin:unsubscribe', () => {
         socket.leave(ADMIN_ROOM);
+    });
+
+    socket.on('contest:join', (contestId) => {
+        const normalizedContestId = String(contestId || '').trim();
+        if (!normalizedContestId) return;
+        socket.join(`contest:${normalizedContestId}`);
+    });
+
+    socket.on('contest:leave', (contestId) => {
+        const normalizedContestId = String(contestId || '').trim();
+        if (!normalizedContestId) return;
+        socket.leave(`contest:${normalizedContestId}`);
     });
 
     socket.on(SUPER_ADMIN_REFRESH_EVENT, () => {

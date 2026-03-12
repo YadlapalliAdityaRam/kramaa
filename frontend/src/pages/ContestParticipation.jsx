@@ -1,8 +1,9 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { io } from 'socket.io-client';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -14,7 +15,7 @@ import {
     FaUsers,
     FaChartBar
 } from 'react-icons/fa';
-import api from '../utils/api';
+import api, { getCurrentSocketBaseUrl, getSocketClientOptions } from '../utils/api';
 
 const getContestStatus = (contest) => {
     if (!contest) return 'LOADING';
@@ -60,6 +61,7 @@ const TAB_ITEMS = [
 const ContestParticipation = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useSelector((state) => state.auth);
 
     const [contest, setContest] = useState(null);
@@ -72,6 +74,8 @@ const ContestParticipation = () => {
     const [winners, setWinners] = useState([]);
     const [leaderboardLoading, setLeaderboardLoading] = useState(false);
     const [lastLeaderboardSync, setLastLeaderboardSync] = useState(null);
+    const [participation, setParticipation] = useState(null);
+    const [actionBusy, setActionBusy] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -84,10 +88,12 @@ const ContestParticipation = () => {
                 const contestData = res.data.contest;
                 setContest(contestData);
                 setStatus(getContestStatus(contestData));
+                setParticipation(res.data?.participation || null);
             } catch (error) {
                 if (mounted) {
                     toast.error(error?.response?.data?.message || 'Failed to load contest');
                     setContest(null);
+                    setParticipation(null);
                 }
             } finally {
                 if (mounted) setLoading(false);
@@ -154,6 +160,34 @@ const ContestParticipation = () => {
         };
     }, [activeTab, id]);
 
+    useEffect(() => {
+        if (!id) return undefined;
+
+        const socket = io(getCurrentSocketBaseUrl(), getSocketClientOptions({
+            reconnectionAttempts: 20
+        }));
+
+        const onConnect = () => {
+            socket.emit('contest:join', id);
+        };
+
+        const onLeaderboardUpdate = (payload = {}) => {
+            if (String(payload?.contestId || '') !== String(id)) return;
+            setLeaderboard(Array.isArray(payload?.leaderboard) ? payload.leaderboard : []);
+            setLastLeaderboardSync(payload?.updatedAt ? new Date(payload.updatedAt) : new Date());
+        };
+
+        socket.on('connect', onConnect);
+        socket.on('contest:leaderboard:update', onLeaderboardUpdate);
+
+        return () => {
+            socket.emit('contest:leave', id);
+            socket.off('connect', onConnect);
+            socket.off('contest:leaderboard:update', onLeaderboardUpdate);
+            socket.disconnect();
+        };
+    }, [id]);
+
     const durationMinutes = useMemo(() => {
         if (!contest) return 0;
         const start = new Date(contest.startTime);
@@ -179,8 +213,19 @@ const ContestParticipation = () => {
     }, [participantRows, user?._id, user?.id]);
 
     const canOpenProblems = Array.isArray(contest?.problems) && contest.problems.length > 0;
+    const exitSummary = location?.state?.contestExitSummary || null;
+    const isContestLockedForUser = ['finished', 'exited'].includes(String(participation?.status || '').toLowerCase());
 
     const handleEnterContest = () => {
+        if (isContestLockedForUser) {
+            toast.error(
+                String(participation?.status || '').toLowerCase() === 'finished'
+                    ? 'You already submitted this contest. Further submissions are locked.'
+                    : 'You already exited this contest. Rejoin (if allowed) to continue.'
+            );
+            return;
+        }
+
         if (status === 'UPCOMING') {
             toast.success('Registration is active. Contest has not started yet.');
             return;
@@ -205,6 +250,33 @@ const ContestParticipation = () => {
         }
 
         navigate(`/contest/${id}/problem/${problemId}`);
+    };
+
+    const handleSubmitContest = async () => {
+        if (!isRegistered) {
+            toast.error('You are not registered for this contest.');
+            return;
+        }
+
+        if (isContestLockedForUser) {
+            toast('Contest already submitted or exited.');
+            return;
+        }
+
+        const confirmed = window.confirm('Submit full contest now? You will not be able to make more contest submissions.');
+        if (!confirmed) return;
+
+        setActionBusy(true);
+        try {
+            const { data } = await api.post(`/contests/${id}/submit`, { reason: 'manual_submit' });
+            setParticipation(data?.progress || null);
+            toast.success(data?.message || 'Contest submitted successfully.');
+            setActiveTab('overview');
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Failed to submit contest.');
+        } finally {
+            setActionBusy(false);
+        }
     };
 
     if (loading) {
@@ -241,6 +313,30 @@ const ContestParticipation = () => {
                         <FaArrowLeft /> Back to Contests
                     </button>
                 </motion.div>
+
+                {exitSummary && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-6 rounded-2xl border border-blue-500/40 bg-blue-500/10 p-5"
+                    >
+                        <h3 className="text-lg font-bold text-blue-300 mb-2">Contest Progress Saved</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                            <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                                <div className="text-gray-400">Problems Solved</div>
+                                <div className="text-white font-semibold">{Number(exitSummary?.problemsSolved || 0)}</div>
+                            </div>
+                            <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                                <div className="text-gray-400">Score</div>
+                                <div className="text-white font-semibold">{Number(exitSummary?.score || 0)}</div>
+                            </div>
+                            <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+                                <div className="text-gray-400">Submissions</div>
+                                <div className="text-white font-semibold">{Number(exitSummary?.submissionCount || 0)}</div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -341,7 +437,7 @@ const ContestParticipation = () => {
                                                 >
                                                     <div>
                                                         <p className="font-semibold text-white">{index + 1}. {title}</p>
-                                                        <p className="text-xs text-gray-400 mt-1">{difficulty} � {item.points || 0} points</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{difficulty} · {Number(item.baseScore ?? item.points ?? 0)} points</p>
                                                     </div>
                                                     <FaPlay className="text-teal-400" />
                                                 </Link>
@@ -437,7 +533,9 @@ const ContestParticipation = () => {
                                                         <th className="py-2 pr-4">User</th>
                                                         <th className="py-2 pr-4">Rating</th>
                                                         <th className="py-2 pr-4">Score</th>
-                                                        <th className="py-2">Solved</th>
+                                                        <th className="py-2 pr-4">Solved</th>
+                                                        <th className="py-2 pr-4">Time</th>
+                                                        <th className="py-2">Wrong</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -451,12 +549,14 @@ const ContestParticipation = () => {
                                                             </td>
                                                             <td className="py-3 pr-4 text-gray-300">{entry.rating || 1200}</td>
                                                             <td className="py-3 pr-4 text-green-400 font-semibold">{entry.score}</td>
-                                                            <td className="py-3 text-gray-300">{entry.solvedCount || 0}</td>
+                                                            <td className="py-3 pr-4 text-gray-300">{entry.solvedCount || 0}</td>
+                                                            <td className="py-3 pr-4 text-gray-300">{Number(entry.totalTime ?? entry.penalty ?? 0).toFixed(2)}m</td>
+                                                            <td className="py-3 text-gray-300">{entry.wrongSubmissions || 0}</td>
                                                         </tr>
                                                     ))}
                                                     {leaderboard.length === 0 && (
                                                         <tr>
-                                                            <td className="py-6 text-gray-500" colSpan={5}>No leaderboard data yet.</td>
+                                                            <td className="py-6 text-gray-500" colSpan={7}>No leaderboard data yet.</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -491,7 +591,12 @@ const ContestParticipation = () => {
                                     <button
                                         type="button"
                                         onClick={handleEnterContest}
-                                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 font-semibold"
+                                        disabled={isContestLockedForUser}
+                                        className={`w-full py-3 px-4 rounded-xl font-semibold ${
+                                            isContestLockedForUser
+                                                ? 'border border-gray-600 bg-gray-700/40 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700'
+                                        }`}
                                     >
                                         <FaPlay className="inline mr-2" /> Enter Contest
                                     </button>
@@ -507,6 +612,24 @@ const ContestParticipation = () => {
                                     </button>
                                 )}
                             </div>
+
+                            {status === 'ONGOING' && isRegistered && (
+                                <div className="mb-5">
+                                    <button
+                                        type="button"
+                                        onClick={handleSubmitContest}
+                                        disabled={actionBusy || isContestLockedForUser}
+                                        className={`w-full py-3 px-4 rounded-xl font-semibold ${
+                                            actionBusy || isContestLockedForUser
+                                                ? 'border border-gray-600 bg-gray-700/40 text-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                                        }`}
+                                    >
+                                        <FaCheckCircle className="inline mr-2" />
+                                        {isContestLockedForUser ? 'Contest Submitted' : (actionBusy ? 'Submitting...' : 'Submit Full Contest')}
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="space-y-2 mb-5">
                                 <button
@@ -535,6 +658,11 @@ const ContestParticipation = () => {
                                 {isRegistered
                                     ? 'You are registered for this contest.'
                                     : 'Register from contests page to participate.'}
+                                {isRegistered && participation?.status && (
+                                    <div className="mt-2 text-xs">
+                                        Current status: <span className="font-semibold text-gray-200">{String(participation.status).toUpperCase()}</span>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </div>

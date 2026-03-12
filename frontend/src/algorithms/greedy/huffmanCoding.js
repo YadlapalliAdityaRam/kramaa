@@ -1,116 +1,141 @@
-const cloneTree = (node) => {
-    if (!node) return null;
-    return { ...node, left: cloneTree(node.left), right: cloneTree(node.right) };
-};
-
 export const generateHuffmanCodingSteps = (text) => {
     const steps = [];
-    const input = text || 'ABRACADABRA';
+    const input = text || 'BCAADDDCCACACAC';
 
-    // Count frequencies
-    const freq = {};
-    for (const ch of input) {
-        freq[ch] = (freq[ch] || 0) + 1;
+    // Phase 1: Frequency Calculation
+    const freqMap = {};
+    for (let char of input) {
+        freqMap[char] = (freqMap[char] || 0) + 1;
     }
 
     steps.push({
-        type: 'tree',
-        description: `Huffman Coding for "${input}". Character frequencies: ${Object.entries(freq).map(([c, f]) => `'${c}'=${f}`).join(', ')}.`,
-        treeData: null,
-        nodeStates: {}
+        type: 'init',
+        description: `Calculated frequencies for string "${input}"\n${Object.entries(freqMap).map(([c, f]) => `'${c}': ${f}`).join(', ')}`,
+        freqMap: { ...freqMap },
+        queue: [],
+        nodes: [],
+        edges: []
     });
 
-    // Create leaf nodes, sorted by frequency
-    let nodeId = 0;
-    let nodes = Object.entries(freq).map(([ch, f]) => ({
-        id: `h${nodeId++}`,
-        value: `${ch}:${f}`,
-        char: ch,
-        freq: f,
-        left: null,
-        right: null
+    // Phase 2: Initialize Priority Queue (Min-Heap conceptually)
+    let nodeIdCounter = 1;
+    let nodesList = Object.entries(freqMap).map(([char, freq]) => ({
+        id: `N${nodeIdCounter++}`,
+        label: `${char}\n(${freq})`,
+        char: char,
+        freq: freq,
+        isLeaf: true
     }));
 
-    nodes.sort((a, b) => a.freq - b.freq);
-    const nodeStates = {};
-    nodes.forEach(n => { nodeStates[n.id] = 'default'; });
-
-    steps.push({
-        type: 'tree',
-        description: `Created ${nodes.length} leaf nodes, sorted by frequency: ${nodes.map(n => `${n.char}(${n.freq})`).join(', ')}.`,
-        treeData: null,
-        nodeStates: { ...nodeStates }
+    // Sort queue by frequency
+    let queue = [...nodesList].sort((a, b) => {
+        if (a.freq !== b.freq) return a.freq - b.freq;
+        return a.char.localeCompare(b.char);
     });
 
-    // Build Huffman tree
-    while (nodes.length > 1) {
-        const left = nodes.shift();
-        const right = nodes.shift();
+    let currentNodes = [...nodesList];
+    let currentEdges = [];
 
-        nodeStates[left.id] = 'current';
-        nodeStates[right.id] = 'current';
+    steps.push({
+        type: 'queue-init',
+        description: `Created isolated leaf nodes for each character and added to Priority Queue based on frequency.`,
+        freqMap: { ...freqMap },
+        queue: [...queue],
+        nodes: JSON.parse(JSON.stringify(currentNodes)),
+        edges: JSON.parse(JSON.stringify(currentEdges)),
+        highlightedNodes: []
+    });
+
+    // Phase 3: Bottom-up construction
+    while (queue.length > 1) {
+        let left = queue.shift();
+        let right = queue.shift();
 
         steps.push({
-            type: 'tree',
-            description: `Merging two smallest: ${left.char || ''}(${left.freq}) + ${right.char || ''}(${right.freq}) = ${left.freq + right.freq}.`,
-            treeData: null,
-            nodeStates: { ...nodeStates }
+            type: 'extract-min',
+            description: `Extracted two nodes with minimum frequencies: ${left.freq} and ${right.freq} from Queue.`,
+            freqMap: { ...freqMap },
+            queue: [...queue],
+            nodes: JSON.parse(JSON.stringify(currentNodes)),
+            edges: JSON.parse(JSON.stringify(currentEdges)),
+            highlightedNodes: [left.id, right.id]
         });
 
-        const merged = {
-            id: `h${nodeId++}`,
-            value: `${left.freq + right.freq}`,
-            char: null,
-            freq: left.freq + right.freq,
-            left,
-            right
+        let parentFreq = left.freq + right.freq;
+        let parentId = `N${nodeIdCounter++}`;
+        let parentNode = {
+            id: parentId,
+            label: `${parentFreq}`,
+            freq: parentFreq,
+            isLeaf: false,
+            leftId: left.id,
+            rightId: right.id
         };
 
-        nodeStates[left.id] = 'visited';
-        nodeStates[right.id] = 'visited';
-        nodeStates[merged.id] = 'inserted';
+        currentNodes.push(parentNode);
 
-        // Insert merged node in sorted order
-        let inserted = false;
-        for (let i = 0; i < nodes.length; i++) {
-            if (merged.freq <= nodes[i].freq) {
-                nodes.splice(i, 0, merged);
-                inserted = true;
-                break;
-            }
-        }
-        if (!inserted) nodes.push(merged);
+        // Add edges: Parent -> Left (0), Parent -> Right (1)
+        currentEdges.push({ from: parentId, to: left.id, label: '0', directed: true });
+        currentEdges.push({ from: parentId, to: right.id, label: '1', directed: true });
+
+        queue.push(parentNode);
+        queue.sort((a, b) => a.freq - b.freq);
 
         steps.push({
-            type: 'tree',
-            description: `Created internal node (freq=${merged.freq}). Remaining nodes: ${nodes.length}.`,
-            treeData: cloneTree(merged),
-            nodeStates: { ...nodeStates }
+            type: 'merge',
+            description: `Merged nodes to create new parent with frequency ${parentFreq}. Assigned edge '0' to left and '1' to right.\nInserted parent back into queue.`,
+            freqMap: { ...freqMap },
+            queue: [...queue],
+            nodes: JSON.parse(JSON.stringify(currentNodes)),
+            edges: JSON.parse(JSON.stringify(currentEdges)),
+            highlightedNodes: [parentId],
+            newEdgeIds: [`${parentId}-${left.id}`, `${parentId}-${right.id}`]
         });
     }
 
-    const root = nodes[0];
+    // Phase 4: Final Tree & Code Generation
+    let root = queue[0];
+    let huffmanCodes = {};
 
-    // Generate codes
-    const codes = {};
-    const generateCodes = (node, code) => {
+    const generateCodes = (nodeId, currentCode) => {
+        const node = currentNodes.find(n => n.id === nodeId);
         if (!node) return;
-        if (!node.left && !node.right && node.char) {
-            codes[node.char] = code || '0';
-        }
-        generateCodes(node.left, code + '0');
-        generateCodes(node.right, code + '1');
-    };
-    generateCodes(root, '');
 
-    // Reset states
-    Object.keys(nodeStates).forEach(k => { nodeStates[k] = 'default'; });
+        if (node.isLeaf) {
+            huffmanCodes[node.char] = currentCode;
+            return;
+        }
+
+        generateCodes(node.leftId, currentCode + '0');
+        generateCodes(node.rightId, currentCode + '1');
+    };
+
+    if (root) {
+        if (root.isLeaf) {
+            huffmanCodes[root.char] = '0';
+        } else {
+            generateCodes(root.id, '');
+        }
+    }
+
+    let encodedStrLength = 0;
+    for (let char of input) {
+        if (huffmanCodes[char]) {
+            encodedStrLength += huffmanCodes[char].length;
+        }
+    }
+    let originalStrLength = input.length * 8; // Assuming 8-bit ASCII
 
     steps.push({
-        type: 'tree-complete',
-        description: `Huffman Tree complete! Codes: ${Object.entries(codes).map(([c, code]) => `'${c}'=${code}`).join(', ')}. Encoded length: ${input.split('').map(c => codes[c].length).reduce((a, b) => a + b, 0)} bits.`,
-        treeData: cloneTree(root),
-        nodeStates: { ...nodeStates }
+        type: 'complete',
+        description: `Huffman Tree complete.\nOriginal Size (8-bit): ${originalStrLength} bits.\nCompressed Size: ${encodedStrLength} bits.`,
+        freqMap: { ...freqMap },
+        queue: [...queue],
+        nodes: JSON.parse(JSON.stringify(currentNodes)),
+        edges: JSON.parse(JSON.stringify(currentEdges)),
+        highlightedNodes: [],
+        huffmanCodes: { ...huffmanCodes },
+        compressionStats: { originalStrLength, encodedStrLength }
     });
 
     return steps;

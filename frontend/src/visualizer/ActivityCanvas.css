@@ -95,3 +95,37 @@
     font-size: 0.85rem;
     font-weight: 600;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .activity-canvas {
+        padding: 8px;
+    }
+
+    .activity-timeline-header {
+        margin-left: 25px;
+    }
+
+    .timeline-tick {
+        font-size: 0.6rem;
+    }
+
+    .activity-label {
+        width: 25px;
+        font-size: 0.65rem;
+    }
+
+    .activity-bar-row {
+        height: 24px;
+        gap: 4px;
+    }
+
+    .bar-time {
+        font-size: 0.55rem;
+    }
+
+    .activity-summary {
+        font-size: 0.75rem;
+        padding: 8px 12px;
+    }
+}

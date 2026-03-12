@@ -6,6 +6,7 @@ const SAFE_NETWORK_RETRY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const UNSAFE_NETWORK_RETRY_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const BACKEND_DOWN_COOLDOWN_MS = 30000;
 const AUTH_EXPIRED_NOTICE_COOLDOWN_MS = 1500;
+const POST_LOGIN_401_GRACE_MS = 12000;
 const LOCAL_HOSTNAME_PATTERN = /^(localhost|127\.0\.0\.1)$/i;
 const PRIVATE_IPV4_PATTERN = /^(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)$/i;
 
@@ -161,6 +162,17 @@ const emitLoadingEvent = (phase) => {
         window.dispatchEvent(new CustomEvent(`krama:loading:${phase}`));
     } catch (error) {
         // noop
+    }
+};
+
+const wasJustLoggedIn = () => {
+    try {
+        const raw = localStorage.getItem('krama:auth:last-login-at');
+        const ts = Number(raw);
+        if (!Number.isFinite(ts) || ts <= 0) return false;
+        return Date.now() - ts <= POST_LOGIN_401_GRACE_MS;
+    } catch (error) {
+        return false;
     }
 };
 
@@ -374,6 +386,10 @@ api.interceptors.response.use(
             requestUrl.includes('/auth/logout');
 
         if (statusCode === 401 && !isAuthEndpoint) {
+            // Avoid immediate auth bounce loops while post-login protected pages bootstrap.
+            if (wasJustLoggedIn()) {
+                return Promise.reject(error);
+            }
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             emitAuthExpired(error?.response?.data?.message || 'Session expired. Please login again.');

@@ -1,14 +1,16 @@
-export const generateCoinChangeSteps = (coins, amount) => {
+export const generateCoinChangeSteps = (coins, amount, isTotalWays = false) => {
     const steps = [];
     const c = coins || [1, 3, 4];
     const amt = amount || 6;
 
-    const dp = Array(amt + 1).fill(Infinity);
-    dp[0] = 0;
+    const dp = Array(amt + 1).fill(isTotalWays ? 0 : Infinity);
+    if (isTotalWays) dp[0] = 1;
+    else dp[0] = 0;
+
     const cellStates = {};
 
     const colLabels = Array.from({ length: amt + 1 }, (_, i) => `${i}`);
-    const rowLabels = ['Min coins'];
+    const rowLabels = [isTotalWays ? 'Total Ways' : 'Min coins'];
 
     const toTable = () => [dp.map(v => v === Infinity ? '∞' : v)];
 
@@ -25,25 +27,37 @@ export const generateCoinChangeSteps = (coins, amount) => {
         cellStates[`0-${i}`] = 'computing';
 
         for (const coin of c) {
-            if (coin <= i && dp[i - coin] + 1 < dp[i]) {
-                dp[i] = dp[i - coin] + 1;
-
-                steps.push({
-                    type: 'dp',
-                    description: `Amount ${i}: Using coin ${coin}, dp[${i}] = dp[${i - coin}] + 1 = ${dp[i]}.`,
-                    table: toTable(),
-                    cellStates: { ...cellStates },
-                    rowLabels,
-                    colLabels
-                });
+            if (coin <= i) {
+                if (isTotalWays) {
+                    const prevVal = dp[i];
+                    dp[i] += dp[i - coin];
+                    steps.push({
+                        type: 'dp',
+                        description: `Amount ${i}: Using coin ${coin}, adding ways from dp[${i - coin}] (${dp[i - coin]}). New ways = ${dp[i]}.`,
+                        table: toTable(),
+                        cellStates: { ...cellStates },
+                        rowLabels,
+                        colLabels
+                    });
+                } else if (dp[i - coin] + 1 < dp[i]) {
+                    dp[i] = dp[i - coin] + 1;
+                    steps.push({
+                        type: 'dp',
+                        description: `Amount ${i}: Using coin ${coin}, dp[${i}] = dp[${i - coin}] + 1 = ${dp[i]}.`,
+                        table: toTable(),
+                        cellStates: { ...cellStates },
+                        rowLabels,
+                        colLabels
+                    });
+                }
             }
         }
 
-        cellStates[`0-${i}`] = dp[i] === Infinity ? 'empty' : 'filled';
+        cellStates[`0-${i}`] = (isTotalWays ? (dp[i] === 0 ? 'empty' : 'filled') : (dp[i] === Infinity ? 'empty' : 'filled'));
 
         steps.push({
             type: 'dp',
-            description: `dp[${i}] = ${dp[i] === Infinity ? '∞ (not possible)' : dp[i]}.`,
+            description: isTotalWays ? `dp[${i}] = ${dp[i]} ways.` : `dp[${i}] = ${dp[i] === Infinity ? '∞ (not possible)' : dp[i]}.`,
             table: toTable(),
             cellStates: { ...cellStates },
             rowLabels,

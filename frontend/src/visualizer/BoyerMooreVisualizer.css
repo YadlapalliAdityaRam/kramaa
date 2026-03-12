@@ -1,0 +1,305 @@
+.bm-canvas {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    width: 100%;
+    margin-bottom: auto;
+    overflow-x: hidden;
+}
+
+.bm-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: flex-end;
+}
+
+.bm-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bm-input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.bm-input-group input {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-color);
+    font-family: monospace;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.bm-input-group input:focus {
+    outline: none;
+    border-color: var(--accent-yellow);
+}
+
+.bm-btn {
+    padding: 10px 16px;
+    height: 40px;
+}
+
+.bm-rnd-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+}
+
+.bm-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.bm-row-label {
+    width: 80px;
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.bm-boxes {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    position: relative;
+    max-width: calc(100% - 80px);
+    /* Leave room for label */
+    overflow-x: auto;
+    padding-bottom: 8px;
+    /* Room for indices */
+}
+
+/* Hide scrollbar for boxes but allow scroll */
+.bm-boxes::-webkit-scrollbar {
+    height: 4px;
+}
+
+.bm-boxes::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.bm-pattern-container {
+    padding-bottom: 16px;
+}
+
+.bm-box {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: monospace;
+    border-radius: 6px;
+    background: var(--bg-elevated);
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bm-spacer {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.bm-index {
+    position: absolute;
+    bottom: -18px;
+    font-size: 0.65rem;
+    color: var(--text-tertiary, #888);
+    font-weight: 500;
+    font-family: sans-serif;
+}
+
+/* Algorithm State Colors */
+.bm-comparing {
+    background: rgba(234, 179, 8, 0.15);
+    /* Yellow Tint */
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+    color: var(--accent-yellow);
+    z-index: 2;
+    transform: scale(1.05);
+}
+
+.bm-matched {
+    background: rgba(34, 197, 94, 0.15);
+    /* Green Tint */
+    border-color: #22c55e;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+}
+
+.bm-mismatched {
+    background: rgba(239, 68, 68, 0.15);
+    /* Red Tint */
+    border-color: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.bm-fully-matched {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+    color: #22c55e;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.4);
+    animation: bmPulse 1.5s infinite alternate;
+}
+
+@keyframes bmPulse {
+    0% {
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.7);
+    }
+}
+
+/* Education / Learning Panel Improvements */
+.bm-education-content p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+.bm-stats-mini {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.bm-stat-item {
+    background: var(--bg-elevated);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bm-stat-item .label {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.bm-stat-item .value {
+    font-size: 1.2rem;
+    color: var(--accent-yellow);
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.bm-complexity-info {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+    text-align: right;
+}
+
+.bm-shift-formula {
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(234, 179, 8, 0.05);
+    border: 1px dashed var(--accent-yellow);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.bm-shift-formula .formula-title {
+    font-size: 0.8rem;
+    color: var(--accent-yellow);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.bm-shift-formula code {
+    display: block;
+    font-size: 1.1rem;
+    background: var(--bg-card);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+.bm-shift-formula .formula-result {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.bm-controls-footer {
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    margin-top: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.bm-preprocessing {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+/* Correct table grid to be more flexible */
+.bm-table-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: transparent;
+}
+
+.bm-table-pair {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 50px;
+}
+
+.bm-table-header {
+    background: var(--bg-elevated);
+}
+
+.bm-table-cell {
+    border: none;
+    padding: 6px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .bm-stats-mini {
+        flex-direction: column;
+    }
+}

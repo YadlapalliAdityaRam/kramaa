@@ -616,6 +616,8 @@ public void radixSort(int[] arr) {
 }`
     },
 
+
+
     jumpSearch: {
         javascript: `function jumpSearch(arr, target) {
     const n = arr.length;
@@ -1151,6 +1153,269 @@ def dijkstra(graph, start):
         }
     }
     return key;
+}`
+    },
+
+    kosaraju: {
+        javascript: `function kosaraju(graph, V) {
+    const stack = [];
+    const visited = new Set();
+
+    function fillOrder(u) {
+        visited.add(u);
+        for (const v of graph[u])
+            if (!visited.has(v)) fillOrder(v);
+        stack.push(u);
+    }
+
+    for (let i = 0; i < V; i++)
+        if (!visited.has(i)) fillOrder(i);
+
+    const reversedGraph = Array.from({ length: V }, () => []);
+    for (let u = 0; u < V; u++)
+        for (const v of graph[u]) reversedGraph[v].push(u);
+
+    visited.clear();
+    const sccs = [];
+
+    function dfs(u, component) {
+        visited.add(u);
+        component.push(u);
+        for (const v of reversedGraph[u])
+            if (!visited.has(v)) dfs(v, component);
+    }
+
+    while (stack.length > 0) {
+        const u = stack.pop();
+        if (!visited.has(u)) {
+            const component = [];
+            dfs(u, component);
+            sccs.push(component);
+        }
+    }
+    return sccs;
+}`,
+        python: `def kosaraju(graph, V):
+    stack = []
+    visited = set()
+
+    def fill_order(u):
+        visited.add(u)
+        for v in graph[u]:
+            if v not in visited:
+                fill_order(v)
+        stack.append(u)
+
+    for i in range(V):
+        if i not in visited:
+            fill_order(i)
+
+    rev_graph = [[] for _ in range(V)]
+    for u in range(V):
+        for v in graph[u]:
+            rev_graph[v].append(u)
+
+    visited.clear()
+    sccs = []
+
+    def dfs(u, component):
+        visited.add(u)
+        component.append(u)
+        for v in rev_graph[u]:
+            if v not in visited:
+                dfs(v, component)
+
+    while stack:
+        u = stack.pop()
+        if u not in visited:
+            comp = []
+            dfs(u, comp)
+            sccs.append(comp)
+    return sccs`,
+        cpp: `void fillOrder(int u, vector<vector<int>>& adj, vector<bool>& visited, stack<int>& st) {
+    visited[u] = true;
+    for (int v : adj[u])
+        if (!visited[v]) fillOrder(v, adj, visited, st);
+    st.push(u);
+}
+
+void dfs(int u, vector<vector<int>>& revAdj, vector<bool>& visited, vector<int>& component) {
+    visited[u] = true;
+    component.push_back(u);
+    for (int v : revAdj[u])
+        if (!visited[v]) dfs(v, revAdj, visited, component);
+}
+
+vector<vector<int>> kosaraju(vector<vector<int>>& adj, int V) {
+    stack<int> st;
+    vector<bool> visited(V, false);
+    for (int i = 0; i < V; i++)
+        if (!visited[i]) fillOrder(i, adj, visited, st);
+
+    vector<vector<int>> revAdj(V);
+    for (int u = 0; u < V; u++)
+        for (int v : adj[u]) revAdj[v].push_back(u);
+
+    fill(visited.begin(), visited.end(), false);
+    vector<vector<int>> sccs;
+
+    while (!st.empty()) {
+        int u = st.top();
+        st.pop();
+        if (!visited[u]) {
+            vector<int> component;
+            dfs(u, revAdj, visited, component);
+            sccs.push_back(component);
+        }
+    }
+    return sccs;
+}`,
+        java: `public void fillOrder(int u, List<List<Integer>> adj, boolean[] visited, Stack<Integer> stack) {
+    visited[u] = true;
+    for (int v : adj.get(u))
+        if (!visited[v]) fillOrder(v, adj, visited, stack);
+    stack.push(u);
+}
+
+public void dfs(int u, List<List<Integer>> revAdj, boolean[] visited, List<Integer> component) {
+    visited[u] = true;
+    component.add(u);
+    for (int v : revAdj.get(u))
+        if (!visited[v]) dfs(v, revAdj, visited, component);
+}
+
+public List<List<Integer>> kosaraju(List<List<Integer>> adj, int V) {
+    Stack<Integer> stack = new Stack<>();
+    boolean[] visited = new boolean[V];
+    for (int i = 0; i < V; i++)
+        if (!visited[i]) fillOrder(i, adj, visited, stack);
+
+    List<List<Integer>> revAdj = new ArrayList<>();
+    for (int i = 0; i < V; i++) revAdj.add(new ArrayList<>());
+    for (int u = 0; u < V; u++)
+        for (int v : adj.get(u)) revAdj.get(v).add(u);
+
+    Arrays.fill(visited, false);
+    List<List<Integer>> sccs = new ArrayList<>();
+
+    while (!stack.isEmpty()) {
+        int u = stack.pop();
+        if (!visited[u]) {
+            List<Integer> component = new ArrayList<>();
+            dfs(u, revAdj, visited, component);
+            sccs.add(component);
+        }
+    }
+    return sccs;
+}`
+    },
+
+    bitManipulation: {
+        javascript: `// Common Bit Manipulation Tricks
+
+// 1. Check if a number is even or odd
+function isEven(n) {
+    return (n & 1) === 0;
+}
+
+// 2. Multiply or divide by 2
+function multiplyByTwo(n) { return n << 1; }
+function divideByTwo(n) { return n >> 1; }
+
+// 3. Clear the lowest set bit
+function clearLowestSetBit(n) {
+    return n & (n - 1);
+}
+
+// 4. Check if a number is a power of 2
+function isPowerOfTwo(n) {
+    return n > 0 && (n & (n - 1)) === 0;
+}
+
+// 5. Swap two numbers without a temp variable
+function swap(a, b) {
+    a = a ^ b;
+    b = a ^ b;
+    a = a ^ b;
+    return [a, b];
+}`,
+        python: `# Common Bit Manipulation Tricks
+
+# 1. Check if a number is even or odd
+def is_even(n):
+    return (n & 1) == 0
+
+# 2. Multiply or divide by 2
+def multiply_by_two(n): return n << 1
+def divide_by_two(n): return n >> 1
+
+# 3. Clear the lowest set bit
+def clear_lowest_set_bit(n):
+    return n & (n - 1)
+
+# 4. Check if a number is a power of 2
+def is_power_of_two(n):
+    return n > 0 and (n & (n - 1)) == 0
+
+# 5. Swap two numbers without a temp variable
+def swap(a, b):
+    a = a ^ b
+    b = a ^ b
+    a = a ^ b
+    return a, b`,
+        cpp: `// Common Bit Manipulation Tricks
+
+// 1. Check if a number is even or odd
+bool isEven(int n) {
+    return (n & 1) == 0;
+}
+
+// 2. Multiply or divide by 2
+int multiplyByTwo(int n) { return n << 1; }
+int divideByTwo(int n) { return n >> 1; }
+
+// 3. Clear the lowest set bit
+int clearLowestSetBit(int n) {
+    return n & (n - 1);
+}
+
+// 4. Check if a number is a power of 2
+bool isPowerOfTwo(int n) {
+    return n > 0 && (n & (n - 1)) == 0;
+}
+
+// 5. Swap two numbers without a temp variable
+void swap(int& a, int& b) {
+    a = a ^ b;
+    b = a ^ b;
+    a = a ^ b;
+}`,
+        java: `// Common Bit Manipulation Tricks
+
+// 1. Check if a number is even or odd
+public boolean isEven(int n) {
+    return (n & 1) == 0;
+}
+
+// 2. Multiply or divide by 2
+public int multiplyByTwo(int n) { return n << 1; }
+public int divideByTwo(int n) { return n >> 1; }
+
+// 3. Clear the lowest set bit
+public int clearLowestSetBit(int n) {
+    return n & (n - 1);
+}
+
+// 4. Check if a number is a power of 2
+public boolean isPowerOfTwo(int n) {
+    return n > 0 && (n & (n - 1)) == 0;
+}
+
+// 5. Swap two numbers without a temp variable
+public void swap(int a, int b) {
+    a = a ^ b;
+    b = a ^ b;
+    a = a ^ b;
 }`
     },
 
@@ -1776,6 +2041,725 @@ public Node huffmanCoding(String text) {
         pq.add(top);
     }
     return pq.poll();
+}`
+    },
+    palindromePartitioning: {
+        javascript: `function partition(s) {
+    const res = [];
+    const path = [];
+    
+    function isPalindrome(str, l, r) {
+        while (l < r) {
+            if (str[l++] !== str[r--]) return false;
+        }
+        return true;
+    }
+    
+    function backtrack(start) {
+        if (start >= s.length) {
+            res.push([...path]);
+            return;
+        }
+        for (let end = start + 1; end <= s.length; end++) {
+            if (isPalindrome(s, start, end - 1)) {
+                path.push(s.slice(start, end));
+                backtrack(end);
+                path.pop();
+            }
+        }
+    }
+    
+    backtrack(0);
+    return res;
+}`,
+        python: `def partition(s):
+    res = []
+    path = []
+    
+    def is_palindrome(str, l, r):
+        while l < r:
+            if str[l] != str[r]: return False
+            l += 1
+            r -= 1
+        return True
+        
+    def backtrack(start):
+        if start >= len(s):
+            res.append(list(path))
+            return
+        for end in range(start + 1, len(s) + 1):
+            if is_palindrome(s, start, end - 1):
+                path.append(s[start:end])
+                backtrack(end)
+                path.pop()
+                
+    backtrack(0)
+    return res`,
+        cpp: `class Solution {
+public:
+    vector<vector<string>> partition(string s) {
+        vector<vector<string>> res;
+        vector<string> path;
+        backtrack(s, 0, path, res);
+        return res;
+    }
+    
+    void backtrack(string& s, int start, vector<string>& path, vector<vector<string>>& res) {
+        if (start >= s.length()) {
+            res.push_back(path);
+            return;
+        }
+        for (int end = start + 1; end <= s.length(); end++) {
+            if (isPalindrome(s, start, end - 1)) {
+                path.push_back(s.substr(start, end - start));
+                backtrack(s, end, path, res);
+                path.pop_back();
+            }
+        }
+    }
+    
+    bool isPalindrome(string& s, int l, int r) {
+        while (l < r) {
+            if (s[l++] != s[r--]) return false;
+        }
+        return true;
+    }
+};`,
+        java: `class Solution {
+    public List<List<String>> partition(String s) {
+        List<List<String>> res = new ArrayList<>();
+        backtrack(s, 0, new ArrayList<>(), res);
+        return res;
+    }
+    
+    private void backtrack(String s, int start, List<String> path, List<List<String>> res) {
+        if (start >= s.length()) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        for (int end = start + 1; end <= s.length(); end++) {
+            if (isPalindrome(s, start, end - 1)) {
+                path.add(s.substring(start, end));
+                backtrack(s, end, path, res);
+                path.remove(path.size() - 1);
+            }
+        }
+    }
+    
+    private boolean isPalindrome(String s, int l, int r) {
+        while (l < r) {
+            if (s.charAt(l++) != s.charAt(r--)) return false;
+        }
+        return true;
+    }
+}`
+    },
+    fibonacciSearch: {
+        javascript: `function fibonacciSearch(arr, x, n) {
+    let fib2 = 0;
+    let fib1 = 1;
+    let fibM = fib2 + fib1;
+    while (fibM < n) {
+        fib2 = fib1;
+        fib1 = fibM;
+        fibM = fib2 + fib1;
+    }
+    let offset = -1;
+    while (fibM > 1) {
+        let i = Math.min(offset + fib2, n - 1);
+        if (arr[i] < x) {
+            fibM = fib1;
+            fib1 = fib2;
+            fib2 = fibM - fib1;
+            offset = i;
+        } else if (arr[i] > x) {
+            fibM = fib2;
+            fib1 = fib1 - fib2;
+            fib2 = fibM - fib1;
+        } else return i;
+    }
+    if (fib1 && arr[offset + 1] === x) return offset + 1;
+    return -1;
+}`,
+        python: `def fibonacci_search(arr, x, n):
+    fib2 = 0
+    fib1 = 1
+    fib_m = fib2 + fib1
+    while fib_m < n:
+        fib2 = fib1
+        fib1 = fib_m
+        fib_m = fib2 + fib1
+    offset = -1
+    while fib_m > 1:
+        i = min(offset + fib2, n - 1)
+        if arr[i] < x:
+            fib_m = fib1
+            fib1 = fib2
+            fib2 = fib_m - fib1
+            offset = i
+        elif arr[i] > x:
+            fib_m = fib2
+            fib1 = fib1 - fib2
+            fib2 = fib_m - fib1
+        else:
+            return i
+    if fib1 and arr[offset + 1] == x:
+        return offset + 1
+    return -1`,
+        cpp: `int fibonacciSearch(int arr[], int x, int n) {
+    int fibMMm2 = 0;
+    int fibMMm1 = 1;
+    int fibM = fibMMm2 + fibMMm1;
+    while (fibM < n) {
+        fibMMm2 = fibMMm1;
+        fibMMm1 = fibM;
+        fibM = fibMMm2 + fibMMm1;
+    }
+    int offset = -1;
+    while (fibM > 1) {
+        int i = min(offset + fibMMm2, n - 1);
+        if (arr[i] < x) {
+            fibM = fibMMm1;
+            fibMMm1 = fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+            offset = i;
+        } else if (arr[i] > x) {
+            fibM = fibMMm2;
+            fibMMm1 = fibMMm1 - fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+        } else return i;
+    }
+    if (fibMMm1 && arr[offset + 1] == x) return offset + 1;
+    return -1;
+}`,
+        java: `public int fibonacciSearch(int arr[], int x, int n) {
+    int fibMMm2 = 0;
+    int fibMMm1 = 1;
+    int fibM = fibMMm2 + fibMMm1;
+    while (fibM < n) {
+        fibMMm2 = fibMMm1;
+        fibMMm1 = fibM;
+        fibM = fibMMm2 + fibMMm1;
+    }
+    int offset = -1;
+    while (fibM > 1) {
+        int i = Math.min(offset + fibMMm2, n - 1);
+        if (arr[i] < x) {
+            fibM = fibMMm1;
+            fibMMm1 = fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+            offset = i;
+        } else if (arr[i] > x) {
+            fibM = fibMMm2;
+            fibMMm1 = fibMMm1 - fibMMm2;
+            fibMMm2 = fibM - fibMMm1;
+        } else return i;
+    }
+    if (fibMMm1 != 0 && arr[offset + 1] == x) return offset + 1;
+    return -1;
+}`
+    },
+    heap: {
+        javascript: `// Min-Heap Implementation
+function insert(heap, val) {
+    heap.push(val);
+    bubbleUp(heap, heap.length - 1);
+}
+
+function bubbleUp(heap, i) {
+    while (i > 0) {
+        let p = Math.floor((i - 1) / 2);
+        if (heap[p] <= heap[i]) break;
+        [heap[p], heap[i]] = [heap[i], heap[p]];
+        i = p;
+    }
+}
+
+function extractMin(heap) {
+    if (heap.length === 0) return null;
+    let min = heap[0];
+    let last = heap.pop();
+    if (heap.length > 0) {
+        heap[0] = last;
+        sinkDown(heap, 0);
+    }
+    return min;
+}
+
+function sinkDown(heap, i) {
+    while (true) {
+        let smallest = i, l = 2*i + 1, r = 2*i + 2;
+        if (l < heap.length && heap[l] < heap[smallest]) smallest = l;
+        if (r < heap.length && heap[r] < heap[smallest]) smallest = r;
+        if (smallest === i) break;
+        [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
+        i = smallest;
+    }
+}`,
+        python: `class MinHeap:
+    def __init__(self):
+        self.heap = []
+
+    def insert(self, val):
+        self.heap.append(val)
+        self._bubble_up(len(self.heap) - 1)
+
+    def _bubble_up(self, i):
+        while i > 0:
+            p = (i - 1) // 2
+            if self.heap[p] <= self.heap[i]: break
+            self.heap[p], self.heap[i] = self.heap[i], self.heap[p]
+            i = p
+
+    def extract_min(self):
+        if not self.heap: return None
+        min_val = self.heap[0]
+        last = self.heap.pop()
+        if self.heap:
+            self.heap[0] = last
+            self._sink_down(0)
+        return min_val
+
+    def _sink_down(self, i):
+        while True:
+            smallest, l, r = i, 2*i + 1, 2*i + 2
+            if l < len(self.heap) and self.heap[l] < self.heap[smallest]: smallest = l
+            if r < len(self.heap) and self.heap[r] < self.heap[smallest]: smallest = r
+            if smallest == i: break
+            self.heap[i], self.heap[smallest] = self.heap[smallest], self.heap[i]
+            i = smallest`,
+        cpp: `class MinHeap {
+    vector<int> heap;
+    void bubbleUp(int i) {
+        while (i > 0) {
+            int p = (i - 1) / 2;
+            if (heap[p] <= heap[i]) break;
+            swap(heap[p], heap[i]);
+            i = p;
+        }
+    }
+    void sinkDown(int i) {
+        while (true) {
+            int smallest = i, l = 2*i + 1, r = 2*i + 2;
+            if (l < heap.size() && heap[l] < heap[smallest]) smallest = l;
+            if (r < heap.size() && heap[r] < heap[smallest]) smallest = r;
+            if (smallest == i) break;
+            swap(heap[i], heap[smallest]);
+            i = smallest;
+        }
+    }
+public:
+    void insert(int val) {
+        heap.push_back(val);
+        bubbleUp(heap.size() - 1);
+    }
+    int extractMin() {
+        int minVal = heap[0];
+        heap[0] = heap.back();
+        heap.pop_back();
+        if (!heap.empty()) sinkDown(0);
+        return minVal;
+    }
+};`,
+        java: `class MinHeap {
+    private List<Integer> heap = new ArrayList<>();
+
+    public void insert(int val) {
+        heap.add(val);
+        bubbleUp(heap.size() - 1);
+    }
+
+    private void bubbleUp(int i) {
+        while (i > 0) {
+            int p = (i - 1) / 2;
+            if (heap.get(p) <= heap.get(i)) break;
+            Collections.swap(heap, p, i);
+            i = p;
+        }
+    }
+
+    public int extractMin() {
+        int min = heap.get(0);
+        heap.set(0, heap.get(heap.size() - 1));
+        heap.remove(heap.size() - 1);
+        if (!heap.isEmpty()) sinkDown(0);
+        return min;
+    }
+
+    private void sinkDown(int i) {
+        while (true) {
+            int small = i, l = 2*i + 1, r = 2*i + 2;
+            if (l < heap.size() && heap.get(l) < heap.get(small)) small = l;
+            if (r < heap.size() && heap.get(r) < heap.get(small)) small = r;
+            if (small == i) break;
+            Collections.swap(heap, i, small);
+            i = small;
+        }
+    }
+}`
+    },
+    splayTree: {
+        javascript: `class Node {
+    constructor(key) {
+        this.key = key;
+        this.left = this.right = null;
+    }
+}
+
+function rightRotate(x) {
+    let y = x.left;
+    x.left = y.right;
+    y.right = x;
+    return y;
+}
+
+function leftRotate(x) {
+    let y = x.right;
+    x.right = y.left;
+    y.left = x;
+    return y;
+}
+
+function splay(root, key) {
+    if (root === null || root.key === key) return root;
+    if (root.key > key) {
+        if (root.left === null) return root;
+        if (root.left.key > key) {
+            root.left.left = splay(root.left.left, key);
+            root = rightRotate(root);
+        } else if (root.left.key < key) {
+            root.left.right = splay(root.left.right, key);
+            if (root.left.right !== null) root.left = leftRotate(root.left);
+        }
+        return (root.left === null) ? root : rightRotate(root);
+    } else {
+        if (root.right === null) return root;
+        if (root.right.key > key) {
+            root.right.left = splay(root.right.left, key);
+            if (root.right.left !== null) root.right = rightRotate(root.right);
+        } else if (root.right.key < key) {
+            root.right.right = splay(root.right.right, key);
+            root = leftRotate(root);
+        }
+        return (root.right === null) ? root : leftRotate(root);
+    }
+}`,
+        python: `class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = self.right = None
+
+def right_rotate(x):
+    y = x.left
+    x.left = y.right
+    y.right = x
+    return y
+
+def left_rotate(x):
+    y = x.right
+    x.right = y.left
+    y.left = x
+    return y
+
+def splay(root, key):
+    if root is None or root.key == key:
+        return root
+    if root.key > key:
+        if root.left is None: return root
+        if root.left.key > key:
+            root.left.left = splay(root.left.left, key)
+            root = right_rotate(root)
+        elif root.left.key < key:
+            root.left.right = splay(root.left.right, key)
+            if root.left.right is not None:
+                root.left = left_rotate(root.left)
+        return root if root.left is None else right_rotate(root)
+    else:
+        if root.right is None: return root
+        if root.right.key > key:
+            root.right.left = splay(root.right.left, key)
+            if root.right.left is not None:
+                root.right = right_rotate(root.right)
+        elif root.right.key < key:
+            root.right.right = splay(root.right.right, key)
+            root = left_rotate(root)
+        return root if root.right is None else left_rotate(root)`,
+        cpp: `struct Node {
+    int key;
+    Node *left, *right;
+};
+
+Node* rightRotate(Node* x) {
+    Node* y = x->left;
+    x->left = y->right;
+    y->right = x;
+    return y;
+}
+
+Node* leftRotate(Node* x) {
+    Node* y = x->right;
+    x->right = y->left;
+    y->left = x;
+    return y;
+}
+
+Node* splay(Node* root, int key) {
+    if (!root || root->key == key) return root;
+    if (root->key > key) {
+        if (!root->left) return root;
+        if (root->left->key > key) {
+            root->left->left = splay(root->left->left, key);
+            root = rightRotate(root);
+        } else if (root->left->key < key) {
+            root->left->right = splay(root->left->right, key);
+            if (root->left->right) root->left = leftRotate(root->left);
+        }
+        return (!root->left) ? root : rightRotate(root);
+    } else {
+        if (!root->right) return root;
+        if (root->right->key > key) {
+            root->right->left = splay(root->right->left, key);
+            if (root->right->left) root->right = rightRotate(root->right);
+        } else if (root->right->key < key) {
+            root->right->right = splay(root->right->right, key);
+            root = leftRotate(root);
+        }
+        return (!root->right) ? root : leftRotate(root);
+    }
+}`,
+        java: `class Node {
+    int key;
+    Node left, right;
+}
+
+public class SplayTree {
+    Node rightRotate(Node x) {
+        Node y = x.left;
+        x.left = y.right;
+        y.right = x;
+        return y;
+    }
+
+    Node leftRotate(Node x) {
+        Node y = x.right;
+        x.right = y.left;
+        y.left = x;
+        return y;
+    }
+
+    Node splay(Node root, int key) {
+        if (root == null || root.key == key) return root;
+        if (root.key > key) {
+            if (root.left == null) return root;
+            if (root.left.key > key) {
+                root.left.left = splay(root.left.left, key);
+                root = rightRotate(root);
+            } else if (root.left.key < key) {
+                root.left.right = splay(root.left.right, key);
+                if (root.left.right != null) root.left = leftRotate(root.left);
+            }
+            return (root.left == null) ? root : rightRotate(root);
+        } else {
+            if (root.right == null) return root;
+            if (root.right.key > key) {
+                root.right.left = splay(root.right.left, key);
+                if (root.right.left != null) root.right = rightRotate(root.right);
+            } else if (root.right.key < key) {
+                root.right.right = splay(root.right.right, key);
+                root = leftRotate(root);
+            }
+            return (root.right == null) ? root : leftRotate(root);
+        }
+    }
+}`
+    },
+    trie: {
+        javascript: `class TrieNode {
+    constructor() {
+        this.children = {};
+        this.isEndOfWord = false;
+    }
+}
+
+class Trie {
+    constructor() {
+        this.root = new TrieNode();
+    }
+
+    insert(word) {
+        let node = this.root;
+        for (let char of word) {
+            if (!node.children[char]) node.children[char] = new TrieNode();
+            node = node.children[char];
+        }
+        node.isEndOfWord = true;
+    }
+
+    search(word) {
+        let node = this.root;
+        for (let char of word) {
+            if (!node.children[char]) return false;
+            node = node.children[char];
+        }
+        return node.isEndOfWord;
+    }
+}`,
+        python: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end_of_word = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        self.is_end_of_word = True
+
+    def search(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return node.is_end_of_word`,
+        cpp: `struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    bool isEndOfWord = false;
+};
+
+class Trie {
+    TrieNode* root;
+public:
+    Trie() { root = new TrieNode(); }
+    void insert(string word) {
+        TrieNode* node = root;
+        for (char ch : word) {
+            if (!node->children.count(ch)) node->children[ch] = new TrieNode();
+            node = node->children[ch];
+        }
+        node->isEndOfWord = true;
+    }
+};`,
+        java: `class TrieNode {
+    Map<Character, TrieNode> children = new HashMap<>();
+    boolean isEndOfWord = false;
+}
+
+public class Trie {
+    private TrieNode root = new TrieNode();
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char ch : word.toCharArray()) {
+            node.children.putIfAbsent(ch, new TrieNode());
+            node = node.children.get(ch);
+        }
+        node.isEndOfWord = true;
+    }
+}`
+    },
+    topologicalSort: {
+        javascript: `function topologicalSort(n, edges) {
+    let inDegree = new Array(n).fill(0);
+    let adj = Array.from({ length: n }, () => []);
+    
+    for (let [u, v] of edges) {
+        adj[u].push(v);
+        inDegree[v]++;
+    }
+
+    let queue = [];
+    for (let i = 0; i < n; i++) {
+        if (inDegree[i] === 0) queue.push(i);
+    }
+
+    let result = [];
+    while (queue.length > 0) {
+        let u = queue.shift();
+        result.push(u);
+        for (let v of adj[u]) {
+            inDegree[v]--;
+            if (inDegree[v] === 0) queue.push(v);
+        }
+    }
+
+    return result.length === n ? result : "Cycle Detected";
+}`,
+        python: `def topological_sort(n, edges):
+    in_degree = [0] * n
+    adj = [[] for _ in range(n)]
+    
+    for u, v in edges:
+        adj[u].append(v)
+        in_degree[v] += 1
+
+    queue = [i for i in range(n) if in_degree[i] == 0]
+    result = []
+
+    while queue:
+        u = queue.pop(0)
+        result.append(u)
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+
+    return result if len(result) == n else "Cycle Detected"`,
+        cpp: `vector<int> topologicalSort(int n, vector<pair<int, int>>& edges) {
+    vector<int> inDegree(n, 0);
+    vector<vector<int>> adj(n);
+    
+    for (auto& edge : edges) {
+        adj[edge.first].push_back(edge.second);
+        inDegree[edge.second]++;
+    }
+
+    queue<int> q;
+    for (int i = 0; i < n; i++) {
+        if (inDegree[i] == 0) q.push(i);
+    }
+
+    vector<int> result;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        result.push_back(u);
+        for (int v : adj[u]) {
+            if (--inDegree[v] == 0) q.push(v);
+        }
+    }
+
+    return result.size() == n ? result : vector<int>();
+}`,
+        java: `public List<Integer> topologicalSort(int n, int[][] edges) {
+    int[] inDegree = new int[n];
+    List<List<Integer>> adj = new ArrayList<>();
+    for (int i = 0; i < n; i++) adj.add(new ArrayList<>());
+
+    for (int[] edge : edges) {
+        adj.get(edge[0]).add(edge[1]);
+        inDegree[edge[1]]++;
+    }
+
+    Queue<Integer> q = new LinkedList<>();
+    for (int i = 0; i < n; i++) {
+        if (inDegree[i] == 0) q.add(i);
+    }
+
+    List<Integer> result = new ArrayList<>();
+    while (!q.isEmpty()) {
+        int u = q.poll();
+        result.add(u);
+        for (int v : adj.get(u)) {
+            if (--inDegree[v] == 0) q.add(v);
+        }
+    }
+
+    return result.size() == n ? result : new ArrayList<>();
 }`
     }
 };

@@ -33,6 +33,17 @@ const coreAlgorithms = [
         useCases: ['Small datasets', 'Memory constrained systems', 'Low swap count workflows']
     },
     {
+        id: 's-shell',
+        name: 'Shell Sort',
+        category: 'Sorting',
+        difficulty: 'Intermediate',
+        path: '/algorithms/sorting/shell',
+        description: 'Gap-based variation of Insertion Sort. Sorts distant elements and shrinks gap to 1.',
+        timeComplexity: { best: 'O(n log n)', average: 'O(n^(4/3))', worst: 'O(n^2)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Medium-sized lists', 'Embedded systems', 'Where memory is tight']
+    },
+    {
         id: 's4',
         name: 'Merge Sort',
         category: 'Sorting',
@@ -49,10 +60,10 @@ const coreAlgorithms = [
         category: 'Sorting',
         difficulty: 'Intermediate',
         path: '/algorithms/sorting/quick',
-        description: 'Divide-and-conquer sorting using pivot partitioning.',
+        description: 'Divide-and-conquer sorting that uses a pivot element to partition the array into smaller and larger subarrays.',
         timeComplexity: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n^2)' },
         spaceComplexity: 'O(log n)',
-        useCases: ['General-purpose array sorting', 'Performance critical apps', 'In-place sorting']
+        useCases: ['General-purpose array sorting', 'Performance critical applications', 'Standard library implementations']
     },
     {
         id: 's6',
@@ -88,6 +99,39 @@ const coreAlgorithms = [
         useCases: ['Fixed-length integers', 'Known digit widths', 'Large integer batches']
     },
     {
+        id: 's9',
+        name: 'Cocktail Shaker Sort',
+        category: 'Sorting',
+        difficulty: 'Intermediate',
+        path: '/algorithms/sorting/cocktail-shaker',
+        description: 'Bidirectional variation of Bubble Sort that traverses in both directions.',
+        timeComplexity: { best: 'O(n)', average: 'O(n^2)', worst: 'O(n^2)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Nearly sorted data', 'Reducing "turtles" in Bubble Sort', 'Small datasets']
+    },
+    {
+        id: 's10',
+        name: 'Comb Sort',
+        category: 'Sorting',
+        difficulty: 'Intermediate',
+        path: '/algorithms/sorting/comb',
+        description: 'Improves Bubble Sort by using a shrinking gap to compare distant elements.',
+        timeComplexity: { best: 'O(n log n)', average: 'O(n^2 / 2^p)', worst: 'O(n^2)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Eliminating turtles in Bubble Sort', 'Small/Medium datasets', 'Non-stable sorting needs']
+    },
+    {
+        id: 's11',
+        name: 'Counting Sort',
+        category: 'Sorting',
+        difficulty: 'Intermediate',
+        path: '/algorithms/sorting/counting',
+        description: 'A non-comparison based sorting algorithm that counts the frequency of each element.',
+        timeComplexity: { best: 'O(n + k)', average: 'O(n + k)', worst: 'O(n + k)' },
+        spaceComplexity: 'O(n + k)',
+        useCases: ['Small range of integer values', 'Sub-routine for Radix Sort', 'When stability is required']
+    },
+    {
         id: 'se1',
         name: 'Linear Search',
         category: 'Searching',
@@ -99,15 +143,26 @@ const coreAlgorithms = [
         useCases: ['Unsorted arrays', 'Small datasets', 'One-off lookups']
     },
     {
+        id: 'se1_5',
+        name: 'Sentinel Linear Search',
+        category: 'Searching',
+        difficulty: 'Beginner',
+        path: '/algorithms/searching/sentinel-linear',
+        description: 'Improves Linear Search by replacing the last element with the target to avoid boundary checks in the loop.',
+        timeComplexity: { best: 'O(1)', average: 'O(n)', worst: 'O(n)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Unsorted arrays where minimizing loop conditions improves performance slightly']
+    },
+    {
         id: 'se2',
         name: 'Binary Search',
         category: 'Searching',
         difficulty: 'Beginner',
         path: '/algorithms/searching/binary',
-        description: 'Searches sorted arrays by halving search space each step.',
+        description: 'Efficiently find a target in a sorted collection by repeatedly halving the search area.',
         timeComplexity: { best: 'O(1)', average: 'O(log n)', worst: 'O(log n)' },
         spaceComplexity: 'O(1)',
-        useCases: ['Sorted arrays', 'Fast repeated lookups', 'Large datasets']
+        useCases: ['Search in sorted datasets', 'Looking up words in a dictionary', 'Finding a value in a range']
     },
     {
         id: 'se3',
@@ -136,11 +191,23 @@ const coreAlgorithms = [
         name: 'Exponential Search',
         category: 'Searching',
         difficulty: 'Intermediate',
-        path: '/algorithms/searching/exponential',
+        path: '/algorithms/searching/exponential-search',
         description: 'Expands search range exponentially then applies binary search.',
         timeComplexity: { best: 'O(1)', average: 'O(log n)', worst: 'O(log n)' },
         spaceComplexity: 'O(1)',
         useCases: ['Unbounded arrays', 'Sorted streams', 'Early-target lookups']
+    },
+
+    {
+        id: 'se7',
+        name: 'Fibonacci Search',
+        category: 'Searching',
+        difficulty: 'Advanced',
+        path: '/algorithms/searching/fibonacci-search',
+        description: 'Search algorithm for sorted arrays using Fibonacci numbers to divide the range.',
+        timeComplexity: { best: 'O(1)', average: 'O(log n)', worst: 'O(log n)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Systems with slow multiplication', 'Large sorted datasets', 'Uniform memory scale']
     },
     {
         id: 'g1',
@@ -148,10 +215,21 @@ const coreAlgorithms = [
         category: 'Graphs',
         difficulty: 'Intermediate',
         path: '/algorithms/graphs/bfs',
-        description: 'Traverses graph level by level from a source node.',
+        description: 'Traverses graph level-by-level using a queue. Ideal for finding shortest paths in unweighted graphs.',
         timeComplexity: { best: 'O(V + E)', average: 'O(V + E)', worst: 'O(V + E)' },
         spaceComplexity: 'O(V)',
-        useCases: ['Shortest path in unweighted graphs', 'Connectivity checks', 'Layered traversal']
+        useCases: ['Shortest path in unweighted networks', 'Social network connections (degree of separation)', 'GPS navigation foundations']
+    },
+    {
+        id: 'g6',
+        name: 'Dijkstra\'s Algorithm',
+        category: 'Graphs',
+        difficulty: 'Intermediate',
+        path: '/algorithms/graphs/dijkstra',
+        description: 'Finds the shortest path from a source node to all other nodes in a weighted graph.',
+        timeComplexity: { best: 'O((V + E) log V)', average: 'O((V + E) log V)', worst: 'O((V + E) log V)' },
+        spaceComplexity: 'O(V)',
+        useCases: ['Dijkstra\'s is the foundation for most modern navigation and routing systems.']
     },
     {
         id: 'g2',
@@ -159,25 +237,15 @@ const coreAlgorithms = [
         category: 'Graphs',
         difficulty: 'Intermediate',
         path: '/algorithms/graphs/dfs',
-        description: 'Traverses graph by exploring one branch deeply before backtracking.',
+        description: 'Explores graph branches deeply using a stack or recursion. Fundamental for structure analysis.',
         timeComplexity: { best: 'O(V + E)', average: 'O(V + E)', worst: 'O(V + E)' },
         spaceComplexity: 'O(V)',
-        useCases: ['Cycle detection', 'Topological processing', 'Component detection']
+        useCases: ['Cycle detection in graphs', 'Topological sorting', 'Solving puzzles (like mazes) and structural connectivity']
     },
-    {
-        id: 'g3',
-        name: "Dijkstra's Algorithm",
-        category: 'Graphs',
-        difficulty: 'Advanced',
-        path: '/algorithms/graphs/dijkstra',
-        description: 'Finds shortest path from a source in non-negative weighted graphs.',
-        timeComplexity: { best: 'O((V + E) log V)', average: 'O((V + E) log V)', worst: 'O((V + E) log V)' },
-        spaceComplexity: 'O(V)',
-        useCases: ['Routing', 'Navigation systems', 'Network optimization']
-    },
+
     {
         id: 'g4',
-        name: 'Bellman-Ford',
+        name: "Bellman-Ford",
         category: 'Graphs',
         difficulty: 'Advanced',
         path: '/algorithms/graphs/bellman-ford',
@@ -213,7 +281,7 @@ const coreAlgorithms = [
         name: 'AVL Tree',
         category: 'Trees',
         difficulty: 'Advanced',
-        path: '/algorithms/trees/avl',
+        path: '/algorithms/trees/avl-tree',
         description: 'Self-balancing BST with strict height-balance rotations.',
         timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
         spaceComplexity: 'O(n)',
@@ -224,44 +292,154 @@ const coreAlgorithms = [
         name: 'Red-Black Tree',
         category: 'Trees',
         difficulty: 'Advanced',
-        path: '/algorithms/trees/rbt',
+        path: '/algorithms/trees/red-black-tree',
         description: 'Balanced BST using coloring rules for near-logarithmic operations.',
         timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
         spaceComplexity: 'O(n)',
         useCases: ['Language/runtime maps', 'Set implementations', 'Balanced dictionary indexing']
     },
     {
+        id: 't4',
+        name: 'Segment Tree',
+        category: 'Trees',
+        difficulty: 'Advanced',
+        path: '/algorithms/trees/segment-tree',
+        description: 'Supports efficient range queries and point updates on an array.',
+        timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
+        spaceComplexity: 'O(n)',
+        useCases: ['Range sum queries', 'Range min/max', 'Competitive programming']
+    },
+    {
+        id: 't5',
+        name: 'Fenwick Tree (BIT)',
+        category: 'Trees',
+        difficulty: 'Advanced',
+        path: '/algorithms/trees/fenwick',
+        description: 'Binary Indexed Tree for efficient prefix sum computation and point updates.',
+        timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
+        spaceComplexity: 'O(n)',
+        useCases: ['Prefix sums', 'Frequency counting', 'Inversions counting']
+    },
+    {
+        id: 't6',
+        name: 'Heap / Priority Queue',
+        category: 'Trees',
+        difficulty: 'Intermediate',
+        path: '/algorithms/trees/priority-queue',
+        description: 'Min-Heap with insert (bubble-up) and extract-min (heapify-down) operations.',
+        timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
+        spaceComplexity: 'O(n)',
+        useCases: ['Priority scheduling', 'Heap sort', 'Dijkstra / Prim helpers']
+    },
+    {
+        id: 't7',
+        name: 'Splay Tree',
+        category: 'Trees',
+        difficulty: 'Hard',
+        path: '/algorithms/trees/splay',
+        description: 'A self-adjusting binary search tree where recently accessed elements are moved to the root using rotations.',
+        timeComplexity: { best: 'O(log n)', average: 'O(log n) amortized', worst: 'O(n)' },
+        spaceComplexity: 'O(n)',
+        useCases: ['Cache implementations', 'Memory management', 'Data streams with frequent access to recent elements']
+    },
+    {
+        id: 't8',
+        name: 'Trie (Prefix Tree)',
+        category: 'Trees',
+        difficulty: 'Intermediate',
+        path: '/algorithms/trees/trie',
+        description: 'An efficient information retrieval data structure that stores character paths to share common prefixes among words.',
+        timeComplexity: { best: 'O(m)', average: 'O(m)', worst: 'O(m)' },
+        spaceComplexity: 'O(ALPHABET * m * n)',
+        useCases: ['Autocomplete features', 'Spell checkers', 'IP routing tables', 'T9 predictive text']
+    },
+    {
+        id: 't-nary-dfs',
+        name: 'N-ary DFS',
+        category: 'Trees',
+        difficulty: 'Intermediate',
+        path: '/algorithms/trees/nary-tree',
+        description: 'Depth-first search traversal on a general tree with any number of children.',
+        timeComplexity: { best: 'O(V)', average: 'O(V)', worst: 'O(V)' },
+        spaceComplexity: 'O(H)',
+        useCases: ['Folder structure traversal', 'DOM tree analysis']
+    },
+    {
+        id: 't-nary-bfs',
+        name: 'N-ary BFS (Level Order)',
+        category: 'Trees',
+        difficulty: 'Intermediate',
+        path: '/algorithms/trees/nary-tree',
+        description: 'Breadth-first search traversal on a general tree, visiting nodes level-by-level.',
+        timeComplexity: { best: 'O(V)', average: 'O(V)', worst: 'O(V)' },
+        spaceComplexity: 'O(W)',
+        useCases: ['Organizational chart leveling', 'Broad search workloads']
+    },
+    {
+        id: 't-nary-height',
+        name: 'N-ary Tree Height',
+        category: 'Trees',
+        difficulty: 'Intermediate',
+        path: '/algorithms/trees/nary-tree',
+        description: 'Calculates the maximum depth/height of a general N-ary tree.',
+        timeComplexity: { best: 'O(V)', average: 'O(V)', worst: 'O(V)' },
+        spaceComplexity: 'O(H)',
+        useCases: ['Tree metrics', 'Structural analysis']
+    },
+    {
         id: 'dp1',
-        name: 'Knapsack Problem',
+        name: 'Knapsack Problem (0/1)',
         category: 'Dynamic Programming',
         difficulty: 'Intermediate',
         path: '/algorithms/dp/knapsack',
-        description: 'Optimizes maximum value under weight capacity constraints.',
+        description: 'An optimization problem that finds the maximum value of items that can fit into a fixed-capacity knapsack.',
         timeComplexity: { best: 'O(nW)', average: 'O(nW)', worst: 'O(nW)' },
         spaceComplexity: 'O(nW)',
-        useCases: ['Resource allocation', 'Budget optimization', 'Subset optimization']
+        useCases: ['Resource allocation', 'Budget optimization', 'Load balancing in distributed systems', 'Investment selection']
+    },
+    {
+        id: 'dp-lcs',
+        name: 'Longest Common Subsequence',
+        category: 'Dynamic Programming',
+        difficulty: 'Intermediate',
+        path: '/algorithms/dp/lcs',
+        description: 'Finds the longest subsequence present in both strings in the same relative order.',
+        timeComplexity: { best: 'O(mn)', average: 'O(mn)', worst: 'O(mn)' },
+        spaceComplexity: 'O(mn)',
+        useCases: ['Diff tools', 'Bioinformatics', 'Version control systems']
     },
     {
         id: 'dp2',
-        name: 'Longest Common Subsequence',
+        name: 'Edit Distance (Levenshtein)',
         category: 'Dynamic Programming',
         difficulty: 'Advanced',
-        path: '/algorithms/dp/lcs',
-        description: 'Finds longest subsequence common to two sequences.',
+        path: '/algorithms/dp/edit-distance',
+        description: 'Calculates the minimum number of operations (insert, delete, replace) to transform one string into another.',
         timeComplexity: { best: 'O(mn)', average: 'O(mn)', worst: 'O(mn)' },
         spaceComplexity: 'O(mn)',
-        useCases: ['Diff tools', 'Version compare', 'DNA/protein sequence matching']
+        useCases: ['Spell checkers', 'DNA sequence alignment', 'Natural Language Processing', 'Diff tools']
     },
     {
         id: 'dp3',
-        name: 'Coin Change',
+        name: 'Coin Change (Min Coins)',
         category: 'Dynamic Programming',
         difficulty: 'Intermediate',
         path: '/algorithms/dp/coin-change',
-        description: 'Computes minimum coins or number of ways for a target amount.',
+        description: 'Computes the minimum number of coins needed to make a target amount using given denominations.',
         timeComplexity: { best: 'O(n * amount)', average: 'O(n * amount)', worst: 'O(n * amount)' },
         spaceComplexity: 'O(amount)',
-        useCases: ['Payment systems', 'Combinatorics education', 'Optimization practice']
+        useCases: ['Currency calculation', 'Payment systems', 'Optimization problems', 'Combinatorics foundations']
+    },
+    {
+        id: 'dp4',
+        name: 'Coin Change (Total Ways)',
+        category: 'Dynamic Programming',
+        difficulty: 'Intermediate',
+        path: '/algorithms/dp/coin-change-ways',
+        description: 'Computes the total number of distinct ways to make a target amount using given denominations, order un-important.',
+        timeComplexity: { best: 'O(n * amount)', average: 'O(n * amount)', worst: 'O(n * amount)' },
+        spaceComplexity: 'O(n * amount)',
+        useCases: ['Combinatorics', 'Mathematical ways counting', 'Unbounded knapsack variants']
     },
     {
         id: 'gr1',
@@ -287,29 +465,9 @@ const coreAlgorithms = [
     }
 ];
 
+
+
 const expansionAlgorithms = [
-    {
-        id: 'u01',
-        name: 'Shell Sort',
-        category: 'Sorting',
-        difficulty: 'Intermediate',
-        path: '/algorithms/sorting/shell',
-        description: 'Generalized insertion sort with shrinking gaps for faster passes.',
-        timeComplexity: { best: 'O(n log n)', average: 'O(n log^2 n)', worst: 'O(n^2)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Medium arrays', 'In-place optimization', 'Gap-based sorting education']
-    },
-    {
-        id: 'u02',
-        name: 'Counting Sort',
-        category: 'Sorting',
-        difficulty: 'Beginner',
-        path: '/algorithms/sorting/counting',
-        description: 'Counts frequency of values and rebuilds sorted array by index counts.',
-        timeComplexity: { best: 'O(n + k)', average: 'O(n + k)', worst: 'O(n + k)' },
-        spaceComplexity: 'O(k)',
-        useCases: ['Small bounded integers', 'Stable sorting foundation', 'Frequency-based sorting']
-    },
     {
         id: 'u03',
         name: 'Tim Sort',
@@ -332,61 +490,11 @@ const expansionAlgorithms = [
         spaceComplexity: 'O(1)',
         useCases: ['Write-costly memory', 'Min-write workflows', 'Algorithm comparison']
     },
-    {
-        id: 'u05',
-        name: 'Cocktail Shaker Sort',
-        category: 'Sorting',
-        difficulty: 'Beginner',
-        path: '/algorithms/sorting/cocktail-shaker',
-        description: 'Bidirectional bubble sort that sweeps both ends each pass.',
-        timeComplexity: { best: 'O(n)', average: 'O(n^2)', worst: 'O(n^2)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Teaching bidirectional scans', 'Small arrays', 'Boundary shrinking demos']
-    },
-    {
-        id: 'u06',
-        name: 'Comb Sort',
-        category: 'Sorting',
-        difficulty: 'Intermediate',
-        path: '/algorithms/sorting/comb',
-        description: 'Improves bubble sort by comparing distant elements using a shrinking gap.',
-        timeComplexity: { best: 'O(n log n)', average: 'O(n^2)', worst: 'O(n^2)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Bubble sort optimization', 'Gap shrink techniques', 'Intro to practical improvements']
-    },
-    {
-        id: 'u07',
-        name: 'Ternary Search',
-        category: 'Searching',
-        difficulty: 'Intermediate',
-        path: '/algorithms/searching/ternary',
-        description: 'Splits sorted range into three parts using two mid points.',
-        timeComplexity: { best: 'O(1)', average: 'O(log_3 n)', worst: 'O(log_3 n)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Sorted arrays', 'Search strategy comparison', 'Divide-and-conquer learning']
-    },
-    {
-        id: 'u08',
-        name: 'Fibonacci Search',
-        category: 'Searching',
-        difficulty: 'Intermediate',
-        path: '/algorithms/searching/fibonacci',
-        description: 'Searches sorted arrays with Fibonacci-indexed offsets.',
-        timeComplexity: { best: 'O(1)', average: 'O(log n)', worst: 'O(log n)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Sorted arrays', 'Low division-cost systems', 'Search method comparison']
-    },
-    {
-        id: 'u09',
-        name: 'Sentinel Linear Search',
-        category: 'Searching',
-        difficulty: 'Beginner',
-        path: '/algorithms/searching/sentinel-linear',
-        description: 'Linear search with sentinel to reduce boundary checks.',
-        timeComplexity: { best: 'O(1)', average: 'O(n)', worst: 'O(n)' },
-        spaceComplexity: 'O(1)',
-        useCases: ['Loop optimization demos', 'Intro optimization techniques', 'Simple scan tasks']
-    },
+
+
+
+
+
     {
         id: 'u10',
         name: 'Floyd-Warshall',
@@ -403,7 +511,7 @@ const expansionAlgorithms = [
         name: "Kruskal's MST",
         category: 'Graphs',
         difficulty: 'Advanced',
-        path: '/algorithms/graphs/kruskal',
+        path: '/algorithms/graphs/kruskals-mst',
         description: 'Builds MST by sorting edges and using Union-Find cycle checks.',
         timeComplexity: { best: 'O(E log E)', average: 'O(E log E)', worst: 'O(E log E)' },
         spaceComplexity: 'O(V)',
@@ -453,61 +561,7 @@ const expansionAlgorithms = [
         spaceComplexity: 'O(V)',
         useCases: ['SCC decomposition', 'Graph condensation', 'Directed graph analysis']
     },
-    {
-        id: 'u16',
-        name: 'Trie (Prefix Tree)',
-        category: 'Trees',
-        difficulty: 'Intermediate',
-        path: '/algorithms/trees/trie',
-        description: 'Character tree optimized for prefix-based queries.',
-        timeComplexity: { best: 'O(L)', average: 'O(L)', worst: 'O(L)' },
-        spaceComplexity: 'O(alphabet * L * N)',
-        useCases: ['Autocomplete', 'Dictionary lookup', 'Prefix matching']
-    },
-    {
-        id: 'u17',
-        name: 'Segment Tree',
-        category: 'Trees',
-        difficulty: 'Advanced',
-        path: '/algorithms/trees/segment-tree',
-        description: 'Range query + point update structure with logarithmic operations.',
-        timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
-        spaceComplexity: 'O(n)',
-        useCases: ['Range sums/min/max', 'Competitive programming', 'Interval updates']
-    },
-    {
-        id: 'u18',
-        name: 'Fenwick Tree (BIT)',
-        category: 'Trees',
-        difficulty: 'Advanced',
-        path: '/algorithms/trees/fenwick',
-        description: 'Binary indexed tree for efficient prefix sums and updates.',
-        timeComplexity: { best: 'O(log n)', average: 'O(log n)', worst: 'O(log n)' },
-        spaceComplexity: 'O(n)',
-        useCases: ['Prefix sums', 'Frequency tables', 'Online range queries']
-    },
-    {
-        id: 'u19',
-        name: 'Heap / Min-Max Priority Queue',
-        category: 'Trees',
-        difficulty: 'Beginner',
-        path: '/algorithms/trees/priority-queue',
-        description: 'Complete tree represented as array for efficient priority operations.',
-        timeComplexity: { best: 'O(1)', average: 'O(log n)', worst: 'O(log n)' },
-        spaceComplexity: 'O(n)',
-        useCases: ['Task scheduling', 'Event simulation', 'Shortest-path internals']
-    },
-    {
-        id: 'u20',
-        name: 'Splay Tree',
-        category: 'Trees',
-        difficulty: 'Advanced',
-        path: '/algorithms/trees/splay',
-        description: 'Self-adjusting BST that splays accessed nodes toward root.',
-        timeComplexity: { best: 'O(1)', average: 'O(log n) amortized', worst: 'O(n)' },
-        spaceComplexity: 'O(n)',
-        useCases: ['Adaptive access patterns', 'Cache-friendly trees', 'Amortized analysis']
-    },
+
     {
         id: 'u21',
         name: 'Longest Increasing Subsequence',
@@ -519,17 +573,7 @@ const expansionAlgorithms = [
         spaceComplexity: 'O(n)',
         useCases: ['Sequence analysis', 'DP pattern study', 'Optimization interviews']
     },
-    {
-        id: 'u22',
-        name: 'Edit Distance (Levenshtein)',
-        category: 'Dynamic Programming',
-        difficulty: 'Intermediate',
-        path: '/algorithms/dp/edit-distance',
-        description: 'Minimum insert/delete/replace operations to transform one string to another.',
-        timeComplexity: { best: 'O(m * n)', average: 'O(m * n)', worst: 'O(m * n)' },
-        spaceComplexity: 'O(m * n)',
-        useCases: ['Spell correction', 'String similarity', 'Diff engines']
-    },
+
     {
         id: 'u23',
         name: 'Matrix Chain Multiplication',
@@ -665,13 +709,13 @@ const expansionAlgorithms = [
     {
         id: 'u35',
         name: 'Subset Sum',
-        category: 'Backtracking',
+        category: 'Dynamic Programming',
         difficulty: 'Intermediate',
-        path: '/algorithms/backtracking/subset-sum',
-        description: 'Finds subsets whose total equals a target using include/exclude recursion.',
-        timeComplexity: { best: 'O(2^n)', average: 'O(2^n)', worst: 'O(2^n)' },
-        spaceComplexity: 'O(n)',
-        useCases: ['Combinatorial search', 'Pruning strategy learning', 'Target sum problems']
+        path: '/algorithms/dp/subset-sum',
+        description: 'Determines if any subset of the given array adds up to a target sum using a 2D boolean DP grid and traces back to find the exact elements.',
+        timeComplexity: { best: 'O(n * target)', average: 'O(n * target)', worst: 'O(n * target)' },
+        spaceComplexity: 'O(n * target)',
+        useCases: ['0/1 Knapsack variants', 'Exact change problems', 'Partition problems']
     },
     {
         id: 'u36',
@@ -679,10 +723,10 @@ const expansionAlgorithms = [
         category: 'Math',
         difficulty: 'Beginner',
         path: '/algorithms/math/sieve',
-        description: 'Marks multiples to efficiently list prime numbers up to N.',
+        description: 'Efficiently find all prime numbers up to N by systematically crossing out multiples in a grid.',
         timeComplexity: { best: 'O(n log log n)', average: 'O(n log log n)', worst: 'O(n log log n)' },
         spaceComplexity: 'O(n)',
-        useCases: ['Prime precomputation', 'Number theory', 'Competitive programming']
+        useCases: ['Prime number precomputation', 'Number theory education', 'Competitive programming']
     },
     {
         id: 'u37',
@@ -727,6 +771,28 @@ const expansionAlgorithms = [
         timeComplexity: { best: 'O(n * 2^n)', average: 'O(n * 2^n)', worst: 'O(n * 2^n)' },
         spaceComplexity: 'O(n^2)',
         useCases: ['Palindrome decomposition', 'DP + backtracking blend', 'Partition generation']
+    },
+    {
+        id: 'tp1',
+        name: 'Two Pointers Technique',
+        category: 'Searching',
+        difficulty: 'Beginner',
+        path: '/algorithms/searching/two-pointers',
+        description: 'Uses two indices moving inward from opposite ends of a sorted array to efficiently find pairs.',
+        timeComplexity: { best: 'O(n)', average: 'O(n)', worst: 'O(n)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Pair sum problems', 'Sorted array scanning', 'Reducing nested loops']
+    },
+    {
+        id: 'sw1',
+        name: 'Sliding Window Technique',
+        category: 'Searching',
+        difficulty: 'Beginner',
+        path: '/algorithms/searching/sliding-window',
+        description: 'Processes a moving window of elements to find optimal subarrays without rescanning.',
+        timeComplexity: { best: 'O(n)', average: 'O(n)', worst: 'O(n)' },
+        spaceComplexity: 'O(1)',
+        useCases: ['Maximum subarray sum', 'Fixed-size window problems', 'String pattern matching']
     }
 ];
 

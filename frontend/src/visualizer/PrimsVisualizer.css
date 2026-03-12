@@ -1,0 +1,290 @@
+/* ── Prim's MST Visualizer ── */
+
+/* Step badge in description */
+.prim-step-badge {
+    font-size: 0.82rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Dual Graph Panels ── */
+.prim-dual-graphs {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    min-height: 280px;
+}
+
+.prim-graph-panel {
+    flex: 1;
+    position: relative;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    min-height: 250px;
+}
+
+.prim-mst-panel {
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.prim-graph-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    z-index: 5;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+
+.prim-mst-label {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.prim-graph-canvas-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* ── Info Row (edge list, nodes, weight, legend) ── */
+.prim-info-row {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.prim-info-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 14px;
+    flex: 1;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+}
+
+.prim-pq-card {
+    flex: 1.5;
+    /* Priority Queue gets a bit more space */
+}
+
+.prim-card-title {
+    margin: 0 0 10px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ── Priority Queue (Candidate Edges) ── */
+.prim-edge-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding-right: 4px;
+    flex: 1;
+}
+
+.prim-edge-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.prim-edge-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.prim-edge-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.25s ease;
+}
+
+.prim-edge-item .pe-nodes {
+    flex: 1;
+}
+
+.prim-edge-item .pe-weight {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.prim-edge-item.pe-active {
+    background: rgba(59, 130, 246, 0.15);
+    border-left-color: #3b82f6;
+    color: #93c5fd;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.prim-edge-item.pe-active .pe-weight {
+    color: #bfdbfe;
+}
+
+.pe-badge {
+    background: rgba(59, 130, 246, 0.25);
+    color: #60a5fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── Visited Nodes ── */
+.prim-nodes-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    align-content: flex-start;
+}
+
+.prim-visited-node {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #6ee7b7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+/* ── MST Weight Card ── */
+.prim-weight-card {
+    text-align: center;
+    background: rgba(16, 185, 129, 0.04) !important;
+    border-color: rgba(16, 185, 129, 0.15) !important;
+    min-width: 120px;
+    flex: 0.5;
+    justify-content: center;
+}
+
+.prim-total-weight {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #10b981;
+    text-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+    line-height: 1;
+}
+
+.prim-edge-count {
+    font-size: 0.75rem;
+    color: #6ee7b7;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* ── Legend ── */
+.prim-legend-card {
+    min-width: 160px;
+    flex: 0.5;
+}
+
+.prim-legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pl-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.pl-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.pl-grey {
+    background: #4b5563;
+}
+
+.pl-blue {
+    background: #3b82f6;
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+}
+
+.pl-green {
+    background: #10b981;
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+}
+
+/* Node legend specific shape */
+.pl-node {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    border-radius: 50%;
+}
+
+/* ── Controls Bar ── */
+.prim-controls-bar {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .prim-dual-graphs {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .prim-graph-panel {
+        min-height: 200px;
+    }
+
+    .prim-info-row {
+        flex-wrap: nowrap;
+    }
+
+    .prim-info-card {
+        min-width: 200px;
+    }
+}

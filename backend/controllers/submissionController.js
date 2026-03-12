@@ -1,18 +1,26 @@
 const Submission = require('../models/Submission');
 const Problem = require('../models/Problem');
 const User = require('../models/User');
+const Follow = require('../models/Follow');
 const Contest = require('../models/Contest');
 const ContestParticipant = require('../models/ContestParticipant');
 const codeExecutor = require('../services/codeExecutor');
 const analyticsService = require('../services/analyticsService');
 const globalRankService = require('../services/globalRankService');
 const notificationService = require('../services/notificationService');
+const DailyChallenge = require('../models/DailyChallenge');
+const {
+    recordActivity,
+    formatUtcDateKey
+} = require('../services/social/activityService');
 const mongoose = require('mongoose');
 const {
     applyContestSubmissionResult,
     computeContestStatus,
     isProblemInContest,
-    syncContestStatus
+    sortByLeaderboardRules,
+    syncContestStatus,
+    validateParticipantSubmissionAccess
 } = require('../services/contestService');
 
 const activeSubmissionLocks = new Map();
@@ -27,6 +35,18 @@ const roundNumber = (value, decimals = 3) => {
     const factor = 10 ** decimals;
     return Math.round(toFiniteNumber(value, 0) * factor) / factor;
 };
+
+const mapContestLeaderboardEntry = (participant, index) => ({
+    rank: index + 1,
+    userId: participant.userId?._id || participant.userId,
+    username: participant.userId?.username || 'Unknown',
+    rating: Number(participant.userId?.rating?.current || participant.userId?.rating || 1200),
+    solvedCount: Number(participant.solvedCount || 0),
+    totalScore: Number(participant.score || 0),
+    totalTime: Number(participant.totalTime ?? participant.penalty ?? 0),
+    wrongSubmissions: Number(participant.wrongSubmissions || 0),
+    status: participant.status || 'active'
+});
 
 const getNonUserRoleIds = async () => {
     const privilegedUsers = await User.find({
@@ -167,7 +187,7 @@ exports.submitSolution = async (req, res) => {
         let contest = null;
 
         if (contestId) {
-            contest = await Contest.findById(contestId).select('startTime endTime status problems');
+            contest = await Contest.findById(contestId).select('startTime endTime status problems exitRules scoringConfig problemScoring');
             if (!contest) return res.status(404).json({ success: false, message: 'Contest not found' });
 
             await syncContestStatus(contest);
@@ -176,9 +196,20 @@ exports.submitSolution = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Contest is not running' });
             }
 
-            const participant = await ContestParticipant.exists({ contestId, userId });
+            const participant = await ContestParticipant.findOne({ contestId, userId });
             if (!participant) {
                 return res.status(403).json({ success: false, message: 'You are not registered for this contest' });
+            }
+
+            const submissionAccess = await validateParticipantSubmissionAccess({
+                contestDoc: contest,
+                participantDoc: participant
+            });
+            if (!submissionAccess.allowed) {
+                return res.status(403).json({
+                    success: false,
+                    message: submissionAccess.reason || 'Contest submissions are not allowed'
+                });
             }
 
             // Check if problem belongs to contest
@@ -373,6 +404,7 @@ exports.submitSolution = async (req, res) => {
                     await applyContestSubmissionResult({
                         session,
                         contestId,
+                        contestDoc: contest,
                         userId,
                         problemId,
                         submissionId: currentSubmission._id,
@@ -403,6 +435,21 @@ exports.submitSolution = async (req, res) => {
                 }
             }
 
+            if (contestId) {
+                const io = req.app.get('io');
+                if (io) {
+                    const participants = await ContestParticipant.find({ contestId })
+                        .populate('userId', 'username rating')
+                        .lean();
+                    const leaderboard = sortByLeaderboardRules(participants).map(mapContestLeaderboardEntry);
+                    io.to(`contest:${contestId}`).emit('contest:leaderboard:update', {
+                        contestId: String(contestId),
+                        leaderboard,
+                        updatedAt: new Date()
+                    });
+                }
+            }
+
         } catch (error) {
             session.endSession();
             throw error;
@@ -423,21 +470,84 @@ exports.submitSolution = async (req, res) => {
             ? await Submission.findById(createdSubmissionId)
             : await Submission.findOne({ user: userId, problem: problemId }).sort({ createdAt: -1 });
 
-        // Trigger Analytics Update (Async)
+        // Trigger analytics + social events (best effort).
         if (finalSubmission) {
-            analyticsService.processSubmission(userId, finalSubmission._id).catch(err =>
+            analyticsService.processSubmission(userId, finalSubmission._id).catch((err) =>
                 console.error('Background Analytics Failed:', err)
             );
 
-            // Send notification
             const isAccepted = finalSubmission.status === 'accepted';
             notificationService.createNotification(req, userId, {
                 type: 'submission',
-                title: isAccepted ? 'Submission Accepted ✅' : 'Submission Failed ❌',
+                title: isAccepted ? 'Submission Accepted' : 'Submission Failed',
                 message: `Your ${language} solution for "${problem.title}" was ${isAccepted ? 'accepted' : finalSubmission.status}.`,
                 link: `/problem/${problem.slug || problemId}`,
-                icon: isAccepted ? '✅' : '❌'
-            }).catch(err => console.error('Notification creation failed:', err));
+                icon: isAccepted ? 'OK' : 'X'
+            }).catch((err) => console.error('Notification creation failed:', err));
+
+            if (isAccepted) {
+                const acceptedCountForProblem = await Submission.countDocuments({
+                    user: userId,
+                    problem: problemId,
+                    status: 'accepted'
+                });
+                const isFirstAcceptedForProblem = acceptedCountForProblem === 1;
+
+                if (isFirstAcceptedForProblem) {
+                    await recordActivity(req, {
+                        userId,
+                        activityType: 'problem_solved',
+                        problemId,
+                        solutionId: finalSubmission._id,
+                        metadata: {
+                            problemTitle: problem.title,
+                            problemSlug: problem.slug || null,
+                            link: `/coding-platform/${problem.slug || problemId}`
+                        },
+                        dedupeKey: `solved:${problemId}`,
+                        dedupeWindowMinutes: 60 * 24 * 365
+                    });
+
+                    await recordActivity(req, {
+                        userId,
+                        activityType: 'solution_posted',
+                        problemId,
+                        solutionId: finalSubmission._id,
+                        metadata: {
+                            problemTitle: problem.title,
+                            problemSlug: problem.slug || null,
+                            link: `/coding-platform/${problem.slug || problemId}`
+                        },
+                        dedupeKey: `solution:${problemId}`,
+                        dedupeWindowMinutes: 60 * 24 * 365
+                    });
+                }
+
+                const todayDateKey = formatUtcDateKey(new Date());
+                if (todayDateKey) {
+                    const todayChallenge = await DailyChallenge.findOne({ dateKey: todayDateKey })
+                        .populate('problem', 'title slug')
+                        .lean();
+                    const todayChallengeProblemId = todayChallenge?.problem?._id || todayChallenge?.problem;
+
+                    if (todayChallengeProblemId && String(todayChallengeProblemId) === String(problemId)) {
+                        await recordActivity(req, {
+                            userId,
+                            activityType: 'daily_challenge_completed',
+                            problemId,
+                            solutionId: finalSubmission._id,
+                            metadata: {
+                                dateKey: todayDateKey,
+                                problemTitle: problem.title,
+                                problemSlug: problem.slug || null,
+                                link: `/coding-platform/${problem.slug || problemId}`
+                            },
+                            dedupeKey: `daily_challenge_completed:${todayDateKey}:${problemId}`,
+                            dedupeWindowMinutes: 60 * 24
+                        });
+                    }
+                }
+            }
         }
 
         // Calculate percentiles against accepted submissions in same language (excluding this user).
@@ -568,6 +678,108 @@ exports.getMySubmissions = async (req, res) => {
         res.json({ success: true, count: submissions.length, submissions });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Public solutions for a problem (accepted submissions from regular users)
+exports.getProblemSolutions = async (req, res) => {
+    try {
+        const { problemId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(problemId)) {
+            return res.status(400).json({ success: false, message: 'Invalid problem id.' });
+        }
+
+        const page = Math.max(1, Number(req.query.page || 1));
+        const limit = Math.min(50, Math.max(1, Number(req.query.limit || 12)));
+        const skip = (page - 1) * limit;
+        const sort = String(req.query.sort || 'latest').toLowerCase();
+        const language = String(req.query.language || '').trim().toLowerCase();
+
+        let sortOption = { createdAt: -1 };
+        if (sort === 'runtime') sortOption = { runtime: 1, createdAt: -1 };
+        if (sort === 'memory') sortOption = { memory: 1, createdAt: -1 };
+
+        const nonUserRoleIds = await getNonUserRoleIds();
+        const query = {
+            problem: problemId,
+            status: 'accepted',
+            isHidden: { $ne: true },
+            user: { $nin: nonUserRoleIds }
+        };
+        if (language) query.language = language;
+
+        const [total, submissions] = await Promise.all([
+            Submission.countDocuments(query),
+            Submission.find(query)
+                .populate('user', 'username avatar role accountStatus stats.totalProblems finalScore')
+                .sort(sortOption)
+                .skip(skip)
+                .limit(limit)
+                .lean()
+        ]);
+
+        const safeSubmissions = (Array.isArray(submissions) ? submissions : []).filter((submission) => {
+            const author = submission?.user;
+            return author
+                && author.role === 'USER'
+                && author.accountStatus !== 'Deleted';
+        });
+
+        const authorIds = [
+            ...new Set(
+                safeSubmissions
+                    .map((submission) => String(submission?.user?._id || ''))
+                    .filter(Boolean)
+            )
+        ];
+
+        let followingSet = new Set();
+        if (req.user?.id && authorIds.length > 0) {
+            const followingRows = await Follow.find({
+                follower: req.user.id,
+                following: { $in: authorIds }
+            })
+                .select('following')
+                .lean();
+            followingSet = new Set(followingRows.map((row) => String(row.following)));
+        }
+
+        const items = safeSubmissions.map((submission) => {
+            const author = submission.user || {};
+            const authorId = String(author._id || '');
+
+            return {
+                _id: String(submission._id),
+                language: submission.language || '',
+                runtime: toFiniteNumber(submission.runtime, 0),
+                memory: toFiniteNumber(submission.memory, 0),
+                testCasesPassed: Math.max(0, Math.trunc(toFiniteNumber(submission.testCasesPassed, 0))),
+                totalTestCases: Math.max(0, Math.trunc(toFiniteNumber(submission.totalTestCases, 0))),
+                createdAt: submission.createdAt,
+                code: String(submission.code || ''),
+                user: {
+                    _id: authorId,
+                    username: author.username || 'Unknown',
+                    avatar: author.avatar || '',
+                    problemsSolved: Number(author?.stats?.totalProblems || 0),
+                    finalScore: Number(author?.finalScore || 0),
+                    isFollowing: followingSet.has(authorId)
+                }
+            };
+        });
+
+        return res.json({
+            success: true,
+            items,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message || 'Failed to fetch solutions' });
     }
 };
 
@@ -901,3 +1113,4 @@ exports.getSubmissionPerformance = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+

@@ -1,0 +1,132 @@
+.visualizer-container.sieve {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+    background: #0f172a;
+    min-height: 80vh;
+    color: white;
+}
+
+.sieve-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.sieve-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e293b;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sieve-cell.active {
+    color: #cbd5e1;
+}
+
+.sieve-cell.prime {
+    background: #10b981;
+    color: white;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    z-index: 2;
+}
+
+.sieve-cell.current-prime {
+    background: #fbbf24;
+    color: #000;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    z-index: 10;
+}
+
+.sieve-cell.current-multiple {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.05);
+    z-index: 5;
+}
+
+.sieve-cell.multiple {
+    opacity: 0.2;
+    background: #334155;
+    text-decoration: line-through;
+    transform: scale(0.9);
+}
+
+.sieve-stats {
+    display: flex;
+    gap: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem 2rem;
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.prime {
+    background: #10b981;
+}
+
+.dot.current {
+    background: #fbbf24;
+}
+
+.dot.crossed {
+    background: #64748b;
+}
+
+.input-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.limit-input {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    color: white;
+    width: 80px;
+}
+
+.btn-generate {
+    background: #38bdf8;
+    color: #0f172a;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-generate:hover {
+    background: #0ea5e9;
+    transform: translateY(-2px);
+}

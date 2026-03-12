@@ -8,11 +8,13 @@ import { logout } from '../redux/slices/authSlice';
 import {
     FaGithub, FaLinkedin, FaTwitter, FaGlobe, FaMapMarkerAlt, FaUniversity, FaEdit,
     FaCode, FaFire, FaTrophy, FaCalendarAlt, FaEnvelope, FaChartBar, FaBookmark,
-    FaStar, FaMedal, FaClock, FaMemory, FaBolt, FaChevronDown, FaShareAlt, FaComment
+    FaStar, FaMedal, FaClock, FaMemory, FaBolt, FaChevronDown, FaShareAlt, FaComment,
+    FaUsers, FaTimes
 } from 'react-icons/fa';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import ReportModal from '../components/common/ReportModal';
 import { FaFlag } from 'react-icons/fa';
+import FollowButton from '../components/social/FollowButton';
 
 // ==========================================
 // SUB-COMPONENTS
@@ -44,6 +46,179 @@ const StatCard = ({ label, value, color, icon, subtitle, onClick, active = false
             <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.85rem' }}>{label}</p>
             {subtitle && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted, #666)' }}>{subtitle}</span>}
         </motion.div>
+    );
+};
+
+const SocialListModal = ({
+    isOpen,
+    title,
+    users = [],
+    loading = false,
+    hasMore = false,
+    loadingMore = false,
+    onLoadMore,
+    onClose,
+    currentUserId = '',
+    followStateMap = {},
+    onFollowStateChange
+}) => {
+    if (!isOpen) return null;
+
+    return (
+        <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1100,
+            background: 'rgba(2,6,23,0.7)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+        }}>
+            <div className="glass-panel" style={{
+                width: '100%',
+                maxWidth: '560px',
+                maxHeight: '80vh',
+                overflow: 'hidden',
+                borderRadius: '16px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)'
+                }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary, #f8fafc)' }}>{title}</h3>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 10,
+                            border: '1px solid rgba(255,255,255,0.14)',
+                            background: 'rgba(255,255,255,0.04)',
+                            color: 'var(--text-primary, #f8fafc)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        aria-label="Close list"
+                    >
+                        <FaTimes size={14} />
+                    </button>
+                </div>
+
+                <div style={{ overflowY: 'auto', padding: '10px 12px' }}>
+                    {loading && users.length === 0 ? (
+                        <p style={{ margin: '8px 0', color: 'var(--text-secondary, #9ca3af)' }}>Loading...</p>
+                    ) : users.length === 0 ? (
+                        <p style={{ margin: '8px 0', color: 'var(--text-secondary, #9ca3af)' }}>No users found.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {users.map((entry) => {
+                                const userId = String(entry?._id || '');
+                                const isSelf = userId && userId === String(currentUserId || '');
+                                return (
+                                    <div
+                                        key={entry?._id || Math.random().toString(36)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '10px',
+                                            padding: '10px 12px',
+                                            borderRadius: '12px',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.06)'
+                                        }}
+                                    >
+                                        <Link
+                                            to={`/profile/${entry?.username || ''}`}
+                                            onClick={onClose}
+                                            style={{
+                                                minWidth: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                textDecoration: 'none',
+                                                color: 'inherit'
+                                            }}
+                                        >
+                                            <img
+                                                src={entry?.avatar || `https://ui-avatars.com/api/?name=${entry?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=42`}
+                                                alt=""
+                                                style={{
+                                                    width: 34,
+                                                    height: 34,
+                                                    borderRadius: '50%',
+                                                    border: '1px solid rgba(96,165,250,0.35)'
+                                                }}
+                                            />
+                                            <div style={{ minWidth: 0 }}>
+                                                <div style={{
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-primary, #f8fafc)',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis'
+                                                }}>
+                                                    {entry?.username || 'Unknown'}
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #9ca3af)' }}>
+                                                    {Number(entry?.problemsSolved || 0)} solved
+                                                </div>
+                                            </div>
+                                        </Link>
+
+                                        <FollowButton
+                                            targetUserId={userId}
+                                            isSelf={isSelf}
+                                            initialFollowing={Boolean(followStateMap[userId])}
+                                            size="sm"
+                                            onStateChange={(nextState) => onFollowStateChange(userId, nextState)}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {hasMore && (
+                    <div style={{
+                        borderTop: '1px solid rgba(255,255,255,0.06)',
+                        padding: '10px 12px',
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={onLoadMore}
+                            disabled={loadingMore}
+                            style={{
+                                border: '1px solid rgba(96,165,250,0.35)',
+                                background: 'rgba(96,165,250,0.15)',
+                                color: '#93c5fd',
+                                fontWeight: 600,
+                                borderRadius: 10,
+                                padding: '8px 14px',
+                                cursor: loadingMore ? 'not-allowed' : 'pointer',
+                                opacity: loadingMore ? 0.7 : 1
+                            }}
+                        >
+                            {loadingMore ? 'Loading...' : 'Load More'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 };
 
@@ -151,6 +326,12 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
     const totalInYear = weeks
         .flat()
         .reduce((sum, day) => (day.inRange && !day.isFuture ? sum + day.count : sum), 0);
+    const activeDaysInYear = weeks
+        .flat()
+        .reduce((sum, day) => (day.inRange && !day.isFuture && day.count > 0 ? sum + 1 : sum), 0);
+    const activeDaysOverall = Object.values(rawHeatmap || {}).reduce((sum, value) => {
+        return Number(value) > 0 ? sum + 1 : sum;
+    }, 0);
 
     const getColor = (count) => {
         if (count === 0) return 'rgba(255,255,255,0.06)';
@@ -169,7 +350,7 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
         <div style={{ overflowX: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>
-                    {totalInYear} submissions in {year}
+                    {totalInYear} submissions in {year} • {activeDaysInYear} active days
                 </span>
                 <select
                     value={year}
@@ -186,6 +367,9 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
                 >
                     {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
+            </div>
+            <div style={{ marginBottom: '8px', fontSize: '0.75rem', color: 'var(--text-muted, #888)' }}>
+                Total active days: {activeDaysOverall}
             </div>
 
             <div style={{ minWidth: `${DAY_LABEL_WIDTH + gridWidth}px` }}>
@@ -1408,6 +1592,21 @@ const Profile = () => {
     const [messageContent, setMessageContent] = useState('');
     const [sendingMessage, setSendingMessage] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [socialCounts, setSocialCounts] = useState({ followersCount: 0, followingCount: 0 });
+    const [profileFollowState, setProfileFollowState] = useState(false);
+    const [followStateMap, setFollowStateMap] = useState({});
+    const [suggestedUsers, setSuggestedUsers] = useState([]);
+    const [suggestedLoading, setSuggestedLoading] = useState(false);
+    const [socialListModal, setSocialListModal] = useState({
+        isOpen: false,
+        type: 'followers',
+        users: [],
+        loading: false,
+        loadingMore: false,
+        page: 1,
+        pages: 1,
+        hasMore: false
+    });
 
     useEffect(() => {
         fetchProfile();
@@ -1428,6 +1627,21 @@ const Profile = () => {
         setCommunityPostsPagination({ page: 1, pages: 1, hasMore: false, total: 0 });
         setCommunityPostsLoading(false);
         setCommunityPostsLoadingMore(false);
+        setSocialCounts({ followersCount: 0, followingCount: 0 });
+        setProfileFollowState(false);
+        setFollowStateMap({});
+        setSuggestedUsers([]);
+        setSuggestedLoading(false);
+        setSocialListModal({
+            isOpen: false,
+            type: 'followers',
+            users: [],
+            loading: false,
+            loadingMore: false,
+            page: 1,
+            pages: 1,
+            hasMore: false
+        });
     }, [paramUsername, isAuthenticated]);
 
     useEffect(() => {
@@ -1617,6 +1831,178 @@ const Profile = () => {
         }
     };
 
+    const loadSocialSummary = async (targetUserId) => {
+        if (!targetUserId) return;
+        try {
+            const [followersRes, followingRes] = await Promise.all([
+                api.get(`/followers/${targetUserId}`, { params: { page: 1, limit: 1 } }),
+                api.get(`/following/${targetUserId}`, { params: { page: 1, limit: 1 } })
+            ]);
+
+            setSocialCounts({
+                followersCount: Number(followersRes.data?.pagination?.total || 0),
+                followingCount: Number(followingRes.data?.pagination?.total || 0)
+            });
+        } catch (error) {
+            setSocialCounts({ followersCount: 0, followingCount: 0 });
+        }
+    };
+
+    const loadFollowRelationship = async (targetUserId) => {
+        if (!isAuthenticated || !targetUserId || isOwnProfile) {
+            setProfileFollowState(false);
+            return;
+        }
+
+        try {
+            const res = await api.get(`/social/relationship/${targetUserId}`);
+            setProfileFollowState(Boolean(res.data?.isFollowing));
+        } catch (error) {
+            setProfileFollowState(false);
+        }
+    };
+
+    const loadSuggestedUsers = async () => {
+        if (!isAuthenticated) {
+            setSuggestedUsers([]);
+            return;
+        }
+
+        try {
+            setSuggestedLoading(true);
+            const res = await api.get('/suggested-users', { params: { limit: 8 } });
+            const users = Array.isArray(res.data?.users) ? res.data.users : [];
+            setSuggestedUsers(users);
+
+            setFollowStateMap((prev) => {
+                const next = { ...(prev || {}) };
+                users.forEach((entry) => {
+                    const uid = String(entry?._id || '');
+                    if (uid && entry?.isFollowing !== undefined) {
+                        next[uid] = Boolean(entry.isFollowing);
+                    }
+                });
+                return next;
+            });
+        } catch (error) {
+            setSuggestedUsers([]);
+        } finally {
+            setSuggestedLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const targetUserId = String(profile?.user?._id || '');
+        if (!targetUserId) return;
+
+        loadSocialSummary(targetUserId);
+        loadFollowRelationship(targetUserId);
+    }, [profile?.user?._id, isOwnProfile, isAuthenticated]);
+
+    useEffect(() => {
+        loadSuggestedUsers();
+    }, [isAuthenticated, authUser?._id]);
+
+    const fetchSocialList = async (type = 'followers', page = 1, append = false) => {
+        const targetUserId = String(profile?.user?._id || '');
+        if (!targetUserId) return;
+
+        const loadingKey = append ? 'loadingMore' : 'loading';
+        setSocialListModal((prev) => ({ ...prev, [loadingKey]: true }));
+        try {
+            const path = type === 'following' ? `/following/${targetUserId}` : `/followers/${targetUserId}`;
+            const res = await api.get(path, { params: { page, limit: 20 } });
+            const users = Array.isArray(res.data?.users) ? res.data.users : [];
+            const pagination = res.data?.pagination || { page, pages: 1, total: users.length };
+
+            setSocialListModal((prev) => ({
+                ...prev,
+                type,
+                users: append ? [...(Array.isArray(prev.users) ? prev.users : []), ...users] : users,
+                page: Number(pagination.page || page),
+                pages: Number(pagination.pages || 1),
+                hasMore: Number(pagination.page || page) < Number(pagination.pages || 1),
+                loading: false,
+                loadingMore: false
+            }));
+
+            setFollowStateMap((prev) => {
+                const next = { ...(prev || {}) };
+                users.forEach((entry) => {
+                    const uid = String(entry?._id || '');
+                    if (uid) next[uid] = Boolean(entry?.isFollowing);
+                });
+                return next;
+            });
+        } catch (error) {
+            setSocialListModal((prev) => ({
+                ...prev,
+                loading: false,
+                loadingMore: false
+            }));
+            toast.error('Failed to load user list');
+        }
+    };
+
+    const openSocialList = async (type = 'followers') => {
+        setSocialListModal((prev) => ({
+            ...prev,
+            isOpen: true,
+            type,
+            users: [],
+            page: 1,
+            pages: 1,
+            hasMore: false,
+            loading: true,
+            loadingMore: false
+        }));
+
+        await fetchSocialList(type, 1, false);
+    };
+
+    const closeSocialList = () => {
+        setSocialListModal((prev) => ({ ...prev, isOpen: false }));
+    };
+
+    const handleSocialListLoadMore = async () => {
+        if (socialListModal.loading || socialListModal.loadingMore || !socialListModal.hasMore) return;
+        await fetchSocialList(
+            socialListModal.type,
+            (socialListModal.page || 1) + 1,
+            true
+        );
+    };
+
+    const handleFollowStateMapChange = (targetUserId, nextState) => {
+        const normalizedId = String(targetUserId || '');
+        if (!normalizedId) return;
+
+        setFollowStateMap((prev) => ({ ...prev, [normalizedId]: Boolean(nextState) }));
+        setSocialListModal((prev) => ({
+            ...prev,
+            users: (Array.isArray(prev.users) ? prev.users : []).map((entry) => (
+                String(entry?._id || '') === normalizedId
+                    ? { ...entry, isFollowing: Boolean(nextState) }
+                    : entry
+            ))
+        }));
+
+        const viewingUserId = String(profile?.user?._id || '');
+        if (normalizedId === viewingUserId) {
+            setProfileFollowState(Boolean(nextState));
+            setSocialCounts((prev) => ({
+                ...prev,
+                followersCount: Math.max(0, (prev.followersCount || 0) + (nextState ? 1 : -1))
+            }));
+        }
+
+        setSuggestedUsers((prev) => (Array.isArray(prev) ? prev : []).map((entry) => (
+            String(entry?._id || '') === normalizedId
+                ? { ...entry, isFollowing: Boolean(nextState) }
+                : entry
+        )));
+    };
+
     const fetchCommunityPostsHistory = async (page = 1, append = false) => {
         const setLoadingState = append ? setCommunityPostsLoadingMore : setCommunityPostsLoading;
         setLoadingState(true);
@@ -1704,6 +2090,8 @@ const Profile = () => {
     if (!profile) return <div className="main-content" style={{ padding: '40px', color: 'var(--text-primary, white)' }}>Profile not found.</div>;
 
     const userObj = profile.user || {};
+    const viewingUserId = String(userObj._id || '');
+    const currentUserId = String(authUser?._id || authUser?.id || '');
     const stats = userObj.stats || {};
     const rating = userObj.rating || { current: 1200, highest: 1200, history: [] };
     const perf = performance || {};
@@ -1733,6 +2121,11 @@ const Profile = () => {
     };
 
     const progressHistoryRows = Array.isArray(progressData?.practiceHistory) ? progressData.practiceHistory : [];
+    const safeSuggestedUsers = (Array.isArray(suggestedUsers) ? suggestedUsers : [])
+        .filter((entry) => {
+            const uid = String(entry?._id || '');
+            return uid && uid !== String(currentUserId || '');
+        });
     const analyticsTagStatsRaw = analytics?.tagStats instanceof Map
         ? Object.fromEntries(analytics.tagStats)
         : (analytics?.tagStats || {});
@@ -1813,6 +2206,17 @@ const Profile = () => {
                                     title="Share Profile"><FaShareAlt /></button>
                             </div>
 
+                            {!isOwnProfile && (
+                                <div style={{ margin: '10px 0 6px', display: 'flex', justifyContent: 'center' }}>
+                                    <FollowButton
+                                        targetUserId={viewingUserId}
+                                        initialFollowing={profileFollowState}
+                                        size="md"
+                                        onStateChange={(nextState) => handleFollowStateMapChange(viewingUserId, nextState)}
+                                    />
+                                </div>
+                            )}
+
                             <h1 style={{ margin: '0 0 2px', fontSize: '1.5rem' }}>{userObj.fullName || userObj.username}</h1>
                             {userObj.fullName && <p style={{ color: 'var(--text-muted, #888)', margin: '0 0 6px', fontSize: '0.85rem' }}>@{userObj.username}</p>}
 
@@ -1881,6 +2285,22 @@ const Profile = () => {
                                 subtitle={isOwnProfile ? 'Click to view all' : undefined}
                                 onClick={isOwnProfile ? () => handleHistoryOpen('solved') : undefined}
                                 active={historyView === 'solved'}
+                            />
+                            <StatCard
+                                icon={<FaUsers />}
+                                value={socialCounts.followersCount || 0}
+                                label="Followers"
+                                color="#60a5fa"
+                                subtitle="View list"
+                                onClick={viewingUserId ? () => openSocialList('followers') : undefined}
+                            />
+                            <StatCard
+                                icon={<FaUsers />}
+                                value={socialCounts.followingCount || 0}
+                                label="Following"
+                                color="#a78bfa"
+                                subtitle="View list"
+                                onClick={viewingUserId ? () => openSocialList('following') : undefined}
                             />
                             <StatCard
                                 icon={<FaCode />}
@@ -2229,7 +2649,115 @@ const Profile = () => {
                     </div>
                 )}
 
+                {isAuthenticated && (
+                    <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', gap: '10px', flexWrap: 'wrap' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <FaUsers style={{ color: '#60a5fa' }} />
+                                Suggested Coders
+                            </h3>
+                            <span style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: '0.8rem' }}>
+                                Learn from top performers
+                            </span>
+                        </div>
+
+                        {suggestedLoading ? (
+                            <p style={{ color: 'var(--text-muted, #888)', margin: 0 }}>Loading suggestions...</p>
+                        ) : safeSuggestedUsers.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted, #888)', margin: 0 }}>
+                                No suggested coders available right now.
+                            </p>
+                        ) : (
+                            <div
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+                                    gap: '10px'
+                                }}
+                            >
+                                {safeSuggestedUsers.slice(0, 8).map((entry) => {
+                                    const uid = String(entry?._id || '');
+                                    return (
+                                        <div
+                                            key={uid}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: '10px',
+                                                padding: '10px 12px',
+                                                borderRadius: '12px',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                border: '1px solid rgba(255,255,255,0.06)'
+                                            }}
+                                        >
+                                            <Link
+                                                to={`/profile/${entry?.username || ''}`}
+                                                style={{
+                                                    textDecoration: 'none',
+                                                    color: 'inherit',
+                                                    minWidth: 0,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                }}
+                                            >
+                                                <img
+                                                    src={entry?.avatar || `https://ui-avatars.com/api/?name=${entry?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=40`}
+                                                    alt=""
+                                                    style={{
+                                                        width: 34,
+                                                        height: 34,
+                                                        borderRadius: '50%',
+                                                        border: '1px solid rgba(96,165,250,0.35)'
+                                                    }}
+                                                />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{
+                                                        color: 'var(--text-primary, #f8fafc)',
+                                                        fontWeight: 600,
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        fontSize: '0.88rem'
+                                                    }}>
+                                                        {entry?.username || 'Unknown'}
+                                                    </div>
+                                                    <div style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.75rem' }}>
+                                                        {Number(entry?.problemsSolved || 0)} solved
+                                                    </div>
+                                                </div>
+                                            </Link>
+
+                                            <FollowButton
+                                                targetUserId={uid}
+                                                size="sm"
+                                                initialFollowing={Boolean(followStateMap[uid] ?? entry?.isFollowing)}
+                                                onStateChange={(nextState) => handleFollowStateMapChange(uid, nextState)}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
             </div>
+
+            <SocialListModal
+                isOpen={socialListModal.isOpen}
+                title={socialListModal.type === 'following' ? 'Following' : 'Followers'}
+                users={socialListModal.users}
+                loading={socialListModal.loading}
+                hasMore={socialListModal.hasMore}
+                loadingMore={socialListModal.loadingMore}
+                onLoadMore={handleSocialListLoadMore}
+                onClose={closeSocialList}
+                currentUserId={currentUserId}
+                followStateMap={followStateMap}
+                onFollowStateChange={handleFollowStateMapChange}
+            />
 
             {/* Edit Profile Modal */}
             <EditProfileModal

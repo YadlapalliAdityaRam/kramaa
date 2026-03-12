@@ -250,6 +250,7 @@ const ForgotPassword = () => {
                                 placeholder="Email Address"
                                 className="search-input"
                                 style={{ width: '100%', paddingLeft: '40px' }}
+                                autoComplete="email"
                                 required
                             />
                         </div>
@@ -337,6 +338,7 @@ const ForgotPassword = () => {
                                 placeholder="New Password"
                                 className="search-input"
                                 style={{ width: '100%', paddingLeft: '40px' }}
+                                autoComplete="new-password"
                                 required
                             />
                         </div>
@@ -350,6 +352,7 @@ const ForgotPassword = () => {
                                 placeholder="Confirm New Password"
                                 className="search-input"
                                 style={{ width: '100%', paddingLeft: '40px' }}
+                                autoComplete="new-password"
                                 required
                             />
                         </div>
