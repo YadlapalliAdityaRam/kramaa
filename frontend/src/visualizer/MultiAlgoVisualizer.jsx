@@ -1,11 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AnimationCanvas from './AnimationCanvas';
-import GraphCanvas from './GraphCanvas';
-import GraphInputModal from './GraphInputModal';
 import TreeCanvas from './TreeCanvas';
+import GraphCanvas from './GraphCanvas';
+import GraphInput from '../components/GraphInput/GraphInput';
+import TreeInputModal from './TreeInputModal';
 import DPTableCanvas from './DPTableCanvas';
 import ActivityCanvas from './ActivityCanvas';
+import StringMatchMiniCanvas from './StringMatchMiniCanvas';
+import AStarMiniCanvas from './AStarMiniCanvas';
+import GridCanvas from './GridCanvas';
+import InputArrayDisplay from '../components/InputArrayDisplay';
+
 import { generateBubbleSortSteps } from '../algorithms/sorting/bubbleSort';
 import { generateSelectionSortSteps } from '../algorithms/sorting/selectionSort';
 import { generateInsertionSortSteps } from '../algorithms/sorting/insertionSort';
@@ -19,13 +25,32 @@ import { generateBinarySearchSteps } from '../algorithms/searching/binarySearch'
 import { generateJumpSearchSteps } from '../algorithms/searching/jumpSearch';
 import { generateInterpolationSearchSteps } from '../algorithms/searching/interpolationSearch';
 import { generateExponentialSearchSteps } from '../algorithms/searching/exponentialSearch';
+import { generateTwoPointersSteps } from '../algorithms/searching/twoPointers';
+import { generateSlidingWindowSteps } from '../algorithms/searching/slidingWindow';
+
+import { generateFibonacciSearchSteps } from '../algorithms/searching/fibonacciSearch';
+import { generateSentinelLinearSearchSteps } from '../algorithms/searching/sentinelLinearSearch';
+import { generateShellSortSteps } from '../algorithms/sorting/shellSort';
+import { generateCountingSortSteps } from '../algorithms/sorting/countingSort';
+import { generateTimSortSteps } from '../algorithms/sorting/timSort';
+import { generateCycleSortSteps } from '../algorithms/sorting/cycleSort';
+import { generateCocktailShakerSortSteps } from '../algorithms/sorting/cocktailShakerSort';
+import { generateCombSortSteps } from '../algorithms/sorting/combSort';
 import { generateBFSSteps } from '../algorithms/graphs/bfs';
 import { generateDFSSteps } from '../algorithms/graphs/dfs';
 import { generateDijkstraSteps } from '../algorithms/graphs/dijkstra';
 import { generateBellmanFordSteps } from '../algorithms/graphs/bellmanFord';
 import { generatePrimsSteps } from '../algorithms/graphs/prims';
+import { generateAStarGridSteps } from '../algorithms/graphs/aStarGridCompare';
+import { generateKruskalsSteps } from '../algorithms/graphs/kruskals';
 import { defaultGraph, defaultWeightedGraph } from '../algorithms/graphs/graphData';
-import { generateBinaryTreeTraversalSteps, defaultTreeValues } from '../algorithms/trees/binaryTree';
+import { 
+    generateBinaryTreeTraversalSteps, 
+    generateBSTInsertSteps,
+    generateBSTSearchSteps,
+    generateBSTDeleteSteps,
+    defaultTreeValues 
+} from '../algorithms/trees/binaryTree';
 import { generateAVLTreeSteps } from '../algorithms/trees/avlTree';
 import { generateRedBlackTreeSteps } from '../algorithms/trees/redBlackTree';
 import { generateKnapsackSteps } from '../algorithms/dp/knapsack';
@@ -33,6 +58,35 @@ import { generateLCSSteps } from '../algorithms/dp/lcs';
 import { generateCoinChangeSteps } from '../algorithms/dp/coinChange';
 import { generateActivitySelectionSteps } from '../algorithms/greedy/activitySelection';
 import { generateHuffmanCodingSteps } from '../algorithms/greedy/huffmanCoding';
+import { generateBoyerMooreSteps } from '../algorithms/string/boyerMoore';
+import { generateNaryDFSSteps, generateNaryBFSSteps, generateNaryTreeHeightSteps } from '../algorithms/trees/naryTree';
+import { generateSegmentTreeSteps } from '../algorithms/trees/segmentTree';
+import { generateFenwickTreeSteps } from '../algorithms/trees/fenwickTree';
+import { generateHeapSteps } from '../algorithms/trees/heap';
+import { generateSplayTreeSteps } from '../algorithms/trees/splayTree';
+import { generateTrieSteps } from '../algorithms/trees/trie';
+import { generateLISSteps } from '../algorithms/dp/lis';
+import { generateEditDistanceSteps } from '../algorithms/dp/editDistance';
+import { generateMatrixChainSteps } from '../algorithms/dp/matrixChain';
+import { generateRodCuttingSteps } from '../algorithms/dp/rodCutting';
+import { generateEggDropSteps } from '../algorithms/dp/eggDrop';
+import { generatePalindromePartitionSteps } from '../algorithms/dp/palindromePartition';
+import { generateFractionalKnapsackSteps } from '../algorithms/greedy/fractionalKnapsack';
+import { generateJobSequencingSteps } from '../algorithms/greedy/jobSequencing';
+import { generateKMPSteps } from '../algorithms/string/kmp';
+import { generateRabinKarpSteps } from '../algorithms/string/rabinKarp';
+import { generateZAlgorithmSteps } from '../algorithms/string/zAlgorithm';
+import { generateManacherSteps } from '../algorithms/string/manacher';
+import { generateNQueensSteps } from '../algorithms/backtracking/nQueens';
+import { generateRatInMazeSteps } from '../algorithms/backtracking/ratInMaze';
+import { generateSubsetSumSteps } from '../algorithms/dp/subsetSum';
+import { generateSieveSteps } from '../algorithms/math/sieve';
+import { generateGCDSteps } from '../algorithms/math/euclideanGcd';
+import { generateFastExpSteps } from '../algorithms/math/fastExponentiation';
+import { generateFloydWarshallSteps } from '../algorithms/graphs/floydWarshall';
+import { generateTopologicalSortSteps } from '../algorithms/graphs/topologicalSort';
+import { generateKosarajuSteps } from '../algorithms/graphs/kosaraju';
+import { generateFloydCycleSteps } from '../algorithms/graphs/floydCycle';
 import { generateFallbackArraySteps, normalizeCategoryKey, resolveDefaultTarget, sanitizeArrayInput } from './algorithmFallbacks';
 
 const resolveGraphStartNode = (graphData, params = []) => {
@@ -96,6 +150,17 @@ const GENERATORS = {
     'Jump Search': { canvasType: 'array', generate: (data, target) => generateJumpSearchSteps(data, target), needsTarget: true },
     'Interpolation Search': { canvasType: 'array', generate: (data, target) => generateInterpolationSearchSteps(data, target), needsTarget: true },
     'Exponential Search': { canvasType: 'array', generate: (data, target) => generateExponentialSearchSteps(data, target), needsTarget: true },
+    'Shell Sort': { canvasType: 'array', generate: (data) => generateShellSortSteps(data), needsTarget: false },
+    'Counting Sort': { canvasType: 'array', generate: (data) => generateCountingSortSteps(data), needsTarget: false },
+    'Tim Sort': { canvasType: 'array', generate: (data) => generateTimSortSteps(data), needsTarget: false },
+    'Cycle Sort': { canvasType: 'array', generate: (data) => generateCycleSortSteps(data), needsTarget: false },
+    'Cocktail Shaker Sort': { canvasType: 'array', generate: (data) => generateCocktailShakerSortSteps(data), needsTarget: false },
+    'Comb Sort': { canvasType: 'array', generate: (data) => generateCombSortSteps(data), needsTarget: false },
+
+    'Fibonacci Search': { canvasType: 'array', generate: (data, target) => generateFibonacciSearchSteps(data, target), needsTarget: true },
+    'Sentinel Linear Search': { canvasType: 'array', generate: (data, target) => generateSentinelLinearSearchSteps(data, target), needsTarget: true },
+    'Two Pointers Technique': { canvasType: 'array', generate: (data, target) => generateTwoPointersSteps(data, target), needsTarget: true },
+    'Sliding Window Technique': { canvasType: 'array', generate: (data, target) => generateSlidingWindowSteps(data, target), needsTarget: true },
 
     'Breadth-First Search (BFS)': {
         canvasType: 'graph',
@@ -122,32 +187,161 @@ const GENERATORS = {
         graphData: defaultWeightedGraph,
         generate: (_data, _target, params, graphData) => generatePrimsSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
     },
+    "Kruskal's MST": {
+        canvasType: 'graph',
+        graphData: defaultWeightedGraph,
+        generate: (_data, _t, _p, graphData) => generateKruskalsSteps(graphData || defaultWeightedGraph)
+    },
+    'A* Search': {
+        canvasType: 'astar',
+        generate: (data, target, params) => generateAStarGridSteps(data, target, params),
+        needsTarget: false
+    },
 
     'Binary Tree Traversals': {
         canvasType: 'tree',
-        generate: (data, _target, params) => generateBinaryTreeTraversalSteps(
-            data?.length ? data : defaultTreeValues,
-            resolveTraversalType(params, 'inorder')
+        generate: (data, _target, params, _graph, treeData) => generateBinaryTreeTraversalSteps(
+            (data && data.length && data !== DEFAULT_DATA) ? data : defaultTreeValues,
+            resolveTraversalType(params, 'inorder'),
+            treeData || null
         )
+    },
+    'Binary Search Tree': {
+        canvasType: 'tree',
+        generate: (data, target, params, graph, treeData) => {
+            const input = (data && data.length && data !== DEFAULT_DATA) ? data : defaultTreeValues;
+            const val = params[0] || (data && data.length ? data[0] : 50);
+            return generateBSTInsertSteps(input, val);
+        }
     },
     'AVL Tree': {
         canvasType: 'tree',
-        generate: (data) => generateAVLTreeSteps(data?.length ? data : defaultTreeValues)
+        generate: (data, _t, _p, _g, treeData) => generateAVLTreeSteps((data && data.length && data !== DEFAULT_DATA) ? data : defaultTreeValues, _t, _p, _g, treeData || null)
     },
     'Red-Black Tree': {
         canvasType: 'tree',
-        generate: (data) => generateRedBlackTreeSteps(data?.length ? data : defaultTreeValues)
+        generate: (data, _t, _p, _g, treeData) => generateRedBlackTreeSteps((data && data.length && data !== DEFAULT_DATA) ? data : defaultTreeValues, _t, _p, _g, treeData || null)
     },
     'Huffman Coding': {
         canvasType: 'tree',
         generate: () => generateHuffmanCodingSteps()
     },
+    'N-ary DFS': {
+        canvasType: 'tree',
+        generate: (data, _t, _p, _g, treeData) => generateNaryDFSSteps(treeData || null)
+    },
+    'N-ary BFS (Level Order)': {
+        canvasType: 'tree',
+        generate: (data, _t, _p, _g, treeData) => generateNaryBFSSteps(treeData || null)
+    },
+    'N-ary Tree Height': {
+        canvasType: 'tree',
+        generate: (data, _t, _p, _g, treeData) => generateNaryTreeHeightSteps(treeData || null)
+    },
+    'Segment Tree': {
+        canvasType: 'tree',
+        generate: (data) => generateSegmentTreeSteps((data && data.length && data !== DEFAULT_DATA) ? data : undefined)
+    },
+    'Fenwick Tree (BIT)': {
+        canvasType: 'tree',
+        generate: (data) => generateFenwickTreeSteps((data && data.length && data !== DEFAULT_DATA) ? data : undefined)
+    },
+    'Heap / Priority Queue': {
+        canvasType: 'tree',
+        generate: (data) => generateHeapSteps((data && data.length && data !== DEFAULT_DATA) ? data : undefined)
+    },
+    'Splay Tree': {
+        canvasType: 'tree',
+        generate: (data) => generateSplayTreeSteps((data && data.length && data !== DEFAULT_DATA) ? data : undefined)
+    },
+    'Trie (Prefix Tree)': {
+        canvasType: 'tree',
+        generate: () => generateTrieSteps()
+    },
 
-    'Knapsack Problem': { canvasType: 'dp', generate: () => generateKnapsackSteps() },
-    'Longest Common Subsequence': { canvasType: 'dp', generate: () => generateLCSSteps() },
-    'Coin Change': { canvasType: 'dp', generate: () => generateCoinChangeSteps() },
+    'Knapsack Problem (0/1)': {
+        canvasType: 'dp',
+        generate: (data, target, params) => {
+            const weights = Array.isArray(data) ? data.slice(0, 5) : [1, 3, 4, 5];
+            const values = weights.map(w => Math.floor(w * 1.5));
+            const capacity = params[0] || 7;
+            return generateKnapsackSteps(capacity, weights, values);
+        }
+    },
+    'Longest Common Subsequence': {
+        canvasType: 'dp',
+        generate: (data, target, params) => {
+            const s1 = params[0] || 'ABCBDAB';
+            const s2 = params[1] || 'BDCABA';
+            return generateLCSSteps(s1, s2);
+        }
+    },
+    'Coin Change (Min Coins)': {
+        canvasType: 'dp',
+        generate: (data, target, params) => {
+            const coins = Array.isArray(data) ? [...new Set(data.slice(0, 5).map(x => Math.max(1, x % 10)))] : [1, 3, 4];
+            const amount = params[0] || 6;
+            return generateCoinChangeSteps(coins, amount);
+        }
+    },
+    'Coin Change (Total Ways)': {
+        canvasType: 'dp',
+        generate: (data, target, params) => {
+            const coins = Array.isArray(data) ? [...new Set(data.slice(0, 5).map(x => Math.max(1, x % 10)))] : [1, 3, 4];
+            const amount = params[0] || 6;
+            return generateCoinChangeSteps(coins, amount, true);
+        }
+    },
+    'Longest Increasing Subsequence': { canvasType: 'dp', generate: (data) => generateLISSteps(data) },
+    'Edit Distance (Levenshtein)': { canvasType: 'dp', generate: () => generateEditDistanceSteps() },
+    'Matrix Chain Multiplication': { canvasType: 'dp', generate: (data) => generateMatrixChainSteps(data) },
+    'Rod Cutting': { canvasType: 'dp', generate: (data) => generateRodCuttingSteps(data) },
+    'Egg Drop Problem': { canvasType: 'dp', generate: () => generateEggDropSteps() },
+    'Palindrome Partitioning': { canvasType: 'dp', generate: () => generatePalindromePartitionSteps() },
 
-    'Activity Selection': { canvasType: 'activity', generate: () => generateActivitySelectionSteps() }
+    'Activity Selection': { canvasType: 'activity', generate: () => generateActivitySelectionSteps() },
+    'Fractional Knapsack': { canvasType: 'array', generate: (data) => generateFractionalKnapsackSteps(data), needsTarget: false },
+    'Job Sequencing with Deadlines': { canvasType: 'array', generate: (data) => generateJobSequencingSteps(data), needsTarget: false },
+
+    'Boyer-Moore Algorithm': {
+        canvasType: 'string',
+        needsTarget: true,
+        generate: (data, target) => {
+            const text = Array.isArray(data) ? data.join('') : String(data);
+            const pattern = String(target);
+            return generateBoyerMooreSteps(text, pattern);
+        }
+    },
+    'KMP Algorithm': { canvasType: 'array', generate: () => generateKMPSteps(), needsTarget: false },
+    'Rabin-Karp Algorithm': { canvasType: 'array', generate: () => generateRabinKarpSteps(), needsTarget: false },
+    'Z-Algorithm': { canvasType: 'array', generate: () => generateZAlgorithmSteps(), needsTarget: false },
+    "Manacher's Algorithm": { canvasType: 'array', generate: () => generateManacherSteps(), needsTarget: false },
+
+    'N-Queens Problem': { canvasType: 'grid', generate: (data) => generateNQueensSteps(data && data[0]), needsTarget: false },
+    'Rat in a Maze': { canvasType: 'grid', generate: (data) => generateRatInMazeSteps(data && data[0]), needsTarget: false },
+    'Subset Sum': { canvasType: 'dp', generate: (data, target) => generateSubsetSumSteps(data, target), needsTarget: true },
+
+    'Sieve of Eratosthenes': { canvasType: 'array', generate: (data) => generateSieveSteps(data && data[0]), needsTarget: false },
+    'Euclidean GCD': { canvasType: 'array', generate: (data) => generateGCDSteps(data && data[0], data && data[1]), needsTarget: false },
+    'Fast Exponentiation': { canvasType: 'array', generate: (data) => generateFastExpSteps(data && data[0], data && data[1]), needsTarget: false },
+    'Bit Manipulation Basics': { canvasType: 'array', generate: (data) => generateFallbackArraySteps({ categoryKey: 'math', name: 'Bit Manipulation Basics', array: data }), needsTarget: false },
+
+    'Floyd-Warshall': {
+        canvasType: 'graph', graphData: defaultWeightedGraph,
+        generate: (_data, _target, params, graphData) => generateFloydWarshallSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
+    },
+    'Topological Sort': {
+        canvasType: 'graph', graphData: defaultGraph,
+        generate: (_data, _target, params, graphData) => generateTopologicalSortSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+    },
+    "Cycle Detection (Floyd's)": {
+        canvasType: 'graph', graphData: defaultGraph,
+        generate: (_data, _target, params, graphData) => generateFloydCycleSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+    },
+    "Kosaraju's Algorithm": {
+        canvasType: 'graph', graphData: defaultGraph,
+        generate: (_data, _target, params, graphData) => generateKosarajuSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+    }
 };
 
 const MAX_INPUT_ELEMENTS = 10;
@@ -183,6 +377,32 @@ const ALGORITHM_PARAM_RULES = {
         label: 'mode (1=inorder, 2=preorder, 3=postorder)',
         example: '2',
         mode: 'tree-traversal'
+    },
+    'A* Search': {
+        count: 2,
+        label: 'movement, heuristic (1=4dir, 2=8dir | 1=Manhattan, 2=Euclidean, 3=Diagonal)',
+        example: '1, 1',
+        mode: 'astar-options'
+    },
+    'Sliding Window Technique': {
+        count: 1,
+        label: 'window size',
+        example: '3'
+    },
+    'Two Pointers Technique': {
+        count: 1,
+        label: 'target sum',
+        example: '15'
+    },
+    'Longest Common Subsequence': {
+        count: 2,
+        label: 'string A, string B',
+        example: 'ABCDGH, AEDFHR'
+    },
+    'Binary Search Tree': {
+        count: 1,
+        label: 'value to insert',
+        example: '45'
     }
 };
 
@@ -210,6 +430,9 @@ const buildRandomParams = (rule, array) => {
     if (rule.mode === 'tree-traversal') {
         return [Math.floor(Math.random() * 3) + 1];
     }
+    if (rule.mode === 'astar-options') {
+        return [Math.floor(Math.random() * 2) + 1, Math.floor(Math.random() * 3) + 1];
+    }
     const source = Array.isArray(array) && array.length ? array : DEFAULT_DATA;
     const first = clampParam(resolveDefaultTarget(source));
     const secondSeedIndex = source.length > 1 ? (Math.floor(source.length / 3) + 2) % source.length : 0;
@@ -232,7 +455,7 @@ const getFallbackLaneConfig = (algorithm) => {
         return {
             canvasType: 'tree',
             generate: (data, _target, params) => generateBinaryTreeTraversalSteps(
-                data?.length ? data : defaultTreeValues,
+                (data && data.length && data !== DEFAULT_DATA) ? data : defaultTreeValues,
                 useTraversalMode ? resolveTraversalType(params, 'inorder') : 'inorder'
             ),
             needsTarget: false
@@ -275,12 +498,20 @@ const getFallbackLaneConfig = (algorithm) => {
 
 const getLaneConfig = (algorithm) => GENERATORS[algorithm?.name] || getFallbackLaneConfig(algorithm);
 
-const randomData = (len = MAX_INPUT_ELEMENTS, order = 'random') => {
+const randomData = (len = MAX_INPUT_ELEMENTS, order = 'random', isStringMode = false) => {
+    if (isStringMode) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        return Array.from({ length: len }, () => chars.charAt(Math.floor(Math.random() * chars.length)));
+    }
     const data = Array.from({ length: len }, () => Math.floor(Math.random() * 95) + 5);
     return order === 'increasing' ? [...data].sort((a, b) => a - b) : data;
 };
 
-const parseData = (raw) => {
+const parseData = (raw, isStringMode = false) => {
+    if (isStringMode) {
+        if (!raw || !String(raw).trim()) return { error: 'Enter valid text.' };
+        return { values: String(raw).split('') };
+    }
     const parts = raw.split(/[\s,]+/).filter(Boolean);
     if (parts.length < 1) return { error: 'Enter at least 1 number.' };
     if (parts.length > MAX_INPUT_ELEMENTS) return { error: `Maximum ${MAX_INPUT_ELEMENTS} numbers are allowed.` };
@@ -317,6 +548,11 @@ const normalizeParamValues = (values, rule, array) => {
     if (next.some((value) => !Number.isFinite(value)) || next.length < rule.count) return fallback;
     if (rule.mode === 'tree-traversal') {
         return [normalizeTraversalMode(next[0])];
+    }
+    if (rule.mode === 'astar-options') {
+        const movement = Math.max(1, Math.min(2, Math.round(next[0])));
+        const heuristic = Math.max(1, Math.min(3, Math.round(next[1])));
+        return [movement, heuristic];
     }
     return next.map(clampParam);
 };
@@ -386,7 +622,8 @@ const makeCard = (algorithm, data, overrides = {}) => {
     let steps = [];
     try {
         const laneParams = canvasType === 'graph' ? [startNode] : paramValues;
-        steps = generator([...array], searchTarget, laneParams, graphData) || [];
+        const treeDataPassed = overrides.treeData || null; // Access stored treeData for custom tree injections
+        steps = generator([...array], searchTarget, laneParams, graphData, treeDataPassed) || [];
     } catch (error) {
         steps = [];
     }
@@ -404,6 +641,13 @@ const formatParamSummary = (card) => {
     if (card.algorithm?.name === 'Binary Tree Traversals') {
         const traversalType = resolveTraversalType(card.paramValues, 'inorder');
         return `${traversalType} (mode ${normalizeTraversalMode(card.paramValues?.[0])})`;
+    }
+    if (card.algorithm?.name === 'A* Search') {
+        const movement = Number(card.paramValues?.[0]) === 2 ? '8-dir' : '4-dir';
+        const heuristic = Number(card.paramValues?.[1]) === 2
+            ? 'Euclidean'
+            : (Number(card.paramValues?.[1]) === 3 ? 'Diagonal' : 'Manhattan');
+        return `${movement}, ${heuristic}`;
     }
     return card.paramValues.join(', ');
 };
@@ -423,6 +667,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
     const [comparisonInputReady, setComparisonInputReady] = useState(algorithms.length <= 1);
     const [comparisonInputType, setComparisonInputType] = useState(algorithms.length <= 1 ? 'default' : null);
     const [graphModalLaneKey, setGraphModalLaneKey] = useState(null);
+    const [treeModalLaneKey, setTreeModalLaneKey] = useState(null);
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
@@ -540,6 +785,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     paramInput: previous?.paramInput,
                     paramsReady: previous?.paramsReady,
                     graphData: previous?.graphData,
+                    treeData: previous?.treeData,
                     startNode: previous?.startNode,
                     speed: previous?.speed ?? DEFAULT_SPEED,
                     status: 'idle',
@@ -812,6 +1058,31 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
         setComparisonInputType('random');
     };
 
+    const randomRunAll = () => {
+        if (anyRunning) return;
+        setGlobalError('');
+        
+        // 1. Generate new global data
+        const data = randomData(MAX_INPUT_ELEMENTS, orderMode);
+        setGlobalData(data);
+        setGlobalInput(data.join(', '));
+        const defaultTarget = data[Math.floor(data.length / 2)];
+        setGlobalSearchTarget(defaultTarget);
+        setGlobalTargetInput(String(defaultTarget));
+        setComparisonInputReady(true);
+        setComparisonInputType('random');
+
+        // 2. We need to wait for state updates or force immediate card regeneration
+        // In this component's effect structure, updating globalData will trigger card reset.
+        // We'll use a timeout to ensure cards are randomized after they reset from globalData change.
+        setTimeout(() => {
+            randomizeAllParams();
+            setTimeout(() => {
+                runAll();
+            }, 100);
+        }, 100);
+    };
+
     const applyGlobalTarget = () => {
         if (anyRunning) return;
         const parsedTarget = Number(globalTargetInput);
@@ -859,63 +1130,27 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
     };
 
     return (
-        <div className="glass-panel visualizer-ui" style={{ padding: isMobile ? '14px' : '24px', borderRadius: '20px', marginTop: '12px' }}>
+        <div className="glass-panel visualizer-ui theatre-mode" style={{ padding: isMobile ? '14px' : '24px', borderRadius: '20px', marginTop: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: isMobile ? '14px' : '20px' }}>
                 <div>
                     <h3 style={{ margin: 0, fontSize: isMobile ? '1.08rem' : '1.32rem', color: 'var(--text-primary)', fontWeight: 700 }}>Live Algorithm Race Arena</h3>
-                    <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontWeight: 500 }}>Example data is preloaded. Start one lane or run all lanes.</p>
+                    <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontWeight: 500 }}>Start one lane or run all lanes to compare performance side-by-side.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <button type="button" className="control-btn" onClick={randomizeAllParams} disabled={anyRunning || !pendingParamKeys.length}>
+                    <button type="button" className="control-btn" onClick={newGlobalData} disabled={anyRunning} title="Generate new random array for all algorithms">
+                        Random Data
+                    </button>
+                    <button type="button" className="control-btn" onClick={randomizeAllParams} disabled={anyRunning || !pendingParamKeys.length} title="Randomize extra parameters for all lanes">
                         Random Params All
+                    </button>
+                    <button type="button" className="control-btn play-btn" onClick={randomRunAll} disabled={anyRunning || !supportedKeys.length} title="Randomize everything and run all algorithms">
+                        Random & Run
                     </button>
                     <button type="button" className="control-btn play-btn" onClick={runAll} disabled={anyRunning || !supportedKeys.length}>Run All</button>
                     <button type="button" className="control-btn" onClick={stopAll} disabled={!anyRunning}>Stop All</button>
                     <button type="button" className="control-btn" onClick={resetAll}>Reset All</button>
                 </div>
             </div>
-
-            {isMultiComparison && !comparisonInputReady && (
-                <div style={{
-                    marginBottom: '12px',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(96, 165, 250, 0.35)',
-                    background: 'rgba(96, 165, 250, 0.12)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: '10px',
-                    flexWrap: 'wrap'
-                }}>
-                    <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                        Multiple algorithms selected. Choose input first: enter your own data or use random data.
-                    </span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                            type="button"
-                            className="control-btn"
-                            onClick={() => globalInputRef.current?.focus()}
-                            disabled={anyRunning}
-                        >
-                            Enter Input
-                        </button>
-                        <button
-                            type="button"
-                            className="control-btn play-btn"
-                            onClick={newGlobalData}
-                            disabled={anyRunning}
-                        >
-                            Random Data
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {isMultiComparison && comparisonInputReady && (
-                <div style={{ marginBottom: '8px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                    Comparison input: <strong style={{ color: 'var(--text-primary)' }}>{comparisonInputType === 'custom' ? 'Custom Input' : 'Random Data'}</strong>
-                </div>
-            )}
 
             {pendingParamKeys.length > 0 && (
                 <div style={{
@@ -943,45 +1178,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: globalGridColumns, gap: '14px' }}>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                    <input
-                        ref={globalInputRef}
-                        value={globalInput}
-                        onChange={(e) => {
-                            setGlobalInput(e.target.value);
-                            if (isMultiComparison) {
-                                setComparisonInputReady(false);
-                                setComparisonInputType(null);
-                            }
-                        }}
-                        disabled={anyRunning}
-                        placeholder="Global data"
-                        style={INPUT_STYLE}
-                    />
-                    <button type="button" className="control-btn" onClick={applyGlobalData} disabled={anyRunning}>Set Data</button>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                    <select value={orderMode} onChange={(e) => setOrderMode(e.target.value)} disabled={anyRunning} style={INPUT_STYLE}>
-                        <option value="random">Random</option>
-                        <option value="increasing">Increasing</option>
-                    </select>
-                    <button type="button" className="control-btn" onClick={newGlobalData} disabled={anyRunning}>Random Data</button>
-                </div>
-                {hasSearchAlgorithms && (
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                        <input
-                            value={globalTargetInput}
-                            onChange={(e) => setGlobalTargetInput(e.target.value)}
-                            disabled={anyRunning}
-                            placeholder="Search target"
-                            style={INPUT_STYLE}
-                        />
-                        <button type="button" className="control-btn" onClick={applyGlobalTarget} disabled={anyRunning}>
-                            Set Target
-                        </button>
-                    </div>
-                )}
+            <div style={{ display: 'grid', gridTemplateColumns: globalGridColumns, gap: '14px', marginBottom: '14px' }}>
                 <div>
                     <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Global Speed ({globalSpeed.toFixed(2)}x)</label>
                     <input type="range" min="0.5" max="3" step="0.05" value={globalSpeed} onChange={(e) => onGlobalSpeed(e.target.value)} style={{ width: '100%' }} />
@@ -1026,6 +1223,21 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 />
                             );
                         }
+                        if (card.canvasType === 'tree') {
+                            return (
+                                <TreeCanvas
+                                    treeData={step?.treeSnapshot || step?.treeData || null}
+                                />
+                            );
+                        }
+                        if (card.canvasType === 'astar') {
+                            return (
+                                <AStarMiniCanvas
+                                    gridSnapshot={step?.gridSnapshot || []}
+                                    stats={step?.stats || null}
+                                />
+                            );
+                        }
                         if (card.canvasType === 'dp') {
                             return (
                                 <DPTableCanvas
@@ -1046,13 +1258,32 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 />
                             );
                         }
+                        if (card.canvasType === 'string') {
+                            return (
+                                <StringMatchMiniCanvas
+                                    textData={array}
+                                    target={card.searchTarget}
+                                    currentStep={step}
+                                />
+                            );
+                        }
+                        if (card.canvasType === 'grid') {
+                            return (
+                                <GridCanvas
+                                    array={array}
+                                    currentIndices={active}
+                                    compareIndices={compare}
+                                    sortedIndices={sorted}
+                                />
+                            );
+                        }
                         return <AnimationCanvas array={array} currentIndices={active} compareIndices={compare} sortedIndices={sorted} />;
                     };
 
                     return (
                         <section
                             key={key}
-                            className="glass-panel visualizer-lane"
+                            className="glass-panel visualizer-lane theatre-stage"
                             style={{
                                 padding: isMobile ? '14px' : '18px',
                                 borderRadius: '16px',
@@ -1113,7 +1344,10 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
 
                             {card.isSupported ? (
                                 <>
-                                    <div style={{ height: isMobile ? '220px' : '300px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px', marginBottom: '10px', overflow: 'hidden', background: 'var(--viz-input-bg, #1e1e1e)' }}>
+                                    <div style={{ height: isMobile ? '220px' : '300px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px', marginBottom: '10px', overflow: 'auto', background: 'var(--viz-input-bg, #1e1e1e)' }}>
+                                        {step?.arraySnapshot && (
+                                            <InputArrayDisplay arraySnapshot={step.arraySnapshot} activeArrayIndex={step.activeArrayIndex} />
+                                        )}
                                         {renderLaneCanvas()}
                                     </div>
                                     <div style={{ minHeight: '38px', color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '10px', fontWeight: 500 }}>
@@ -1142,8 +1376,9 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                             setGraphModalLaneKey(key);
                                             return;
                                         }
-                                        const data = randomData(card.data.length || globalData.length || DEFAULT_DATA.length, 'random');
-                                        const laneTarget = data[Math.floor(data.length / 2)];
+                                        const isStr = card.canvasType === 'string';
+                                        const data = randomData(isStr ? 12 : (card.data.length || globalData.length || DEFAULT_DATA.length), 'random', isStr);
+                                        const laneTarget = isStr ? data.slice(1, 4).join('') : data[Math.floor(data.length / 2)];
                                         setCards((prev) => ({
                                             ...prev,
                                             [key]: makeCard(prev[key].algorithm, data, {
@@ -1305,6 +1540,86 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                         Graph algorithms use the same custom graph input flow as full visualizer.
                                     </div>
                                 </>
+                            ) : card.canvasType === 'tree' ? (
+                                <>
+                                    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                                        <button
+                                            type="button"
+                                            className="control-btn"
+                                            disabled={laneIsRunning}
+                                            onClick={() => setTreeModalLaneKey(key)}
+                                            style={{ flex: 1 }}
+                                        >
+                                            Configure Tree
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="control-btn"
+                                            disabled={laneIsRunning}
+                                            onClick={() => {
+                                                setCards((prev) => ({
+                                                    ...prev,
+                                                    [key]: makeCard(prev[key].algorithm, prev[key].data, {
+                                                        isCustom: false,
+                                                        customInput: '',
+                                                        searchTarget: prev[key].searchTarget,
+                                                        targetInput: prev[key].targetInput,
+                                                        paramValues: prev[key].paramValues,
+                                                        paramInput: prev[key].paramInput,
+                                                        paramsReady: prev[key].paramsReady,
+                                                        graphData: prev[key].graphData,
+                                                        treeData: null,
+                                                        startNode: prev[key].startNode,
+                                                        speed: prev[key].speed
+                                                    })
+                                                }));
+                                            }}
+                                        >
+                                            Reset Tree
+                                        </button>
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                                        Configure an Edge List Tree or use default values.
+                                    </div>
+                                </>
+                            ) : card.canvasType === 'tree' && card.algorithm?.name !== 'Huffman Coding' ? (
+                                <>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            className="control-btn"
+                                            style={{ flex: 1, padding: '10px' }}
+                                            onClick={() => setTreeModalLaneKey(key)}
+                                        >
+                                            Configure Tree
+                                        </button>
+                                        <button
+                                            className="control-btn"
+                                            onClick={() => {
+                                                setCards((prev) => ({
+                                                    ...prev,
+                                                    [key]: makeCard(prev[key].algorithm, defaultTreeValues, {
+                                                        isCustom: false,
+                                                        customInput: '',
+                                                        searchTarget: prev[key].searchTarget,
+                                                        targetInput: prev[key].targetInput,
+                                                        paramValues: prev[key].paramValues,
+                                                        paramInput: prev[key].paramInput,
+                                                        paramsReady: prev[key].paramsReady,
+                                                        graphData: prev[key].graphData,
+                                                        treeData: null,
+                                                        startNode: prev[key].startNode,
+                                                        speed: prev[key].speed
+                                                    })
+                                                }));
+                                            }}
+                                        >
+                                            Reset Tree
+                                        </button>
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                                        Configure an Edge List N-ary Tree or use default values.
+                                    </div>
+                                </>
                             ) : (
                                 <>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
@@ -1312,32 +1627,43 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                             value={card.customInput}
                                             disabled={laneIsRunning}
                                             onChange={(e) => updateCard(key, (current) => ({ ...current, customInput: e.target.value }))}
-                                            placeholder="e.g. 50, 10, 20 (max 10)"
+                                            placeholder={card.canvasType === 'string' ? "Text string" : "e.g. 50, 10, 20 (max 10)"}
                                             style={INPUT_STYLE}
                                         />
+                                        {card.needsTarget && (
+                                            <input
+                                                value={card.targetInput}
+                                                disabled={laneIsRunning}
+                                                onChange={(e) => updateCard(key, (current) => ({ ...current, targetInput: e.target.value }))}
+                                                placeholder={card.canvasType === 'string' ? "Pattern" : "Target"}
+                                                style={{ ...INPUT_STYLE, maxWidth: '100px' }}
+                                            />
+                                        )}
                                         <button
                                             type="button"
                                             className="control-btn"
                                             disabled={laneIsRunning || !card.customInput.trim()}
                                             onClick={() => {
                                                 if (laneIsRunning) return;
-                                                const parsed = parseData(card.customInput);
+                                                const isStr = card.canvasType === 'string';
+                                                const parsed = parseData(card.customInput, isStr);
                                                 if (parsed.error) return setGlobalError(`${card.algorithm?.name}: ${parsed.error}`);
                                                 setGlobalError('');
-                                                const laneTarget = Number.isFinite(Number(card.searchTarget))
-                                                    ? Math.round(Number(card.searchTarget))
-                                                    : resolveDefaultTarget(parsed.values);
+                                                const laneTarget = (!isStr && Number.isFinite(Number(card.targetInput)))
+                                                    ? Math.round(Number(card.targetInput))
+                                                    : (isStr ? card.targetInput : resolveDefaultTarget(parsed.values));
                                                 setCards((prev) => ({
                                                     ...prev,
                                                     [key]: makeCard(prev[key].algorithm, parsed.values, {
                                                         isCustom: true,
-                                                        customInput: parsed.values.join(', '),
+                                                        customInput: isStr ? parsed.values.join('') : parsed.values.join(', '),
                                                         searchTarget: laneTarget,
                                                         targetInput: String(laneTarget),
                                                         paramValues: prev[key].paramValues,
                                                         paramInput: prev[key].paramInput,
                                                         paramsReady: prev[key].paramsReady,
                                                         graphData: prev[key].graphData,
+                                                        treeData: prev[key].treeData,
                                                         startNode: prev[key].startNode,
                                                         speed: prev[key].speed
                                                     })
@@ -1348,7 +1674,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                         </button>
                                     </div>
                                     <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                        Enter up to 10 numbers separated by commas or spaces.
+                                        {card.canvasType === 'string' ? 'Enter custom text and pattern to search.' : 'Enter up to 10 numbers separated by commas or spaces.'}
                                     </div>
                                 </>
                             )}
@@ -1356,18 +1682,56 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     );
                 })}
             </div>
-            <GraphInputModal
-                isOpen={Boolean(graphModalLaneKey)}
-                onClose={() => setGraphModalLaneKey(null)}
-                onGenerate={(graphData) => {
-                    if (!graphModalLaneKey) return;
+            {Boolean(graphModalLaneKey) && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setGraphModalLaneKey(null)}>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', minWidth: '400px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <h3 style={{ margin: 0, color: 'white' }}>Update Graph</h3>
+                            <button onClick={() => setGraphModalLaneKey(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                        </div>
+                        <GraphInput
+                            nodes={cards[graphModalLaneKey]?.graphData?.nodes || []}
+                            edges={cards[graphModalLaneKey]?.graphData?.edges || []}
+                            onGraphUpdate={(graphData) => {
+                                setCards((prev) => {
+                                    const lane = prev[graphModalLaneKey];
+                                    if (!lane) return prev;
+                                    const nextStartNode = resolveGraphStartNode(graphData, [lane.startNode]);
+                                    return {
+                                        ...prev,
+                                        [graphModalLaneKey]: makeCard(lane.algorithm, lane.data, {
+                                            isCustom: true,
+                                            customInput: '',
+                                            searchTarget: lane.searchTarget,
+                                            targetInput: lane.targetInput,
+                                            paramValues: lane.paramValues,
+                                            paramInput: lane.paramInput,
+                                            paramsReady: lane.paramsReady,
+                                            graphData,
+                                            startNode: nextStartNode,
+                                            speed: lane.speed
+                                        })
+                                    };
+                                });
+                                setGraphModalLaneKey(null);
+                            }}
+                            requiresDirected={false}
+                            requiresWeights={true}
+                        />
+                    </div>
+                </div>
+            )}
+            <TreeInputModal
+                isOpen={Boolean(treeModalLaneKey)}
+                onClose={() => setTreeModalLaneKey(null)}
+                onGenerate={(treeData) => {
+                    if (!treeModalLaneKey) return;
                     setCards((prev) => {
-                        const lane = prev[graphModalLaneKey];
+                        const lane = prev[treeModalLaneKey];
                         if (!lane) return prev;
-                        const nextStartNode = resolveGraphStartNode(graphData, [lane.startNode]);
                         return {
                             ...prev,
-                            [graphModalLaneKey]: makeCard(lane.algorithm, lane.data, {
+                            [treeModalLaneKey]: makeCard(lane.algorithm, lane.data, {
                                 isCustom: true,
                                 customInput: '',
                                 searchTarget: lane.searchTarget,
@@ -1375,16 +1739,15 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 paramValues: lane.paramValues,
                                 paramInput: lane.paramInput,
                                 paramsReady: lane.paramsReady,
-                                graphData,
-                                startNode: nextStartNode,
+                                graphData: lane.graphData,
+                                treeData: treeData,
+                                startNode: lane.startNode,
                                 speed: lane.speed
                             })
                         };
                     });
-                    setGraphModalLaneKey(null);
+                    setTreeModalLaneKey(null);
                 }}
-                defaultDirected={Boolean(cards[graphModalLaneKey]?.graphData?.directed)}
-                defaultWeighted={Boolean((cards[graphModalLaneKey]?.graphData?.edges || []).some((edge) => edge.weight !== undefined))}
             />
         </div>
     );
