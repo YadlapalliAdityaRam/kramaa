@@ -35,6 +35,40 @@ export const resolveDefaultTarget = (array) => {
     return array[Math.floor(array.length / 2)];
 };
 
+export const resolveAlgorithmTargetDefault = (algorithmName, array, fallback) => {
+    if (Number.isFinite(Number(fallback))) return Math.round(Number(fallback));
+    const source = Array.isArray(array) && array.length ? array : DEFAULT_ARRAY;
+    if (algorithmName === 'Sliding Window Technique') {
+        return Math.max(1, Math.min(3, source.length));
+    }
+    return resolveDefaultTarget(source);
+};
+
+export const clampAlgorithmTarget = (algorithmName, array, candidate) => {
+    const source = Array.isArray(array) && array.length ? array : DEFAULT_ARRAY;
+    if (algorithmName === 'Sliding Window Technique') {
+        const base = Number.isFinite(Number(candidate))
+            ? Math.round(Number(candidate))
+            : resolveAlgorithmTargetDefault(algorithmName, source);
+        return Math.max(1, Math.min(source.length, base));
+    }
+    if (Number.isFinite(Number(candidate))) return Math.round(Number(candidate));
+    return resolveAlgorithmTargetDefault(algorithmName, source);
+};
+
+export const getTargetFieldMeta = (algorithmName, canvasType = 'array') => {
+    if (canvasType === 'string') {
+        return { label: 'Pattern', placeholder: 'Pattern' };
+    }
+    if (algorithmName === 'Sliding Window Technique') {
+        return { label: 'Window Size', placeholder: 'k' };
+    }
+    if (algorithmName === 'Two Pointers Technique') {
+        return { label: 'Target Sum', placeholder: 'Target sum' };
+    }
+    return { label: 'Search Target', placeholder: 'Target' };
+};
+
 export const pathToSlug = (path) => String(path || '').replace(/^\/algorithms\//, '').replace(/^\/+/, '');
 
 const buildSortingFallbackSteps = (array, name) => {

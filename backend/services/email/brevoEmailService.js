@@ -15,7 +15,7 @@ const shouldRequireEmailDelivery = () => {
 const getBrevoConfig = () => {
     const apiKey = String(process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY || '').trim();
     const fromEmail = String(process.env.AUTH_EMAIL_FROM || process.env.SMTP_FROM || '').trim();
-    const fromName = String(process.env.AUTH_EMAIL_FROM_NAME || process.env.APP_NAME || 'Krama').trim();
+    const fromName = String(process.env.AUTH_EMAIL_FROM_NAME || process.env.APP_NAME || 'Kramaa').trim();
 
     return { apiKey, fromEmail, fromName };
 };

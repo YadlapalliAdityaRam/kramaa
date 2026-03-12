@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DualView from './DualView';
 import AnimationCanvas from './AnimationCanvas';
@@ -19,13 +19,16 @@ import { toast } from 'react-hot-toast';
 import { algorithmLineMaps } from '../data/algorithmLineMaps';
 import { algorithmList } from '../data/algorithmsData';
 import {
+    clampAlgorithmTarget,
     generateFallbackArraySteps,
     generateFallbackCode,
     getCanvasTypeForCategory,
     getDefaultArrayData,
     getFallbackLineMap,
+    getTargetFieldMeta,
     normalizeCategoryKey,
     pathToSlug,
+    resolveAlgorithmTargetDefault,
     resolveDefaultTarget,
     sanitizeArrayInput
 } from './algorithmFallbacks';
@@ -71,7 +74,7 @@ import { defaultGraph, defaultWeightedGraph, bfsGraph, dfsGraph } from '../algor
 import { generateBinaryTreeTraversalSteps, defaultTreeValues } from '../algorithms/trees/binaryTree';
 import { generateAVLTreeSteps } from '../algorithms/trees/avlTree';
 import { generateRedBlackTreeSteps } from '../algorithms/trees/redBlackTree';
-import { generateNaryDFSSteps, generateNaryBFSSteps, generateNaryTreeHeightSteps } from '../algorithms/trees/naryTree';
+import { defaultNaryTreeData, generateNaryDFSSteps, generateNaryBFSSteps, generateNaryTreeHeightSteps } from '../algorithms/trees/naryTree';
 import { generateSegmentTreeSteps } from '../algorithms/trees/segmentTree';
 import { generateFenwickTreeSteps } from '../algorithms/trees/fenwickTree';
 import { generateHeapSteps } from '../algorithms/trees/heap';
@@ -340,18 +343,21 @@ const CORE_ALGORITHM_REGISTRY = {
         name: 'N-ary DFS',
         canvasType: 'tree',
         generator: (values, t, p, g, treeData) => generateNaryDFSSteps(treeData || null),
+        defaultData: defaultNaryTreeData,
         codeKey: 'naryDFS'
     },
     'trees/nary-bfs': {
         name: 'N-ary BFS',
         canvasType: 'tree',
         generator: (values, t, p, g, treeData) => generateNaryBFSSteps(treeData || null),
+        defaultData: defaultNaryTreeData,
         codeKey: 'naryBFS'
     },
     'trees/nary-height': {
         name: 'N-ary Tree Height',
         canvasType: 'tree',
         generator: (values, t, p, g, treeData) => generateNaryTreeHeightSteps(treeData || null),
+        defaultData: defaultNaryTreeData,
         codeKey: 'naryHeight'
     },
     'trees/segment-tree': {
@@ -677,10 +683,11 @@ const GenericVisualizer = () => {
 const VisualizerEngine = ({ config, slug }) => {
     const { canvasType, name, generator, needsTarget, defaultData, codeKey } = config;
     const isArrayBased = canvasType === 'array';
+    const targetMeta = useMemo(() => getTargetFieldMeta(name, canvasType), [name, canvasType]);
 
     // State for array-based algorithms
     const [array, setArray] = useState(getDefaultArrayData());
-    const [searchTarget, setSearchTarget] = useState(resolveDefaultTarget(getDefaultArrayData()));
+    const [searchTarget, setSearchTarget] = useState(() => resolveAlgorithmTargetDefault(name, getDefaultArrayData(), config.defaultTarget));
 
     // State for graph-based algorithms
     const [customGraph, setCustomGraph] = useState(null);
@@ -696,6 +703,12 @@ const VisualizerEngine = ({ config, slug }) => {
 
     // State for traversal type selector
     const [traversalType, setTraversalType] = useState('inorder');
+
+    useEffect(() => {
+        if (!needsTarget) return;
+        const seedData = Array.isArray(defaultData) && defaultData.length ? defaultData : getDefaultArrayData();
+        setSearchTarget(resolveAlgorithmTargetDefault(name, seedData, config.defaultTarget));
+    }, [defaultData, name, needsTarget, config.defaultTarget]);
 
     // Array-supported tree algorithms
     const isArrayTree = canvasType === 'tree' && ['Binary Tree Traversals', 'Segment Tree', 'Fenwick Tree (BIT)', 'Heap / Min-Max Priority Queue', 'Splay Tree', 'AVL Tree'].includes(name);
@@ -713,7 +726,7 @@ const VisualizerEngine = ({ config, slug }) => {
             return generator(array, searchTarget);
         }
         if (canvasType === 'tree' && name.startsWith('N-ary')) {
-            return generator([], searchTarget, [], null, customTree);
+            return generator([], searchTarget, [], null, customTree || defaultData || null);
         }
         if (canvasType === 'tree' && name === 'Binary Tree Traversals') {
             return generator(activeData, traversalType, customTree);
@@ -857,6 +870,9 @@ const VisualizerEngine = ({ config, slug }) => {
     const handleGenerateRandom = () => {
         const newArr = Array.from({ length: 10 }, () => Math.floor(Math.random() * 100) + 5);
         setArray(newArr);
+        if (needsTarget) {
+            setSearchTarget((current) => clampAlgorithmTarget(name, newArr, current));
+        }
     };
 
     const handleManualInput = (inputVal) => {
@@ -867,6 +883,9 @@ const VisualizerEngine = ({ config, slug }) => {
             return;
         }
         setArray(inputVal);
+        if (needsTarget) {
+            setSearchTarget((current) => clampAlgorithmTarget(name, inputVal, current));
+        }
     };
 
     const handleGraphGenerate = (graphData) => {
@@ -926,7 +945,7 @@ const VisualizerEngine = ({ config, slug }) => {
             case 'tree':
                 return (
                     <TreeCanvas
-                        treeData={customTree || step?.treeData || null}
+                        treeData={customTree || step?.treeData || defaultData || null}
                         nodeStates={step?.nodeStates || {}}
                     />
                 );
@@ -1130,11 +1149,12 @@ const VisualizerEngine = ({ config, slug }) => {
                         )}
                         {needsTarget && (
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <label style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: '500' }}>Search Target:</label>
+                                <label style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: '500' }}>{targetMeta.label}:</label>
                                 <input
                                     type={canvasType === 'string' ? "text" : "number"}
                                     value={searchTarget}
                                     onChange={(e) => setSearchTarget(canvasType === 'string' ? e.target.value.toUpperCase() : (parseInt(e.target.value) || 0))}
+                                    placeholder={targetMeta.placeholder}
                                     style={{
                                         background: 'rgba(15, 23, 42, 0.6)',
                                         border: '1px solid rgba(56, 189, 248, 0.4)',

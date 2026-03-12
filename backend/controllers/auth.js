@@ -31,7 +31,7 @@ const EMAIL_PURPOSES = {
     PASSWORD_RESET: 'PASSWORD_RESET'
 };
 
-const AUTH_APP_NAME = String(process.env.APP_NAME || 'Krama').trim() || 'Krama';
+const AUTH_APP_NAME = String(process.env.APP_NAME || 'Kramaa').trim() || 'Kramaa';
 const authCookieName = getAuthCookieName();
 
 const toApiSafeUser = (user) => ({

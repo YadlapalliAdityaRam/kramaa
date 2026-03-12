@@ -1,5 +1,34 @@
 // Helpers to map tree structures into visualization steps
 
+export const defaultNaryTreeData = {
+    id: 'Root',
+    value: 'Root',
+    children: [
+        {
+            id: 'A',
+            value: 'A',
+            children: [
+                { id: 'D', value: 'D', children: [] },
+                { id: 'E', value: 'E', children: [] },
+                { id: 'F', value: 'F', children: [] }
+            ]
+        },
+        {
+            id: 'B',
+            value: 'B',
+            children: []
+        },
+        {
+            id: 'C',
+            value: 'C',
+            children: [
+                { id: 'G', value: 'G', children: [] },
+                { id: 'H', value: 'H', children: [] }
+            ]
+        }
+    ]
+};
+
 // Deep clone a tree for snapshots
 const cloneTree = (node) => {
     if (!node) return null;

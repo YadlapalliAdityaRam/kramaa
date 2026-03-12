@@ -255,8 +255,8 @@ const Navbar = () => {
                         <BackForward />
                     </div>
                     <Link to="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                        <img src="/assets/algoverse-logo.png" alt="AlgoVerse" style={{ height: '32px', width: 'auto' }} onError={(e) => { e.target.src = '/assets/krama-logo.png'; }} />
-                        <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AlgoVerse</span>
+                        <img src="/assets/krama-logo.png" alt="Kramaa" style={{ height: '32px', width: 'auto' }} />
+                        <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Kramaa</span>
                     </Link>
 
                     <div className="search-wrapper" style={{ position: 'relative', width: isMobile ? '100%' : '300px' }} ref={searchRef}>
@@ -471,7 +471,7 @@ const Navbar = () => {
                             </div>
                             <div className="profile-drawer-userinfo">
                                 <h3>{user?.fullName || user?.username}</h3>
-                                <p className="profile-drawer-subtitle">Welcome to AlgoVerse!</p>
+                                <p className="profile-drawer-subtitle">Welcome to Kramaa!</p>
                             </div>
                         </div>
 

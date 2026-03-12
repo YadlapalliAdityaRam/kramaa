@@ -6,7 +6,7 @@ const escapeHtml = (value) => String(value || '')
     .replace(/'/g, '&#039;');
 
 const buildOtpEmailTemplate = ({
-    appName = 'Krama',
+    appName = 'Kramaa',
     recipientName = 'User',
     otp,
     purposeLabel,
@@ -45,7 +45,7 @@ const buildOtpEmailTemplate = ({
 };
 
 const buildPasswordResetEmailTemplate = ({
-    appName = 'Krama',
+    appName = 'Kramaa',
     recipientName = 'User',
     resetLink,
     expiresInMinutes
@@ -88,4 +88,3 @@ module.exports = {
     buildOtpEmailTemplate,
     buildPasswordResetEmailTemplate
 };
-

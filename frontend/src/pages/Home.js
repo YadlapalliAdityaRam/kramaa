@@ -266,7 +266,7 @@ const Home = () => {
     };
 
     return (
-        <div className="algoverse-home">
+        <div className="krama-home">
             <AnimatedBackground />
 
             {/* ———————————————— HERO ———————————————— */}
@@ -302,7 +302,7 @@ const Home = () => {
                     </h1>
 
                     <p className="hero-subtitle">
-                        AlgoVerse is the ultimate platform where code meets clarity. Visualize complex algorithms,
+                        Kramaa is the ultimate platform where code meets clarity. Visualize complex algorithms,
                         practice in a real IDE, compete in contests, and prepare for your dream company.
                         <br /><span style={{ color: 'var(--primary-teal)', fontWeight: '600', fontSize: '0.9rem', marginTop: '10px', display: 'block' }}>Created by Aditya Ram</span>
                     </p>
@@ -520,7 +520,7 @@ const Home = () => {
                             <span className="gradient-highlight" data-text="Dream Company?">Dream Company?</span>
                         </h2>
                         <p className="final-cta-subtitle">
-                            Join thousands of developers who are building their future with AlgoVerse.
+                            Join thousands of developers who are building their future with Kramaa.
                             Start visualizing, practicing, and competing today.
                         </p>
                         <Link to="/register" className="btn-start-now">

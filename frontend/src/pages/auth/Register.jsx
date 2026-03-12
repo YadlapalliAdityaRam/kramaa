@@ -131,7 +131,7 @@ const Register = () => {
                 style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '400px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Join AlgoVerse</h2>
+                    <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Join Kramaa</h2>
                     <p style={{ color: 'var(--text-secondary)' }}>Start your coding journey today</p>
                 </div>
 

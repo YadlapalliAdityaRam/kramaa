@@ -33,11 +33,28 @@ const normalizeFloatTolerance = (rawTolerance) => {
     return parsed;
 };
 
-const parseExecutionValue = (value) => {
+const parseExecutionValue = (value, declaredType = 'void') => {
     if (value === null || value === undefined) return null;
     if (typeof value !== 'string') return value;
 
+    const spec = resolveTypeSpec(declaredType || 'void');
     const trimmed = value.trim();
+
+    if (spec.depth === 0 && (spec.baseType === 'string' || spec.baseType === 'char')) {
+        if (!value.length) return '';
+
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (typeof parsed === 'string') return parsed;
+            } catch {
+                return value;
+            }
+        }
+
+        return value;
+    }
+
     if (!trimmed) return null;
 
     try {
@@ -347,4 +364,3 @@ module.exports = {
     hasAnyValidValidator,
     validateOutputByRule
 };
-

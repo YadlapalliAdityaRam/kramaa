@@ -1163,8 +1163,8 @@ if (typeof module !== 'undefined' && module.exports) {
             return "Function returned None. Did you forget to use return statement?";
         }
 
-        const actualVal = parseExecutionValue(returnedStr);
-        const expectedVal = parseExecutionValue(expectedStr);
+        const actualVal = parseExecutionValue(returnedStr, declaredType);
+        const expectedVal = parseExecutionValue(expectedStr, declaredType);
         const validationType = normalizeOutputValidationType(
             testCase?.validationType || problemDetails?.validationType
         );

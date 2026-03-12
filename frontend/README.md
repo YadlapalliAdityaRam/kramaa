@@ -1,6 +1,6 @@
-# AlgoVerse - Advanced Algorithm Visualizer & Learning Platform
+# Kramaa - Advanced Algorithm Visualizer & Learning Platform
 
-AlgoVerse is a comprehensive platform designed to help users visualize, learn, and practice algorithms. It combines interactive animations with a robust coding environment and administrative tools.
+Kramaa is a comprehensive platform designed to help users visualize, learn, and practice algorithms. It combines interactive animations with a robust coding environment and administrative tools.
 
 ## 🚀 Features
 

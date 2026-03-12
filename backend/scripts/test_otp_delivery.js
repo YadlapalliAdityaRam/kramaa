@@ -22,7 +22,7 @@ const testOtpDelivery = async ({ email, name = 'Test User' }) => {
 
     const otp = generateNumericOtp();
     const expiresInMinutes = getOtpTtlMinutes();
-    const appName = String(process.env.APP_NAME || 'Krama').trim() || 'Krama';
+    const appName = String(process.env.APP_NAME || 'Kramaa').trim() || 'Kramaa';
 
     const template = buildOtpEmailTemplate({
         appName,

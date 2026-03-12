@@ -59,7 +59,7 @@ import { generateCoinChangeSteps } from '../algorithms/dp/coinChange';
 import { generateActivitySelectionSteps } from '../algorithms/greedy/activitySelection';
 import { generateHuffmanCodingSteps } from '../algorithms/greedy/huffmanCoding';
 import { generateBoyerMooreSteps } from '../algorithms/string/boyerMoore';
-import { generateNaryDFSSteps, generateNaryBFSSteps, generateNaryTreeHeightSteps } from '../algorithms/trees/naryTree';
+import { defaultNaryTreeData, generateNaryDFSSteps, generateNaryBFSSteps, generateNaryTreeHeightSteps } from '../algorithms/trees/naryTree';
 import { generateSegmentTreeSteps } from '../algorithms/trees/segmentTree';
 import { generateFenwickTreeSteps } from '../algorithms/trees/fenwickTree';
 import { generateHeapSteps } from '../algorithms/trees/heap';
@@ -87,7 +87,7 @@ import { generateFloydWarshallSteps } from '../algorithms/graphs/floydWarshall';
 import { generateTopologicalSortSteps } from '../algorithms/graphs/topologicalSort';
 import { generateKosarajuSteps } from '../algorithms/graphs/kosaraju';
 import { generateFloydCycleSteps } from '../algorithms/graphs/floydCycle';
-import { generateFallbackArraySteps, normalizeCategoryKey, resolveDefaultTarget, sanitizeArrayInput } from './algorithmFallbacks';
+import { clampAlgorithmTarget, generateFallbackArraySteps, getTargetFieldMeta, normalizeCategoryKey, resolveAlgorithmTargetDefault, resolveDefaultTarget, sanitizeArrayInput } from './algorithmFallbacks';
 
 const resolveGraphStartNode = (graphData, params = []) => {
     const nodes = graphData?.nodes || [];
@@ -228,15 +228,15 @@ const GENERATORS = {
     },
     'N-ary DFS': {
         canvasType: 'tree',
-        generate: (data, _t, _p, _g, treeData) => generateNaryDFSSteps(treeData || null)
+        generate: (data, _t, _p, _g, treeData) => generateNaryDFSSteps(treeData || defaultNaryTreeData)
     },
     'N-ary BFS (Level Order)': {
         canvasType: 'tree',
-        generate: (data, _t, _p, _g, treeData) => generateNaryBFSSteps(treeData || null)
+        generate: (data, _t, _p, _g, treeData) => generateNaryBFSSteps(treeData || defaultNaryTreeData)
     },
     'N-ary Tree Height': {
         canvasType: 'tree',
-        generate: (data, _t, _p, _g, treeData) => generateNaryTreeHeightSteps(treeData || null)
+        generate: (data, _t, _p, _g, treeData) => generateNaryTreeHeightSteps(treeData || defaultNaryTreeData)
     },
     'Segment Tree': {
         canvasType: 'tree',
@@ -387,7 +387,8 @@ const ALGORITHM_PARAM_RULES = {
     'Sliding Window Technique': {
         count: 1,
         label: 'window size',
-        example: '3'
+        example: '3',
+        mode: 'window-size'
     },
     'Two Pointers Technique': {
         count: 1,
@@ -434,6 +435,9 @@ const buildRandomParams = (rule, array) => {
         return [Math.floor(Math.random() * 2) + 1, Math.floor(Math.random() * 3) + 1];
     }
     const source = Array.isArray(array) && array.length ? array : DEFAULT_DATA;
+    if (rule.mode === 'window-size') {
+        return [Math.max(1, Math.min(3, source.length))];
+    }
     const first = clampParam(resolveDefaultTarget(source));
     const secondSeedIndex = source.length > 1 ? (Math.floor(source.length / 3) + 2) % source.length : 0;
     const second = clampParam(source[secondSeedIndex] ?? first + 1);
@@ -576,21 +580,20 @@ const makeCard = (algorithm, data, overrides = {}) => {
     const canvasType = config?.canvasType || 'array';
     const graphData = overrides.graphData || config?.graphData || null;
     const array = Array.isArray(data) && data.length ? sanitizeArrayInput(data, DEFAULT_DATA) : [...DEFAULT_DATA];
-    const fallbackTarget = Number.isFinite(Number(overrides.searchTarget))
-        ? Math.round(Number(overrides.searchTarget))
-        : resolveDefaultTarget(array);
+    const fallbackTarget = resolveAlgorithmTargetDefault(algorithm?.name, array, overrides.searchTarget);
     const paramRule = resolveParamRule(algorithm, config);
     const paramValues = Array.isArray(overrides.paramValues)
         ? normalizeParamValues(overrides.paramValues, paramRule, array)
         : (paramRule?.count ? buildRandomParams(paramRule, array) : []);
     if (config?.needsTarget && paramValues.length > 0) {
-        paramValues[0] = clampParam(paramValues[0]);
+        paramValues[0] = clampAlgorithmTarget(algorithm?.name, array, paramValues[0]);
     }
     const searchTarget = config?.needsTarget
-        ? (paramValues[0] ?? fallbackTarget)
+        ? clampAlgorithmTarget(algorithm?.name, array, paramValues[0] ?? fallbackTarget)
         : fallbackTarget;
     const paramInput = overrides.paramInput ?? (paramValues.length ? paramValues.join(', ') : '');
     const paramsReady = paramRule?.count ? Boolean(overrides.paramsReady) : true;
+    const syncTargetInput = Boolean(config?.needsTarget) && paramRule?.count === 1 && !overrides.isCustom;
     const startNode = canvasType === 'graph'
         ? resolveGraphStartNode(graphData || defaultGraph, [overrides.startNode])
         : null;
@@ -609,7 +612,7 @@ const makeCard = (algorithm, data, overrides = {}) => {
         paramInput,
         paramsReady,
         searchTarget,
-        targetInput: overrides.targetInput ?? String(searchTarget),
+        targetInput: syncTargetInput ? String(searchTarget) : (overrides.targetInput ?? String(searchTarget)),
         speed: overrides.speed ?? DEFAULT_SPEED,
         status: overrides.status || 'idle',
         stepIndex: overrides.stepIndex || 0,
@@ -906,8 +909,8 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
         if (prepared?.needsTarget && prepared?.paramRule?.count === 1 && !prepared.paramsReady) {
             const parsedTarget = Number(prepared.targetInput);
             const autoTarget = Number.isFinite(parsedTarget)
-                ? clampParam(parsedTarget)
-                : resolveDefaultTarget(prepared.data);
+                ? clampAlgorithmTarget(prepared.algorithm?.name, prepared.data, parsedTarget)
+                : resolveAlgorithmTargetDefault(prepared.algorithm?.name, prepared.data);
             prepared = makeCard(prepared.algorithm, prepared.data, {
                 isCustom: prepared.isCustom,
                 customInput: prepared.customInput,
@@ -1378,7 +1381,9 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                         }
                                         const isStr = card.canvasType === 'string';
                                         const data = randomData(isStr ? 12 : (card.data.length || globalData.length || DEFAULT_DATA.length), 'random', isStr);
-                                        const laneTarget = isStr ? data.slice(1, 4).join('') : data[Math.floor(data.length / 2)];
+                                        const laneTarget = isStr
+                                            ? data.slice(1, 4).join('')
+                                            : resolveAlgorithmTargetDefault(card.algorithm?.name, data);
                                         setCards((prev) => ({
                                             ...prev,
                                             [key]: makeCard(prev[key].algorithm, data, {
@@ -1408,7 +1413,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                             ...prev,
                                             [key]: makeCard(prev[key].algorithm, globalData, {
                                                 searchTarget: globalSearchTarget,
-                                                targetInput: String(globalSearchTarget),
+                                                targetInput: prev[key].isCustom ? prev[key].targetInput : undefined,
                                                 paramValues: prev[key].paramValues,
                                                 paramInput: prev[key].paramInput,
                                                 paramsReady: prev[key].paramsReady,
@@ -1635,7 +1640,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                                 value={card.targetInput}
                                                 disabled={laneIsRunning}
                                                 onChange={(e) => updateCard(key, (current) => ({ ...current, targetInput: e.target.value }))}
-                                                placeholder={card.canvasType === 'string' ? "Pattern" : "Target"}
+                                                placeholder={getTargetFieldMeta(card.algorithm?.name, card.canvasType).placeholder}
                                                 style={{ ...INPUT_STYLE, maxWidth: '100px' }}
                                             />
                                         )}
@@ -1651,7 +1656,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                                 setGlobalError('');
                                                 const laneTarget = (!isStr && Number.isFinite(Number(card.targetInput)))
                                                     ? Math.round(Number(card.targetInput))
-                                                    : (isStr ? card.targetInput : resolveDefaultTarget(parsed.values));
+                                                    : (isStr ? card.targetInput : resolveAlgorithmTargetDefault(card.algorithm?.name, parsed.values));
                                                 setCards((prev) => ({
                                                     ...prev,
                                                     [key]: makeCard(prev[key].algorithm, parsed.values, {

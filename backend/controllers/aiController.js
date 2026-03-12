@@ -11,7 +11,7 @@ const openai = new OpenAI({
     baseURL: isOpenRouter ? 'https://openrouter.ai/api/v1' : undefined,
     defaultHeaders: isOpenRouter ? {
         "HTTP-Referer": process.env.CLIENT_URL || "http://localhost:3000",
-        "X-Title": "AlgoVerse"
+        "X-Title": "Kramaa"
     } : undefined
 });
 

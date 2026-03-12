@@ -72,6 +72,25 @@ describe('codeExecutor.runTestCases', () => {
         expect(results[1].error).toContain('Return type contract violated');
     });
 
+    it('accepts plain string expected outputs for string return types', async () => {
+        const testCases = [{ input: { s: '12345' }, output: '54321' }];
+        codeExecutor.executeBatch = jest.fn().mockResolvedValue([
+            { stdout: '"54321"', stderr: '', printedOutput: '', returnMissing: false, time: 1.1, memory: 10 }
+        ]);
+
+        const results = await codeExecutor.runTestCases(
+            'code',
+            'javascript',
+            testCases,
+            2000,
+            { returnType: 'string' }
+        );
+
+        expect(results).toHaveLength(1);
+        expect(results[0].passed).toBe(true);
+        expect(results[0].error).toBe('');
+    });
+
     it('runs serially and stops at first failure when enabled', async () => {
         const testCases = [
             { input: { n: 1 }, output: 1 },

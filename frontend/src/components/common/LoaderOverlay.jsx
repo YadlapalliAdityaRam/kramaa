@@ -48,7 +48,7 @@ const LoaderOverlay = ({ visible = true, message = 'Preparing workspace' }) => {
                 </div>
 
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.28em]" style={{ color: 'var(--loader-accent-color)' }}>
-                    Krama
+                    Kramaa
                 </p>
                 <p className="text-xs font-medium tracking-[0.12em]" style={{ color: 'var(--loader-message-color)' }}>
                     {message}

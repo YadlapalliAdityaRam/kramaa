@@ -47,7 +47,7 @@ const Login = () => {
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <h2 className="gradient-text" style={{ fontSize: '2rem', marginBottom: '10px' }}>Welcome Back</h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to AlgoVerse to continue</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to Kramaa to continue</p>
                 </div>
 
                 {error && (

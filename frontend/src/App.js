@@ -180,8 +180,8 @@ const AppContent = () => {
       }
     };
 
-    window.addEventListener('algoverse:auth-expired', onAuthExpired);
-    return () => window.removeEventListener('algoverse:auth-expired', onAuthExpired);
+    window.addEventListener('krama:auth-expired', onAuthExpired);
+    return () => window.removeEventListener('krama:auth-expired', onAuthExpired);
   }, [dispatch, location.pathname, navigate]);
 
   useEffect(() => {
@@ -386,7 +386,7 @@ const AppContent = () => {
             </PageTransition>
           </>
         )}
-        <LoaderOverlay visible={showInitialLoader} message="AlgoVerse" />
+        <LoaderOverlay visible={showInitialLoader} message="Kramaa" />
       </div >
     </NetworkStatusHandler>
   );
