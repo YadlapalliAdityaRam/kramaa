@@ -2154,6 +2154,141 @@ public:
     }
 }`
     },
+    nQueens: {
+        javascript: `function solveNQueens(n) {
+    const board = Array(n).fill(-1);
+    const cols = new Set();
+    const diag1 = new Set();
+    const diag2 = new Set();
+    const solutions = [];
+
+    function backtrack(row) {
+        if (row === n) {
+            solutions.push([...board]);
+            return;
+        }
+
+        for (let col = 0; col < n; col++) {
+            const d1 = row - col;
+            const d2 = row + col;
+            if (cols.has(col) || diag1.has(d1) || diag2.has(d2)) continue;
+
+            board[row] = col;
+            cols.add(col);
+            diag1.add(d1);
+            diag2.add(d2);
+
+            backtrack(row + 1);
+
+            board[row] = -1;
+            cols.delete(col);
+            diag1.delete(d1);
+            diag2.delete(d2);
+        }
+    }
+
+    backtrack(0);
+    return solutions;
+}`,
+        python: `def solve_n_queens(n):
+    board = [-1] * n
+    cols = set()
+    diag1 = set()
+    diag2 = set()
+    solutions = []
+
+    def backtrack(row):
+        if row == n:
+            solutions.append(board[:])
+            return
+
+        for col in range(n):
+            d1 = row - col
+            d2 = row + col
+            if col in cols or d1 in diag1 or d2 in diag2:
+                continue
+
+            board[row] = col
+            cols.add(col)
+            diag1.add(d1)
+            diag2.add(d2)
+
+            backtrack(row + 1)
+
+            board[row] = -1
+            cols.remove(col)
+            diag1.remove(d1)
+            diag2.remove(d2)
+
+    backtrack(0)
+    return solutions`,
+        cpp: `vector<vector<int>> solveNQueens(int n) {
+    vector<vector<int>> solutions;
+    vector<int> board(n, -1);
+    vector<bool> cols(n, false);
+    vector<bool> diag1(2 * n - 1, false);
+    vector<bool> diag2(2 * n - 1, false);
+
+    function<void(int)> backtrack = [&](int row) {
+        if (row == n) {
+            solutions.push_back(board);
+            return;
+        }
+
+        for (int col = 0; col < n; col++) {
+            int d1 = row - col + n - 1;
+            int d2 = row + col;
+            if (cols[col] || diag1[d1] || diag2[d2]) continue;
+
+            board[row] = col;
+            cols[col] = diag1[d1] = diag2[d2] = true;
+
+            backtrack(row + 1);
+
+            board[row] = -1;
+            cols[col] = diag1[d1] = diag2[d2] = false;
+        }
+    };
+
+    backtrack(0);
+    return solutions;
+}`,
+        java: `public List<List<Integer>> solveNQueens(int n) {
+    List<List<Integer>> solutions = new ArrayList<>();
+    int[] board = new int[n];
+    Arrays.fill(board, -1);
+    boolean[] cols = new boolean[n];
+    boolean[] diag1 = new boolean[2 * n - 1];
+    boolean[] diag2 = new boolean[2 * n - 1];
+
+    backtrack(0, n, board, cols, diag1, diag2, solutions);
+    return solutions;
+}
+
+private void backtrack(int row, int n, int[] board, boolean[] cols,
+        boolean[] diag1, boolean[] diag2, List<List<Integer>> solutions) {
+    if (row == n) {
+        List<Integer> placement = new ArrayList<>();
+        for (int col : board) placement.add(col);
+        solutions.add(placement);
+        return;
+    }
+
+    for (int col = 0; col < n; col++) {
+        int d1 = row - col + n - 1;
+        int d2 = row + col;
+        if (cols[col] || diag1[d1] || diag2[d2]) continue;
+
+        board[row] = col;
+        cols[col] = diag1[d1] = diag2[d2] = true;
+
+        backtrack(row + 1, n, board, cols, diag1, diag2, solutions);
+
+        board[row] = -1;
+        cols[col] = diag1[d1] = diag2[d2] = false;
+    }
+}`
+    },
     fibonacciSearch: {
         javascript: `function fibonacciSearch(arr, x, n) {
     let fib2 = 0;

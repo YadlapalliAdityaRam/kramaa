@@ -158,7 +158,10 @@ export const algorithmLineMaps = {
         java: { tree: 17, 'tree-complete': 23 }
     },
     nQueens: {
-        javascript: { compare: 5, backtrack: 20, completed: 13 }
+        javascript: { compare: 17, swap: 26, backtrack: 26, completed: 10, info: 1 },
+        python: { compare: 16, swap: 26, backtrack: 26, completed: 10, info: 1 },
+        cpp: { compare: 17, swap: 24, backtrack: 24, completed: 10, info: 1 },
+        java: { compare: 25, swap: 32, backtrack: 32, completed: 18, info: 1 }
     },
     sieve: {
         javascript: { compare: 4, mark: 8, completed: 11 }

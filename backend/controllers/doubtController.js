@@ -59,6 +59,27 @@ const normalizeImageUrl = (rawUrl) => {
     return url;
 };
 
+const normalizePopulatedUser = (rawUser) => {
+    if (!rawUser || typeof rawUser !== 'object') return rawUser;
+
+    const avatar = normalizeImageUrl(rawUser.avatar);
+    return {
+        ...rawUser,
+        avatar: avatar && !/(^|\/)default-avatar\.png$/i.test(String(avatar).trim()) ? avatar : null
+    };
+};
+
+const normalizeDoubtPayload = (rawDoubt) => {
+    if (!rawDoubt || typeof rawDoubt !== 'object') return rawDoubt;
+
+    const doubt = rawDoubt;
+    doubt.imageUrl = normalizeImageUrl(doubt.imageUrl);
+    if (doubt.user && typeof doubt.user === 'object') {
+        doubt.user = normalizePopulatedUser(doubt.user);
+    }
+    return doubt;
+};
+
 // Check if discussions are enabled globally
 const isDiscussionEnabled = async () => {
     const setting = await Setting.findOne({ key: 'discussionsEnabled' });
@@ -171,7 +192,7 @@ exports.getCommunityThreads = async (req, res) => {
 
         const processed = threads.map(t => {
             const obj = t.toObject();
-            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+            normalizeDoubtPayload(obj);
             obj.hasLiked = userLikes.includes(t._id.toString());
             obj.hasDisliked = userDislikes.includes(t._id.toString());
             obj.isSaved = savedDoubtIds.has(t._id.toString());
@@ -245,7 +266,7 @@ exports.getMyCommunityPosts = async (req, res) => {
 
         const processed = threads.map((thread) => {
             const obj = thread.toObject();
-            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+            normalizeDoubtPayload(obj);
             obj.hasLiked = userLikes.includes(thread._id.toString());
             obj.hasDisliked = userDislikes.includes(thread._id.toString());
             obj.isSaved = savedDoubtIds.has(thread._id.toString());
@@ -301,7 +322,7 @@ exports.getSavedCommunityThreads = async (req, res) => {
 
         const processed = threads.map((thread) => {
             const obj = thread.toObject();
-            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+            normalizeDoubtPayload(obj);
             obj.hasLiked = userLikes.includes(thread._id.toString());
             obj.hasDisliked = userDislikes.includes(thread._id.toString());
             obj.isSaved = true;
@@ -411,7 +432,7 @@ exports.getDoubts = async (req, res) => {
 
         const processed = doubts.map(d => {
             const obj = d.toObject();
-            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+            normalizeDoubtPayload(obj);
             obj.hasLiked = userLikes.includes(d._id.toString());
             obj.hasDisliked = userDislikes.includes(d._id.toString());
             if (obj.isDeleted) {
@@ -471,7 +492,7 @@ exports.getReplies = async (req, res) => {
 
         const processed = replies.map(r => {
             const obj = r.toObject();
-            obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+            normalizeDoubtPayload(obj);
             obj.hasLiked = userLikes.includes(r._id.toString());
             obj.hasDisliked = userDislikes.includes(r._id.toString());
             if (obj.isDeleted) {
@@ -580,6 +601,11 @@ exports.createDoubt = async (req, res) => {
         });
 
         const populated = await Doubt.findById(newDoubt._id).populate('user', 'username avatar');
+        const createdPayload = normalizeDoubtPayload({
+            ...populated.toObject(),
+            hasLiked: false,
+            hasDisliked: false
+        });
 
         // Emit socket event
         const io = req.app.get('io');
@@ -588,12 +614,12 @@ exports.createDoubt = async (req, res) => {
                 // Emit to problem room
                 io.emit('new_comment', {
                     problemId,
-                    comment: { ...populated.toObject(), hasLiked: false }
+                    comment: createdPayload
                 });
             } else {
                 // Emit to global community
                 io.emit('new_thread', {
-                    thread: { ...populated.toObject(), hasLiked: false, hasDisliked: false }
+                    thread: createdPayload
                 });
             }
         }
@@ -667,7 +693,7 @@ exports.createDoubt = async (req, res) => {
             }
         }
 
-        res.status(201).json({ success: true, doubt: { ...populated.toObject(), hasLiked: false, hasDisliked: false } });
+        res.status(201).json({ success: true, doubt: createdPayload });
     } catch (error) {
         console.error('createDoubt error:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -714,14 +740,15 @@ exports.editDoubt = async (req, res) => {
         await doubt.save();
 
         const populated = await Doubt.findById(doubt._id).populate('user', 'username avatar');
+        const updatedPayload = normalizeDoubtPayload(populated.toObject());
 
         // Emit socket event
         const io = req.app.get('io');
         if (io) {
-            io.emit('edit_comment', { commentId: doubtId, comment: populated.toObject() });
+            io.emit('edit_comment', { commentId: doubtId, comment: updatedPayload });
         }
 
-        res.json({ success: true, doubt: populated });
+        res.json({ success: true, doubt: updatedPayload });
     } catch (error) {
         console.error('editDoubt error:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -1037,7 +1064,7 @@ exports.getThreadDetail = async (req, res) => {
         }
 
         const obj = thread.toObject();
-        obj.imageUrl = normalizeImageUrl(obj.imageUrl);
+        normalizeDoubtPayload(obj);
         obj.hasLiked = hasLiked;
         obj.hasDisliked = hasDisliked;
         obj.isSaved = requesterId ? (await getSavedDoubtIdSet(req, requesterId)).has(thread._id.toString()) : false;

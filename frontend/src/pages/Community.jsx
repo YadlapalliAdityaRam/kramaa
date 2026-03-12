@@ -41,13 +41,16 @@ const CATEGORY_COLORS = {
     Problem: { bg: 'rgba(249,115,22,0.12)', color: '#fb923c', border: 'rgba(249,115,22,0.3)' },
     Official: { bg: 'rgba(236,72,153,0.12)', color: '#ec4899', border: 'rgba(236,72,153,0.3)' },
 };
+const DEFAULT_AVATAR_PATTERN = /(^|\/)default-avatar\.png$/i;
 
 const normalizeUser = (rawUser) => {
     const user = rawUser && typeof rawUser === 'object' ? rawUser : {};
+    const rawAvatar = typeof user.avatar === 'string' ? user.avatar.trim() : '';
     return {
         ...user,
         _id: String(user._id || user.id || ''),
         id: String(user.id || user._id || ''),
+        avatar: rawAvatar && !DEFAULT_AVATAR_PATTERN.test(rawAvatar) ? rawAvatar : '',
         username: typeof user.username === 'string' && user.username.trim()
             ? user.username.trim()
             : 'Unknown'
@@ -83,6 +86,17 @@ const normalizeThreadList = (list) => (
         ? list.map(normalizeThread).filter((item) => Boolean(item._id))
         : []
 );
+
+const normalizeSuggestedUser = (rawEntry) => {
+    const entry = rawEntry && typeof rawEntry === 'object' ? rawEntry : {};
+    const normalizedUser = normalizeUser(entry);
+    return {
+        ...entry,
+        ...normalizedUser,
+        problemsSolved: Number(entry.problemsSolved ?? entry.stats?.totalProblems) || 0,
+        isFollowing: Boolean(entry.isFollowing)
+    };
+};
 
 const stripApiSuffix = (baseUrl) => String(baseUrl || '').replace(/\/api\/?$/, '');
 const joinUrl = (baseUrl, path) => `${String(baseUrl || '').replace(/\/+$/, '')}/${String(path || '').replace(/^\/+/, '')}`;
@@ -201,6 +215,36 @@ const getImageCandidates = (url) => {
     }
 
     return [...new Set(candidates.filter(Boolean))];
+};
+
+const getAvatarFallbackUrl = (username = 'U', size = 32) => (
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(String(username || 'U'))}&background=1a1a2e&color=60a5fa&bold=true&size=${size}`
+);
+
+const getAvatarUrl = (avatar, username = 'U', size = 32) => {
+    const raw = String(avatar || '').trim();
+    if (!raw || DEFAULT_AVATAR_PATTERN.test(raw)) return getAvatarFallbackUrl(username, size);
+    return getImageUrl(raw) || getAvatarFallbackUrl(username, size);
+};
+
+const handleAvatarImageError = (event, originalAvatar, username = 'U', size = 32) => {
+    const img = event.currentTarget;
+    const raw = String(originalAvatar || '').trim();
+    const fallback = getAvatarFallbackUrl(username, size);
+    const candidates = (!raw || DEFAULT_AVATAR_PATTERN.test(raw))
+        ? [fallback]
+        : [...getImageCandidates(raw), fallback];
+    const currentSrc = String(img.getAttribute('src') || '');
+    const currentIndex = candidates.findIndex((candidate) => candidate === currentSrc);
+    const nextSrc = candidates[currentIndex + 1];
+
+    if (nextSrc && nextSrc !== currentSrc) {
+        img.src = nextSrc;
+        return;
+    }
+
+    img.onerror = null;
+    img.src = fallback;
 };
 
 const isPdfAttachment = (url) => /\.pdf(?:$|[?#])/i.test(String(url || '').trim());
@@ -406,7 +450,8 @@ const ThreadCard = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                     <Link to={`/profile/${thread.user?.username}`} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                         <img
-                            src={thread.user?.avatar || `https://ui-avatars.com/api/?name=${thread.user?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=28`}
+                            src={getAvatarUrl(thread.user?.avatar, thread.user?.username, 28)}
+                            onError={(e) => handleAvatarImageError(e, thread.user?.avatar, thread.user?.username, 28)}
                             alt=""
                             style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid rgba(96,165,250,0.4)' }}
                         />
@@ -496,7 +541,8 @@ const ReplyItem = ({ reply, depth = 0, onLike, onReplyClick, onReport, isAuthent
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <Link to={`/profile/${reply.user?.username}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                 <img
-                    src={reply.user?.avatar || `https://ui-avatars.com/api/?name=${reply.user?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=24`}
+                    src={getAvatarUrl(reply.user?.avatar, reply.user?.username, 24)}
+                    onError={(e) => handleAvatarImageError(e, reply.user?.avatar, reply.user?.username, 24)}
                     alt=""
                     style={{ width: 20, height: 20, borderRadius: '50%' }}
                 />
@@ -570,7 +616,7 @@ const ThreadDetail = ({
     const fetchThread = useCallback(async () => {
         try {
             const res = await api.get(`/doubts/${threadId}/detail`);
-            setThread(res.data?.thread || null);
+            setThread(res.data?.thread ? normalizeThread(res.data.thread) : null);
         } catch { toast.error('Failed to load thread'); onBack(); }
     }, [threadId, onBack]);
 
@@ -578,7 +624,7 @@ const ThreadDetail = ({
         try {
             setRepliesLoading(true);
             const res = await api.get(`/doubts/${threadId}/replies`, { params: { page, limit: 20 } });
-            const items = Array.isArray(res.data?.replies) ? res.data.replies : [];
+            const items = normalizeThreadList(res.data?.replies);
             setReplies(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
             setRepliesHasMore(Boolean(res.data?.pagination?.hasMore));
             setRepliesPage(page);
@@ -700,7 +746,8 @@ const ThreadDetail = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', fontSize: '0.88rem' }}>
                     <Link to={`/profile/${thread.user?.username}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
                         <img
-                            src={thread.user?.avatar || `https://ui-avatars.com/api/?name=${thread.user?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=36`}
+                            src={getAvatarUrl(thread.user?.avatar, thread.user?.username, 36)}
+                            onError={(e) => handleAvatarImageError(e, thread.user?.avatar, thread.user?.username, 36)}
                             alt=""
                             style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(96,165,250,0.3)' }}
                         />
@@ -1295,7 +1342,7 @@ const Community = () => {
         try {
             setSuggestedLoading(true);
             const res = await api.get('/suggested-users', { params: { limit: 6 } });
-            const rows = Array.isArray(res.data?.users) ? res.data.users : [];
+            const rows = Array.isArray(res.data?.users) ? res.data.users.map(normalizeSuggestedUser) : [];
             setSuggestedUsers(rows);
             setFollowMap((prev) => {
                 const next = { ...(prev || {}) };
@@ -1904,7 +1951,8 @@ const Community = () => {
                                                             style={{ textDecoration: 'none', color: 'inherit', minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}
                                                         >
                                                             <img
-                                                                src={entry?.avatar || `https://ui-avatars.com/api/?name=${entry?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=40`}
+                                                                src={getAvatarUrl(entry?.avatar, entry?.username, 40)}
+                                                                onError={(e) => handleAvatarImageError(e, entry?.avatar, entry?.username, 40)}
                                                                 alt=""
                                                                 style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(96,165,250,0.35)' }}
                                                             />
