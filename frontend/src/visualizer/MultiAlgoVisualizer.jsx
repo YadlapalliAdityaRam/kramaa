@@ -384,17 +384,6 @@ const ALGORITHM_PARAM_RULES = {
         example: '1, 1',
         mode: 'astar-options'
     },
-    'Sliding Window Technique': {
-        count: 1,
-        label: 'window size',
-        example: '3',
-        mode: 'window-size'
-    },
-    'Two Pointers Technique': {
-        count: 1,
-        label: 'target sum',
-        example: '15'
-    },
     'Longest Common Subsequence': {
         count: 2,
         label: 'string A, string B',
@@ -417,10 +406,10 @@ const resolveParamRule = (algorithm, laneConfig) => {
     if (laneConfig?.canvasType === 'graph') return null;
     const fromAlgorithm = ALGORITHM_PARAM_RULES[algorithm?.name];
     if (fromAlgorithm) return { ...fromAlgorithm };
+    if (laneConfig?.needsTarget) return null;
     const categoryKey = normalizeParamCategory(algorithm?.category);
     const fromCategory = CATEGORY_PARAM_RULES[categoryKey];
     if (fromCategory) return { ...fromCategory };
-    if (laneConfig?.needsTarget) return { ...CATEGORY_PARAM_RULES.searching };
     return null;
 };
 
@@ -574,6 +563,50 @@ const countComparisons = (steps, upto = steps.length - 1) => {
     return count;
 };
 
+const countSlidingWindowChecks = (steps, upto = steps.length - 1) => {
+    let count = 0;
+    for (let i = 0; i <= Math.max(0, Math.min(upto, steps.length - 1)); i += 1) {
+        const step = steps[i];
+        const windowLength = Array.isArray(step?.currentWindowIndices) ? step.currentWindowIndices.length : 0;
+        const isWindowCheck = step?.type === 'best-update'
+            || (step?.type === 'check-window' && windowLength === step?.k);
+        if (isWindowCheck) count += 1;
+    }
+    return count;
+};
+
+const getLaneMetric = (card, upto = card?.stepIndex ?? 0) => {
+    if (!card) return { label: 'Cmp', current: 0, total: 0 };
+    if (card.algorithm?.name === 'Sliding Window Technique') {
+        return {
+            label: 'Windows',
+            current: countSlidingWindowChecks(card.steps, upto),
+            total: countSlidingWindowChecks(card.steps)
+        };
+    }
+    if (card.algorithm?.name === 'Two Pointers Technique') {
+        return {
+            label: 'Pair Checks',
+            current: countComparisons(card.steps, upto),
+            total: countComparisons(card.steps)
+        };
+    }
+    return {
+        label: 'Cmp',
+        current: countComparisons(card.steps, upto),
+        total: countComparisons(card.steps)
+    };
+};
+
+const getDisplayTargetValue = (card) => {
+    if (!card?.needsTarget) return null;
+    const parsed = Number(card.targetInput);
+    if (Number.isFinite(parsed)) {
+        return clampAlgorithmTarget(card.algorithm?.name, card.data, parsed);
+    }
+    return card.searchTarget;
+};
+
 const makeCard = (algorithm, data, overrides = {}) => {
     const config = getLaneConfig(algorithm);
     const generator = config?.generate;
@@ -593,7 +626,7 @@ const makeCard = (algorithm, data, overrides = {}) => {
         : fallbackTarget;
     const paramInput = overrides.paramInput ?? (paramValues.length ? paramValues.join(', ') : '');
     const paramsReady = paramRule?.count ? Boolean(overrides.paramsReady) : true;
-    const syncTargetInput = Boolean(config?.needsTarget) && paramRule?.count === 1 && !overrides.isCustom;
+    const syncTargetInput = Boolean(config?.needsTarget) && !overrides.isCustom && (!paramRule || paramRule.count === 1);
     const startNode = canvasType === 'graph'
         ? resolveGraphStartNode(graphData || defaultGraph, [overrides.startNode])
         : null;
@@ -779,11 +812,14 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
             entries.forEach(({ key, algorithm }) => {
                 const previous = prev[key];
                 const data = previous?.isCustom ? previous.data : globalData;
+                const laneTarget = previous?.isCustom
+                    ? previous.searchTarget
+                    : resolveAlgorithmTargetDefault(algorithm?.name, data);
                 next[key] = makeCard(algorithm, data, {
                     isCustom: previous?.isCustom || false,
                     customInput: previous?.isCustom ? previous.customInput : '',
-                    searchTarget: previous?.isCustom ? previous.searchTarget : globalSearchTarget,
-                    targetInput: previous?.isCustom ? previous.targetInput : String(globalSearchTarget),
+                    searchTarget: laneTarget,
+                    targetInput: previous?.isCustom ? previous.targetInput : String(laneTarget),
                     paramValues: previous?.paramValues,
                     paramInput: previous?.paramInput,
                     paramsReady: previous?.paramsReady,
@@ -906,26 +942,32 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
 
         let prepared = lane;
 
-        if (prepared?.needsTarget && prepared?.paramRule?.count === 1 && !prepared.paramsReady) {
+        if (prepared?.needsTarget) {
             const parsedTarget = Number(prepared.targetInput);
             const autoTarget = Number.isFinite(parsedTarget)
                 ? clampAlgorithmTarget(prepared.algorithm?.name, prepared.data, parsedTarget)
                 : resolveAlgorithmTargetDefault(prepared.algorithm?.name, prepared.data);
-            prepared = makeCard(prepared.algorithm, prepared.data, {
-                isCustom: prepared.isCustom,
-                customInput: prepared.customInput,
-                searchTarget: autoTarget,
-                targetInput: String(autoTarget),
-                paramValues: [autoTarget],
-                paramInput: String(autoTarget),
-                paramsReady: true,
-                graphData: prepared.graphData,
-                startNode: prepared.startNode,
-                speed: prepared.speed,
-                status: prepared.status,
-                stepIndex: prepared.stepIndex,
-                elapsedMs: prepared.elapsedMs
-            });
+            const shouldSyncTarget = prepared.searchTarget !== autoTarget
+                || prepared.targetInput !== String(autoTarget)
+                || (prepared.paramRule?.count === 1 && prepared.paramValues?.[0] !== autoTarget);
+
+            if (shouldSyncTarget || (prepared.paramRule?.count === 1 && !prepared.paramsReady)) {
+                prepared = makeCard(prepared.algorithm, prepared.data, {
+                    isCustom: prepared.isCustom,
+                    customInput: prepared.customInput,
+                    searchTarget: autoTarget,
+                    targetInput: String(autoTarget),
+                    paramValues: prepared.paramRule?.count === 1 ? [autoTarget] : prepared.paramValues,
+                    paramInput: prepared.paramRule?.count === 1 ? String(autoTarget) : prepared.paramInput,
+                    paramsReady: prepared.paramRule?.count === 1 ? true : prepared.paramsReady,
+                    graphData: prepared.graphData,
+                    startNode: prepared.startNode,
+                    speed: prepared.speed,
+                    status: prepared.status,
+                    stepIndex: prepared.stepIndex,
+                    elapsedMs: prepared.elapsedMs
+                });
+            }
         }
 
         if (prepared?.paramRule?.count > 0 && !prepared.paramsReady) {
@@ -979,7 +1021,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
 
     const runAll = () => {
         if (isMultiComparison && !comparisonInputReady) {
-            setGlobalError('For multi-algorithm comparison, enter input and click Set Data, or click Random Data first.');
+            setGlobalError('For multi-algorithm comparison, enter input and click Set Data, or use Random & Run.');
             return;
         }
         if (anyRunning || !supportedKeys.length) return;
@@ -1140,12 +1182,6 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontWeight: 500 }}>Start one lane or run all lanes to compare performance side-by-side.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <button type="button" className="control-btn" onClick={newGlobalData} disabled={anyRunning} title="Generate new random array for all algorithms">
-                        Random Data
-                    </button>
-                    <button type="button" className="control-btn" onClick={randomizeAllParams} disabled={anyRunning || !pendingParamKeys.length} title="Randomize extra parameters for all lanes">
-                        Random Params All
-                    </button>
                     <button type="button" className="control-btn play-btn" onClick={randomRunAll} disabled={anyRunning || !supportedKeys.length} title="Randomize everything and run all algorithms">
                         Random & Run
                     </button>
@@ -1163,21 +1199,12 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     border: '1px solid rgba(251, 191, 36, 0.45)',
                     background: 'rgba(251, 191, 36, 0.12)',
                     display: 'flex',
-                    justifyContent: 'space-between',
                     gap: '10px',
                     flexWrap: 'wrap'
                 }}>
                     <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                        Extra parameters required for {pendingParamKeys.length} lane{pendingParamKeys.length > 1 ? 's' : ''}. Enter parameters or generate random parameters.
+                        Extra parameters required for {pendingParamKeys.length} lane{pendingParamKeys.length > 1 ? 's' : ''}. Enter parameters in each lane or use that lane's Random Params button.
                     </span>
-                    <button
-                        type="button"
-                        className="control-btn play-btn"
-                        onClick={randomizeAllParams}
-                        disabled={anyRunning}
-                    >
-                        Random Params All
-                    </button>
                 </div>
             )}
 
@@ -1205,9 +1232,12 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     const compare = step?.type === 'compare' ? (step.indices || []) : [];
                     const active = step?.type !== 'compare' ? (step?.indices || []) : [];
                     const sorted = step?.sortedIndices || (step?.type === 'completed' ? array.map((_, i) => i) : []);
-                    const liveComp = countComparisons(card.steps, card.stepIndex);
+                    const laneMetric = getLaneMetric(card, card.stepIndex);
                     const isWinner = key === winnerKey;
                     const laneIsRunning = card.status === 'running';
+                    const targetMeta = getTargetFieldMeta(card.algorithm?.name, card.canvasType);
+                    const displayTarget = getDisplayTargetValue(card);
+                    const isPointerTechnique = card.algorithm?.name === 'Two Pointers Technique' || card.algorithm?.name === 'Sliding Window Technique';
 
                     const renderLaneCanvas = () => {
                         if (!card.isSupported) return null;
@@ -1280,7 +1310,16 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 />
                             );
                         }
-                        return <AnimationCanvas array={array} currentIndices={active} compareIndices={compare} sortedIndices={sorted} />;
+                        return (
+                            <AnimationCanvas
+                                array={array}
+                                currentIndices={active}
+                                compareIndices={compare}
+                                sortedIndices={sorted}
+                                algorithmName={card.algorithm?.name || ''}
+                                currentStep={step}
+                            />
+                        );
                     };
 
                     return (
@@ -1328,16 +1367,19 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                             <div
                                 style={{
                                     display: 'grid',
-                                    gridTemplateColumns: card.paramRule
-                                        ? (isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))')
-                                        : (isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'),
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                                     gap: '8px',
                                     margin: '10px 0'
                                 }}
                             >
                                 <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>Step: {card.stepIndex}/{Math.max(card.steps.length - 1, 0)}</div>
                                 <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>Time: {formatTime(card.elapsedMs)}</div>
-                                <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>Cmp: {liveComp}/{card.totalComparisons}</div>
+                                <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>{laneMetric.label}: {laneMetric.current}/{laneMetric.total}</div>
+                                {card.needsTarget && (
+                                    <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                        {targetMeta.label}: {displayTarget ?? '-'}
+                                    </div>
+                                )}
                                 {card.paramRule && (
                                     <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
                                         Params: {formatParamSummary(card)}
@@ -1347,7 +1389,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
 
                             {card.isSupported ? (
                                 <>
-                                    <div style={{ height: isMobile ? '220px' : '300px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px', marginBottom: '10px', overflow: 'auto', background: 'var(--viz-input-bg, #1e1e1e)' }}>
+                                    <div style={{ minHeight: isPointerTechnique ? (isMobile ? '250px' : '300px') : undefined, height: isPointerTechnique ? 'auto' : (isMobile ? '220px' : '300px'), border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px', marginBottom: '10px', overflow: 'auto', background: 'var(--viz-input-bg, #1e1e1e)' }}>
                                         {step?.arraySnapshot && (
                                             <InputArrayDisplay arraySnapshot={step.arraySnapshot} activeArrayIndex={step.activeArrayIndex} />
                                         )}
@@ -1411,16 +1453,19 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                         if (laneIsRunning) return;
                                         setCards((prev) => ({
                                             ...prev,
-                                            [key]: makeCard(prev[key].algorithm, globalData, {
-                                                searchTarget: globalSearchTarget,
-                                                targetInput: prev[key].isCustom ? prev[key].targetInput : undefined,
-                                                paramValues: prev[key].paramValues,
-                                                paramInput: prev[key].paramInput,
-                                                paramsReady: prev[key].paramsReady,
-                                                graphData: prev[key].graphData,
-                                                startNode: prev[key].startNode,
-                                                speed: prev[key].speed
-                                            })
+                                            [key]: (() => {
+                                                const resetTarget = resolveAlgorithmTargetDefault(prev[key].algorithm?.name, globalData);
+                                                return makeCard(prev[key].algorithm, globalData, {
+                                                    searchTarget: prev[key].isCustom ? prev[key].searchTarget : resetTarget,
+                                                    targetInput: prev[key].isCustom ? prev[key].targetInput : String(resetTarget),
+                                                    paramValues: prev[key].paramValues,
+                                                    paramInput: prev[key].paramInput,
+                                                    paramsReady: prev[key].paramsReady,
+                                                    graphData: prev[key].graphData,
+                                                    startNode: prev[key].startNode,
+                                                    speed: prev[key].speed
+                                                });
+                                            })()
                                         }));
                                     }}
                                     disabled={laneIsRunning || (card.canvasType !== 'graph' && !card.isCustom)}
@@ -1627,22 +1672,27 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 </>
                             ) : (
                                 <>
-                                    <div style={{ display: 'flex', gap: '6px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                                         <input
                                             value={card.customInput}
                                             disabled={laneIsRunning}
                                             onChange={(e) => updateCard(key, (current) => ({ ...current, customInput: e.target.value }))}
                                             placeholder={card.canvasType === 'string' ? "Text string" : "e.g. 50, 10, 20 (max 10)"}
-                                            style={INPUT_STYLE}
+                                            style={{ ...INPUT_STYLE, flex: '1 1 180px' }}
                                         />
                                         {card.needsTarget && (
-                                            <input
-                                                value={card.targetInput}
-                                                disabled={laneIsRunning}
-                                                onChange={(e) => updateCard(key, (current) => ({ ...current, targetInput: e.target.value }))}
-                                                placeholder={getTargetFieldMeta(card.algorithm?.name, card.canvasType).placeholder}
-                                                style={{ ...INPUT_STYLE, maxWidth: '100px' }}
-                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: isMobile ? '1 1 100%' : '0 0 124px' }}>
+                                                <label style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                                                    {targetMeta.label}
+                                                </label>
+                                                <input
+                                                    value={card.targetInput}
+                                                    disabled={laneIsRunning}
+                                                    onChange={(e) => updateCard(key, (current) => ({ ...current, targetInput: e.target.value }))}
+                                                    placeholder={targetMeta.placeholder}
+                                                    style={{ ...INPUT_STYLE, width: '100%' }}
+                                                />
+                                            </div>
                                         )}
                                         <button
                                             type="button"
@@ -1655,7 +1705,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                                 if (parsed.error) return setGlobalError(`${card.algorithm?.name}: ${parsed.error}`);
                                                 setGlobalError('');
                                                 const laneTarget = (!isStr && Number.isFinite(Number(card.targetInput)))
-                                                    ? Math.round(Number(card.targetInput))
+                                                    ? clampAlgorithmTarget(card.algorithm?.name, parsed.values, Number(card.targetInput))
                                                     : (isStr ? card.targetInput : resolveAlgorithmTargetDefault(card.algorithm?.name, parsed.values));
                                                 setCards((prev) => ({
                                                     ...prev,

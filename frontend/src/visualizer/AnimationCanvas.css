@@ -8,6 +8,56 @@
     align-items: flex-end;
 }
 
+.animation-canvas--cards {
+    align-items: stretch;
+    min-height: 230px;
+}
+
+.algorithm-info-strip {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.algorithm-info-chip {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.algorithm-info-chip--blue {
+    color: #93c5fd;
+}
+
+.algorithm-info-chip--yellow {
+    color: #fde68a;
+}
+
+.algorithm-info-chip--green {
+    color: #86efac;
+}
+
+.algorithm-info-chip--best {
+    color: #bbf7d0;
+}
+
+.algorithm-info-chip--target {
+    color: #f8fafc;
+}
+
+.algorithm-info-chip--full {
+    color: #cbd5e1;
+    flex: 1 1 100%;
+}
+
 .bars-container {
     display: flex;
     align-items: flex-end;
@@ -17,6 +67,15 @@
     gap: 6px;
 }
 
+.bars-container--cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    align-items: stretch;
+    gap: 12px;
+    height: auto;
+    padding: 6px 0 4px;
+}
+
 .array-bar {
     flex: 1;
     margin: 0 4px;
@@ -24,9 +83,23 @@
     display: flex;
     justify-content: center;
     position: relative;
-    /* transition: height 0.3s ease; - handled by Framer Motion layout prop now */
     min-width: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.array-bar--card {
+    min-height: 104px;
+    height: auto !important;
+    margin: 0;
+    border-radius: 18px;
+    align-items: center;
+    padding: 34px 10px 30px;
+    overflow: hidden;
+}
+
+.array-bar--discarded .bar-value {
+    opacity: 0.78;
+    text-decoration: line-through;
 }
 
 .bar-value {
@@ -37,6 +110,62 @@
     font-weight: 600;
     width: 100%;
     text-align: center;
+}
+
+.array-bar--card .bar-value {
+    position: static;
+    bottom: auto;
+    font-size: 1rem;
+    color: #f8fafc;
+    line-height: 1.1;
+}
+
+.array-index {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(248, 250, 252, 0.82);
+}
+
+.array-status-badge {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #0f172a;
+}
+
+.array-status-badge--active {
+    background: rgba(250, 204, 21, 0.88);
+}
+
+.array-status-badge--discarded {
+    background: rgba(203, 213, 225, 0.88);
+}
+
+.array-status-badge--found,
+.array-status-badge--best {
+    background: rgba(134, 239, 172, 0.92);
+}
+
+.array-status-badge--window {
+    background: rgba(147, 197, 253, 0.92);
+}
+
+.array-status-badge--incoming {
+    background: rgba(253, 224, 71, 0.92);
+}
+
+.array-status-badge--outgoing {
+    background: rgba(252, 165, 165, 0.92);
 }
 
 .bar-pointer {
@@ -52,7 +181,6 @@
 }
 
 @keyframes bounce {
-
     0%,
     100% {
         transform: translateY(0);
@@ -63,10 +191,33 @@
     }
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .animation-canvas {
         min-height: 250px;
+    }
+
+    .animation-canvas--cards {
+        min-height: 180px;
+    }
+
+    .algorithm-info-strip {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .algorithm-info-chip {
+        flex: 1 1 calc(50% - 8px);
+        font-size: 0.78rem;
+        padding: 7px 10px;
+    }
+
+    .algorithm-info-chip--full {
+        flex-basis: 100%;
+    }
+
+    .bars-container--cards {
+        grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+        gap: 8px;
     }
 
     .array-bar {
@@ -74,9 +225,23 @@
         min-width: 8px;
     }
 
+    .array-bar--card {
+        min-height: 88px;
+        padding: 30px 8px 24px;
+    }
+
     .bar-value {
         font-size: 0.65rem;
         bottom: -20px;
+    }
+
+    .array-bar--card .bar-value {
+        font-size: 0.92rem;
+    }
+
+    .array-index,
+    .array-status-badge {
+        font-size: 0.54rem;
     }
 
     .bar-pointer {
