@@ -5,17 +5,18 @@ import api, { getCurrentApiBaseUrl } from '../utils/api';
 import toast from 'react-hot-toast';
 import ReportModal from '../components/common/ReportModal';
 import SkeletonCard from '../components/common/SkeletonCard';
+import FollowButton from '../components/social/FollowButton';
 import {
     FaPlus, FaSearch, FaComment, FaEye, FaHeart, FaTimes,
     FaArrowLeft, FaReply, FaSortAmountDown, FaFire, FaClock,
     FaRegHeart, FaRegComment, FaUserCircle, FaHashtag, FaImage,
-    FaThumbsDown, FaRegThumbsDown, FaShareAlt, FaFlag, FaBookmark, FaRegBookmark, FaTrash
+    FaThumbsDown, FaRegThumbsDown, FaShareAlt, FaFlag, FaBookmark, FaRegBookmark, FaTrash, FaUsers, FaFileAlt, FaExternalLinkAlt
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Helpers
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const relativeTime = (date) => {
     const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
     if (seconds < 60) return 'just now';
@@ -41,13 +42,52 @@ const CATEGORY_COLORS = {
     Official: { bg: 'rgba(236,72,153,0.12)', color: '#ec4899', border: 'rgba(236,72,153,0.3)' },
 };
 
+const normalizeUser = (rawUser) => {
+    const user = rawUser && typeof rawUser === 'object' ? rawUser : {};
+    return {
+        ...user,
+        _id: String(user._id || user.id || ''),
+        id: String(user.id || user._id || ''),
+        username: typeof user.username === 'string' && user.username.trim()
+            ? user.username.trim()
+            : 'Unknown'
+    };
+};
+
+const normalizeThread = (rawThread) => {
+    const thread = rawThread && typeof rawThread === 'object' ? rawThread : {};
+    const normalizedTags = Array.isArray(thread.tags)
+        ? thread.tags.filter(Boolean)
+        : (typeof thread.tags === 'string'
+            ? thread.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+            : []);
+
+    return {
+        ...thread,
+        _id: String(thread._id || thread.id || ''),
+        id: String(thread.id || thread._id || ''),
+        title: typeof thread.title === 'string' ? thread.title : '',
+        content: typeof thread.content === 'string' ? thread.content : '',
+        tags: normalizedTags,
+        user: normalizeUser(thread.user),
+        repliesCount: Number(thread.repliesCount) || 0,
+        likesCount: Number(thread.likesCount) || 0,
+        dislikesCount: Number(thread.dislikesCount) || 0,
+        views: Number(thread.views) || 0,
+        createdAt: thread.createdAt || new Date().toISOString()
+    };
+};
+
+const normalizeThreadList = (list) => (
+    Array.isArray(list)
+        ? list.map(normalizeThread).filter((item) => Boolean(item._id))
+        : []
+);
+
 const stripApiSuffix = (baseUrl) => String(baseUrl || '').replace(/\/api\/?$/, '');
+const joinUrl = (baseUrl, path) => `${String(baseUrl || '').replace(/\/+$/, '')}/${String(path || '').replace(/^\/+/, '')}`;
 
-const getImageUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (!url.startsWith('/')) return url;
-
+const getBackendBaseUrl = () => {
     // Prefer explicit env base URL in production.
     const configuredApiUrl = String(
         import.meta.env.VITE_API_URL ||
@@ -55,22 +95,170 @@ const getImageUrl = (url) => {
         ''
     ).trim().replace(/\/+$/, '');
     const configuredBaseUrl = configuredApiUrl ? stripApiSuffix(configuredApiUrl) : '';
-    if (configuredBaseUrl) return `${configuredBaseUrl}${url}`;
+    if (configuredBaseUrl) return configuredBaseUrl;
+
+    // Secondary fallback: explicit backend/socket host.
+    const configuredBackendUrl = String(
+        import.meta.env.VITE_SOCKET_URL ||
+        import.meta.env.VITE_BACKEND_URL ||
+        ''
+    ).trim().replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(configuredBackendUrl)) {
+        return stripApiSuffix(configuredBackendUrl);
+    }
 
     // Fall back to runtime API base used by axios.
     const runtimeApiBaseUrl = String(getCurrentApiBaseUrl() || '').trim().replace(/\/+$/, '');
     if (/^https?:\/\//i.test(runtimeApiBaseUrl)) {
-        return `${stripApiSuffix(runtimeApiBaseUrl)}${url}`;
+        return stripApiSuffix(runtimeApiBaseUrl);
     }
 
-    // Same-origin fallback (works with Netlify /uploads proxy redirects).
-    if (typeof window !== 'undefined') return `${window.location.origin}${url}`;
-    return url;
+    // Same-origin fallback.
+    if (typeof window !== 'undefined') return String(window.location.origin || '').replace(/\/+$/, '');
+    return '';
 };
 
-/* ─────────────────────────────────────────────
+const normalizeUploadPath = (rawPath) => {
+    let path = String(rawPath || '').trim().replace(/\\/g, '/');
+    if (!path) return '';
+
+    // Remove leading ./ and convert legacy "public/uploads/*" to "/uploads/*".
+    path = path.replace(/^\.\//, '');
+    path = path.replace(/^public\/uploads\//i, '/uploads/');
+    path = path.replace(/^\/public\/uploads\//i, '/uploads/');
+
+    if (/^uploads\//i.test(path)) return `/${path}`;
+    if (/^\/uploads\//i.test(path)) return path;
+    return path;
+};
+
+const toApiUploadPath = (normalizedPath) => {
+    const pathValue = String(normalizedPath || '').trim();
+    if (!pathValue.startsWith('/uploads/')) return null;
+    return `/api${pathValue}`;
+};
+
+const getImageUrl = (url) => {
+    if (!url) return null;
+    const raw = String(url).trim();
+    if (!raw) return null;
+    if (/^(data:|blob:)/i.test(raw)) return raw;
+
+    // Normalize the path first
+    const normalizedPath = normalizeUploadPath(raw);
+
+    // Upload assets are stored on the backend. Prefer the backend-hosted absolute URL first so
+    // deployed frontends (for example Vercel) do not start with a broken /uploads request.
+    if (normalizedPath.startsWith('/uploads/')) {
+        const backendBaseUrl = getBackendBaseUrl();
+        if (backendBaseUrl) return joinUrl(backendBaseUrl, normalizedPath);
+
+        const apiUploadPath = toApiUploadPath(normalizedPath);
+        if (apiUploadPath) return apiUploadPath;
+
+        return normalizedPath;
+    }
+
+    if (/^https?:\/\//i.test(raw)) {
+        try {
+            const parsed = new URL(raw);
+            const path = normalizeUploadPath(`${parsed.pathname}${parsed.search || ''}`);
+            if (path.startsWith('/uploads/')) {
+                const backendBaseUrl = getBackendBaseUrl();
+                if (backendBaseUrl) return joinUrl(backendBaseUrl, path);
+
+                const apiUploadPath = toApiUploadPath(path);
+                return apiUploadPath || path;
+            }
+            return raw;
+        } catch (error) {
+            // Fall through
+        }
+    }
+
+    return normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+};
+
+const getImageCandidates = (url) => {
+    const raw = String(url || '').trim();
+    if (!raw) return [];
+
+    const candidates = [];
+    const preferred = getImageUrl(raw);
+    if (preferred) candidates.push(preferred);
+    if (raw && raw !== preferred) candidates.push(raw);
+
+    const normalizedPath = normalizeUploadPath(raw);
+    if (normalizedPath.startsWith('/')) {
+        const backendBaseUrl = getBackendBaseUrl();
+        if (backendBaseUrl) candidates.push(joinUrl(backendBaseUrl, normalizedPath));
+
+        const apiUploadPath = toApiUploadPath(normalizedPath);
+        if (apiUploadPath) candidates.push(apiUploadPath);
+
+        if (typeof window !== 'undefined') candidates.push(joinUrl(window.location.origin, normalizedPath));
+        candidates.push(normalizedPath);
+    }
+
+    return [...new Set(candidates.filter(Boolean))];
+};
+
+const isPdfAttachment = (url) => /\.pdf(?:$|[?#])/i.test(String(url || '').trim());
+
+const getAttachmentFallbackDataUrl = (label = 'Attachment unavailable') => {
+    const safeLabel = String(label || 'Attachment unavailable');
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="280" fill="url(#bg)"/>
+  <rect x="26" y="26" width="588" height="228" rx="14" fill="none" stroke="#334155" stroke-width="2"/>
+  <circle cx="120" cy="140" r="28" fill="#1d4ed8" opacity="0.25"/>
+  <text x="320" y="130" text-anchor="middle" fill="#cbd5e1" font-size="22" font-family="Arial, sans-serif">Image could not be loaded</text>
+  <text x="320" y="164" text-anchor="middle" fill="#93c5fd" font-size="18" font-family="Arial, sans-serif">${safeLabel}</text>
+</svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const getAttachmentHref = (url) => {
+    const resolved = getImageUrl(url);
+    if (resolved) return resolved;
+    const normalizedPath = normalizeUploadPath(url);
+    if (!normalizedPath) return '';
+    if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+    if (normalizedPath.startsWith('/')) {
+        const backendBaseUrl = getBackendBaseUrl();
+        if (backendBaseUrl) return joinUrl(backendBaseUrl, normalizedPath);
+        if (typeof window !== 'undefined') return joinUrl(window.location.origin, normalizedPath);
+    }
+    return normalizedPath;
+};
+
+const handleAttachmentImageError = (event, originalUrl) => {
+    const img = event.currentTarget;
+    const candidates = getImageCandidates(originalUrl);
+    const currentSrc = String(img.getAttribute('src') || '');
+    const currentIndex = candidates.findIndex((candidate) => candidate === currentSrc);
+    const nextSrc = candidates[currentIndex + 1];
+
+    if (nextSrc && nextSrc !== currentSrc) {
+        img.src = nextSrc;
+        return;
+    }
+
+    img.onerror = null;
+    img.src = getAttachmentFallbackDataUrl('Open from source if needed');
+    img.style.objectFit = 'contain';
+    img.style.background = 'rgba(2,6,23,0.72)';
+};
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Shared Styles
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const glass = {
     background: 'rgba(255,255,255,0.03)',
     border: '1px solid rgba(255,255,255,0.06)',
@@ -90,13 +278,34 @@ const inputStyle = {
     transition: 'border-color 0.2s',
 };
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Thread Card (list view)
-   ───────────────────────────────────────────── */
-const ThreadCard = ({ thread, onClick, onLike, onShare, onReport, onToggleSave, onDeleteThread, currentUserId, isAuthenticated }) => {
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+const ThreadCard = ({
+    thread,
+    onClick,
+    onLike,
+    onShare,
+    onReport,
+    onToggleSave,
+    onDeleteThread,
+    currentUserId,
+    currentUsername = '',
+    isAuthenticated,
+    followState = false,
+    onFollowStateChange
+}) => {
     const cat = CATEGORY_COLORS[thread.category] || CATEGORY_COLORS.General;
     const ownerId = (thread.user?._id || thread.user?.id || '').toString();
     const canDelete = Boolean(currentUserId) && ownerId === currentUserId;
+    const safeTags = Array.isArray(thread.tags) ? thread.tags : [];
+    const resolvedAttachmentUrl = getImageUrl(thread.imageUrl);
+    const ownerUsername = String(thread.user?.username || '').trim().toLowerCase();
+    const normalizedCurrentUsername = String(currentUsername || '').trim().toLowerCase();
+    const isSelfAuthor = Boolean(
+        (ownerId && currentUserId && ownerId === String(currentUserId || '')) ||
+        (ownerUsername && normalizedCurrentUsername && ownerUsername === normalizedCurrentUsername)
+    );
 
     return (
         <motion.div
@@ -135,14 +344,56 @@ const ThreadCard = ({ thread, onClick, onLike, onShare, onReport, onToggleSave, 
             {/* Thumbnail preview if image exists */}
             {thread.imageUrl && (
                 <div style={{ marginBottom: '16px', borderRadius: '8px', overflow: 'hidden', height: '120px', background: 'rgba(0,0,0,0.2)' }}>
-                    <img src={getImageUrl(thread.imageUrl)} alt="attachment preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {isPdfAttachment(thread.imageUrl) ? (
+                        <a
+                            href={getAttachmentHref(thread.imageUrl)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                textDecoration: 'none',
+                                color: '#e2e8f0',
+                                background: 'linear-gradient(135deg, rgba(59,130,246,0.16), rgba(168,85,247,0.18))',
+                                fontWeight: 600
+                            }}
+                        >
+                            <FaFileAlt />
+                            Open PDF Attachment
+                            <FaExternalLinkAlt size={11} />
+                        </a>
+                    ) : resolvedAttachmentUrl ? (
+                        <img
+                            src={resolvedAttachmentUrl}
+                            alt="attachment preview"
+                            onError={(e) => handleAttachmentImageError(e, thread.imageUrl)}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    ) : (
+                        <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#94a3b8',
+                            fontSize: '0.82rem'
+                        }}>
+                            Attachment unavailable
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* Tags */}
-            {thread.tags?.length > 0 && (
+            {safeTags.length > 0 && (
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                    {thread.tags.map((t, i) => (
+                    {safeTags.map((t, i) => (
                         <span key={i} style={{ fontSize: '0.72rem', background: 'rgba(255,255,255,0.06)', padding: '2px 10px', borderRadius: '6px', color: '#8b9cb5' }}>
                             #{t}
                         </span>
@@ -151,17 +402,30 @@ const ThreadCard = ({ thread, onClick, onLike, onShare, onReport, onToggleSave, 
             )}
 
             {/* Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', color: '#6b7280' }}>
-                <Link to={`/profile/${thread.user?.username}`} onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                    <img
-                        src={thread.user?.avatar || `https://ui-avatars.com/api/?name=${thread.user?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=28`}
-                        alt=""
-                        style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid rgba(96,165,250,0.4)' }}
-                    />
-                    <span style={{ color: '#60a5fa', fontWeight: 500, cursor: 'pointer' }}>{thread.user?.username || 'Unknown'}</span>
-                    <span style={{ color: '#6b7280' }}>•</span>
-                    <span style={{ color: '#6b7280' }}>{relativeTime(thread.createdAt)}</span>
-                </Link>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', color: '#6b7280', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <Link to={`/profile/${thread.user?.username}`} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                        <img
+                            src={thread.user?.avatar || `https://ui-avatars.com/api/?name=${thread.user?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=28`}
+                            alt=""
+                            style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid rgba(96,165,250,0.4)' }}
+                        />
+                        <span style={{ color: '#60a5fa', fontWeight: 500, cursor: 'pointer' }}>{thread.user?.username || 'Unknown'}</span>
+                        <span style={{ color: '#6b7280' }}>•</span>
+                        <span style={{ color: '#6b7280' }}>{relativeTime(thread.createdAt)}</span>
+                    </Link>
+                    {ownerId && !isSelfAuthor && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <FollowButton
+                                targetUserId={ownerId}
+                                isSelf={isSelfAuthor}
+                                initialFollowing={Boolean(followState)}
+                                size="sm"
+                                onStateChange={onFollowStateChange}
+                            />
+                        </div>
+                    )}
+                </div>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><FaEye size={12} /> {thread.views || 0}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><FaRegComment size={12} /> {thread.repliesCount || 0}</span>
@@ -213,9 +477,9 @@ const ThreadCard = ({ thread, onClick, onLike, onShare, onReport, onToggleSave, 
     );
 };
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Reply Component (recursive nesting)
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const ReplyItem = ({ reply, depth = 0, onLike, onReplyClick, onReport, isAuthenticated }) => (
     <motion.div
         initial={{ opacity: 0, x: -10 }}
@@ -237,7 +501,7 @@ const ReplyItem = ({ reply, depth = 0, onLike, onReplyClick, onReport, isAuthent
                     style={{ width: 20, height: 20, borderRadius: '50%' }}
                 />
                 <span style={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer' }}>{reply.user?.username}</span>
-                <span style={{ color: '#6b7280', fontSize: '0.78rem' }}>• {relativeTime(reply.createdAt)}</span>
+                <span style={{ color: '#6b7280', fontSize: '0.78rem' }}>â€¢ {relativeTime(reply.createdAt)}</span>
                 {reply.isEdited && <span style={{ color: '#6b7280', fontSize: '0.7rem', fontStyle: 'italic' }}>(edited)</span>}
             </Link>
         </div>
@@ -275,10 +539,24 @@ const ReplyItem = ({ reply, depth = 0, onLike, onReplyClick, onReport, isAuthent
     </motion.div>
 );
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Thread Detail View
-   ───────────────────────────────────────────── */
-const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onReport, onToggleSave, onDeleteThread, currentUserId, savedThreadIds = [] }) => {
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+const ThreadDetail = ({
+    threadId,
+    onBack,
+    isAuthenticated,
+    onLike,
+    onShare,
+    onReport,
+    onToggleSave,
+    onDeleteThread,
+    currentUserId,
+    currentUsername = '',
+    savedThreadIds = [],
+    followState = false,
+    onFollowStateChange
+}) => {
     const [thread, setThread] = useState(null);
     const [replies, setReplies] = useState([]);
     const [replyText, setReplyText] = useState('');
@@ -381,6 +659,14 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
     const safeReplies = Array.isArray(replies) ? replies : [];
     const threadOwnerId = (thread.user?._id || thread.user?.id || '').toString();
     const canDeleteThread = Boolean(currentUserId) && threadOwnerId === currentUserId;
+    const safeTags = Array.isArray(thread.tags) ? thread.tags : [];
+    const resolvedAttachmentUrl = getImageUrl(thread.imageUrl);
+    const threadOwnerUsername = String(thread.user?.username || '').trim().toLowerCase();
+    const normalizedCurrentUsername = String(currentUsername || '').trim().toLowerCase();
+    const isSelfAuthor = Boolean(
+        (threadOwnerId && currentUserId && threadOwnerId === String(currentUserId || '')) ||
+        (threadOwnerUsername && normalizedCurrentUsername && threadOwnerUsername === normalizedCurrentUsername)
+    );
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -420,16 +706,25 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
                         />
                         <div>
                             <span style={{ color: '#60a5fa', fontWeight: 600 }}>{thread.user?.username}</span>
-                            <span style={{ color: '#6b7280', marginLeft: '8px' }}>• {relativeTime(thread.createdAt)}</span>
+                            <span style={{ color: '#6b7280', marginLeft: '8px' }}>â€¢ {relativeTime(thread.createdAt)}</span>
                             {thread.isEdited && <span style={{ color: '#6b7280', marginLeft: '8px', fontStyle: 'italic', fontSize: '0.8rem' }}>(edited)</span>}
                         </div>
                     </Link>
+                    {threadOwnerId && !isSelfAuthor && (
+                        <FollowButton
+                            targetUserId={threadOwnerId}
+                            isSelf={isSelfAuthor}
+                            initialFollowing={Boolean(followState)}
+                            size="sm"
+                            onStateChange={onFollowStateChange}
+                        />
+                    )}
                 </div>
 
                 {/* Tags */}
-                {thread.tags?.length > 0 && (
+                {safeTags.length > 0 && (
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                        {thread.tags.map((t, i) => (
+                        {safeTags.map((t, i) => (
                             <span key={i} style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.06)', padding: '4px 12px', borderRadius: '8px', color: '#8b9cb5', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <FaHashtag size={10} />{t}
                             </span>
@@ -445,7 +740,53 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
                 {/* Attached Image */}
                 {thread.imageUrl && (
                     <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <img src={getImageUrl(thread.imageUrl)} alt="attachment" style={{ width: '100%', maxHeight: '600px', objectFit: 'contain', background: 'rgba(0,0,0,0.4)', display: 'block' }} />
+                        {isPdfAttachment(thread.imageUrl) ? (
+                            <a
+                                href={getAttachmentHref(thread.imageUrl)}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                    width: '100%',
+                                    minHeight: '92px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '16px 18px',
+                                    gap: '12px',
+                                    textDecoration: 'none',
+                                    color: '#e2e8f0',
+                                    background: 'rgba(15,23,42,0.55)'
+                                }}
+                            >
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                                    <FaFileAlt />
+                                    Attachment (PDF)
+                                </span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#93c5fd', fontWeight: 600 }}>
+                                    Open
+                                    <FaExternalLinkAlt size={12} />
+                                </span>
+                            </a>
+                        ) : resolvedAttachmentUrl ? (
+                            <img
+                                src={resolvedAttachmentUrl}
+                                alt="attachment"
+                                onError={(e) => handleAttachmentImageError(e, thread.imageUrl)}
+                                style={{ width: '100%', maxHeight: '600px', objectFit: 'contain', background: 'rgba(0,0,0,0.4)', display: 'block' }}
+                            />
+                        ) : (
+                            <div style={{
+                                minHeight: '90px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#94a3b8',
+                                fontSize: '0.9rem',
+                                background: 'rgba(15,23,42,0.45)'
+                            }}>
+                                Attachment unavailable
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -583,9 +924,9 @@ const ThreadDetail = ({ threadId, onBack, isAuthenticated, onLike, onShare, onRe
     );
 };
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Create Thread Modal
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const COMPANY_TAGS = ['Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Netflix'];
 
 const CreateThreadModal = ({ isOpen, onClose, onSuccess, isAuthenticated }) => {
@@ -679,7 +1020,7 @@ const CreateThreadModal = ({ isOpen, onClose, onSuccess, isAuthenticated }) => {
                 }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 700 }}>🚀 Start a Discussion</h2>
+                    <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 700 }}>ðŸš€ Start a Discussion</h2>
                     <motion.button whileHover={{ rotate: 90 }} onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}><FaTimes /></motion.button>
                 </div>
 
@@ -759,7 +1100,7 @@ const CreateThreadModal = ({ isOpen, onClose, onSuccess, isAuthenticated }) => {
                                     <img src={imagePreview} alt="preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', display: 'block' }} />
                                 ) : (
                                     <div style={{ padding: '20px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', textAlign: 'center' }}>
-                                        📄 {image?.name}
+                                        ðŸ“„ {image?.name}
                                     </div>
                                 )}
                                 <button type="button" onClick={removeImage} style={{
@@ -794,9 +1135,9 @@ const CreateThreadModal = ({ isOpen, onClose, onSuccess, isAuthenticated }) => {
     );
 };
 
-/* ─────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Main Community Component
-   ───────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const Community = () => {
     const { isAuthenticated, user } = useSelector(state => state.auth);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -820,7 +1161,11 @@ const Community = () => {
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
+    const [followMap, setFollowMap] = useState({});
+    const [suggestedUsers, setSuggestedUsers] = useState([]);
+    const [suggestedLoading, setSuggestedLoading] = useState(false);
     const currentUserId = (user?._id || user?.id || '').toString();
+    const currentUsername = String(user?.username || '').trim();
     const isMobile = viewportWidth <= 768;
     const isTablet = viewportWidth > 768 && viewportWidth <= 1100;
 
@@ -830,7 +1175,7 @@ const Community = () => {
             const res = await api.get('/doubts/community', {
                 params: { page: pageNum, limit: 15, sort: sortOption, category: categoryFilter }
             });
-            const items = Array.isArray(res.data?.threads) ? res.data.threads : [];
+            const items = normalizeThreadList(res.data?.threads);
             setThreads(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
             setHasMore(Boolean(res.data?.pagination?.hasMore));
             setPage(pageNum);
@@ -870,7 +1215,7 @@ const Community = () => {
             const res = await api.get('/doubts/my-posts', {
                 params: { page: pageNum, limit: 8, sort: 'latest' }
             });
-            const items = Array.isArray(res.data?.threads) ? res.data.threads : [];
+            const items = normalizeThreadList(res.data?.threads);
             setYourThreads(prev => reset ? items : [...(Array.isArray(prev) ? prev : []), ...items]);
             setYourHasMore(Boolean(res.data?.pagination?.hasMore));
             setYourPage(pageNum);
@@ -893,7 +1238,7 @@ const Community = () => {
         try {
             setSavedLoading(true);
             const res = await api.get('/doubts/saved');
-            setSavedThreads(Array.isArray(res.data?.threads) ? res.data.threads : []);
+            setSavedThreads(normalizeThreadList(res.data?.threads));
         } catch {
             if (!silent) toast.error('Failed to load saved posts');
         } finally {
@@ -904,6 +1249,74 @@ const Community = () => {
     useEffect(() => {
         fetchSavedThreads();
     }, [fetchSavedThreads]);
+
+    const fetchFollowMap = useCallback(async () => {
+        if (!isAuthenticated || !currentUserId) {
+            setFollowMap({});
+            return;
+        }
+
+        try {
+            let pageNum = 1;
+            let hasMorePages = true;
+            const maxPages = 5;
+            const nextMap = {};
+
+            while (hasMorePages && pageNum <= maxPages) {
+                const res = await api.get(`/following/${currentUserId}`, {
+                    params: { page: pageNum, limit: 100 }
+                });
+                const rows = Array.isArray(res.data?.users) ? res.data.users : [];
+                rows.forEach((row) => {
+                    if (row?._id) nextMap[String(row._id)] = true;
+                });
+
+                const totalPages = Number(res.data?.pagination?.pages || 1);
+                hasMorePages = pageNum < totalPages;
+                pageNum += 1;
+            }
+
+            setFollowMap(nextMap);
+        } catch (error) {
+            setFollowMap({});
+        }
+    }, [isAuthenticated, currentUserId]);
+
+    useEffect(() => {
+        fetchFollowMap();
+    }, [fetchFollowMap]);
+
+    const fetchSuggestedUsers = useCallback(async () => {
+        if (!isAuthenticated) {
+            setSuggestedUsers([]);
+            return;
+        }
+
+        try {
+            setSuggestedLoading(true);
+            const res = await api.get('/suggested-users', { params: { limit: 6 } });
+            const rows = Array.isArray(res.data?.users) ? res.data.users : [];
+            setSuggestedUsers(rows);
+            setFollowMap((prev) => {
+                const next = { ...(prev || {}) };
+                rows.forEach((entry) => {
+                    const uid = String(entry?._id || '');
+                    if (uid && entry?.isFollowing !== undefined) {
+                        next[uid] = Boolean(entry.isFollowing);
+                    }
+                });
+                return next;
+            });
+        } catch (error) {
+            setSuggestedUsers([]);
+        } finally {
+            setSuggestedLoading(false);
+        }
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+        fetchSuggestedUsers();
+    }, [fetchSuggestedUsers]);
 
     useEffect(() => {
         const onResize = () => setViewportWidth(window.innerWidth);
@@ -974,6 +1387,20 @@ const Community = () => {
         }
     };
 
+    const handleAuthorFollowStateChange = useCallback((authorId, nextState) => {
+        const normalizedAuthorId = String(authorId || '');
+        if (!normalizedAuthorId) return;
+        setFollowMap((prev) => ({
+            ...(prev || {}),
+            [normalizedAuthorId]: Boolean(nextState)
+        }));
+        setSuggestedUsers((prev) => (Array.isArray(prev) ? prev : []).map((entry) => (
+            String(entry?._id || '') === normalizedAuthorId
+                ? { ...entry, isFollowing: Boolean(nextState) }
+                : entry
+        )));
+    }, []);
+
     const handleDeleteThread = async (threadId) => {
         if (!isAuthenticated) return toast.error('Login to delete your post');
         const confirmed = window.confirm('Delete this post? This action cannot be undone.');
@@ -1014,10 +1441,21 @@ const Community = () => {
     const safeThreads = Array.isArray(threads) ? threads : [];
     const safeYourThreads = Array.isArray(yourThreads) ? yourThreads : [];
     const safeSavedThreads = Array.isArray(savedThreads) ? savedThreads : [];
-    const filteredThreads = searchQuery
-        ? safeThreads.filter(t => t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || t.content?.toLowerCase().includes(searchQuery.toLowerCase()))
+    const normalizedSearch = String(searchQuery || '').trim().toLowerCase();
+    const filteredThreads = normalizedSearch
+        ? safeThreads.filter((t) => (
+            String(t?.title || '').toLowerCase().includes(normalizedSearch) ||
+            String(t?.content || '').toLowerCase().includes(normalizedSearch)
+        ))
         : safeThreads;
-    const savedThreadIds = safeSavedThreads.map(t => t._id);
+    const visibleThreads = Array.isArray(filteredThreads) ? filteredThreads : [];
+    const savedThreadIds = safeSavedThreads
+        .map((t) => String(t?._id || ''))
+        .filter(Boolean);
+    const activeThreadSummary = [...safeThreads, ...safeYourThreads, ...safeSavedThreads]
+        .find((item) => item?._id === activeThreadId);
+    const activeThreadAuthorId = String(activeThreadSummary?.user?._id || activeThreadSummary?.user?.id || '');
+    const activeThreadFollowState = Boolean(followMap[activeThreadAuthorId]);
 
     // If a thread is active, show detail view
     if (activeThreadId) {
@@ -1036,7 +1474,12 @@ const Community = () => {
                             onToggleSave={handleToggleSave}
                             onDeleteThread={handleDeleteThread}
                             currentUserId={currentUserId}
+                            currentUsername={currentUsername}
                             savedThreadIds={savedThreadIds}
+                            followState={activeThreadFollowState}
+                            onFollowStateChange={(nextState) => {
+                                handleAuthorFollowStateChange(activeThreadAuthorId, nextState);
+                            }}
                         />
                     </AnimatePresence>
                 </div>
@@ -1057,7 +1500,7 @@ const Community = () => {
         <div className="main-content">
             <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
 
-                {/* ── Header ── */}
+                {/* â”€â”€ Header â”€â”€ */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{
@@ -1091,7 +1534,7 @@ const Community = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: isTablet || isMobile ? '1fr' : '1fr 320px', gap: isMobile ? '18px' : '32px', alignItems: 'start' }}>
 
-                    {/* ── Main Feed ── */}
+                    {/* â”€â”€ Main Feed â”€â”€ */}
                     <div>
                         {/* Search + Sort bar */}
                         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
@@ -1161,9 +1604,9 @@ const Community = () => {
                                 ) : (
                                     <div style={{ minHeight: '240px' }} />
                                 )
-                            ) : filteredThreads.length > 0 ? (
+                            ) : visibleThreads.length > 0 ? (
                                 [
-                                    ...filteredThreads.map(thread => (
+                                    ...visibleThreads.map(thread => (
                                         <ThreadCard
                                             key={thread._id}
                                             thread={thread}
@@ -1174,7 +1617,10 @@ const Community = () => {
                                             onToggleSave={handleToggleSave}
                                             onDeleteThread={handleDeleteThread}
                                             currentUserId={currentUserId}
+                                            currentUsername={currentUsername}
                                             isAuthenticated={isAuthenticated}
+                                            followState={Boolean(followMap[String(thread.user?._id || thread.user?.id || '')])}
+                                            onFollowStateChange={(nextState) => handleAuthorFollowStateChange(String(thread.user?._id || thread.user?.id || ''), nextState)}
                                         />
                                     )),
                                     hasMore && !searchQuery && (
@@ -1206,7 +1652,7 @@ const Community = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* ── Sidebar ── */}
+                    {/* â”€â”€ Sidebar â”€â”€ */}
                     <div style={{ position: isTablet || isMobile ? 'static' : 'sticky', top: '100px' }}>
                         {/* Your Posts */}
                         {isAuthenticated && (
@@ -1239,11 +1685,31 @@ const Community = () => {
                                                     onClick={() => openThreadDetail(thread._id)}
                                                 >
                                                     {thread.imageUrl ? (
-                                                        <img
-                                                            src={getImageUrl(thread.imageUrl)}
-                                                            alt={thread.title || 'Post'}
-                                                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                                                        />
+                                                        isPdfAttachment(thread.imageUrl) ? (
+                                                            <div
+                                                                style={{
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    flexDirection: 'column',
+                                                                    gap: '6px',
+                                                                    background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(168,85,247,0.22))',
+                                                                    color: '#e2e8f0'
+                                                                }}
+                                                            >
+                                                                <FaFileAlt size={20} />
+                                                                <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>PDF</span>
+                                                            </div>
+                                                        ) : (
+                                                            <img
+                                                                src={getImageUrl(thread.imageUrl)}
+                                                                alt={thread.title || 'Post'}
+                                                                onError={(e) => handleAttachmentImageError(e, thread.imageUrl)}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                                            />
+                                                        )
                                                     ) : (
                                                         <div style={{
                                                             width: '100%',
@@ -1406,6 +1872,68 @@ const Community = () => {
                             </div>
                         )}
 
+                        {/* Suggested Coders */}
+                        {isAuthenticated && (
+                            <div style={{ ...glass, padding: '20px', marginBottom: '20px' }}>
+                                <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '14px', color: '#e0e0e0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FaUsers size={13} style={{ color: '#60a5fa' }} /> Suggested Coders
+                                </h3>
+
+                                {suggestedLoading ? (
+                                    <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>Loading suggestions...</div>
+                                ) : suggestedUsers.length === 0 ? (
+                                    <div style={{ color: '#6b7280', fontSize: '0.84rem' }}>No suggestions right now.</div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {suggestedUsers.slice(0, 6).map((entry) => {
+                                            const uid = String(entry?._id || '');
+                                            const isSelf = uid && uid === currentUserId;
+                                            return (
+                                                <div
+                                                    key={uid || entry?.username}
+                                                    style={{
+                                                        border: '1px solid rgba(255,255,255,0.08)',
+                                                        borderRadius: '10px',
+                                                        padding: '10px',
+                                                        background: 'rgba(255,255,255,0.02)'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                                        <Link
+                                                            to={`/profile/${entry?.username || ''}`}
+                                                            style={{ textDecoration: 'none', color: 'inherit', minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}
+                                                        >
+                                                            <img
+                                                                src={entry?.avatar || `https://ui-avatars.com/api/?name=${entry?.username || 'U'}&background=1a1a2e&color=60a5fa&bold=true&size=40`}
+                                                                alt=""
+                                                                style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(96,165,250,0.35)' }}
+                                                            />
+                                                            <div style={{ minWidth: 0 }}>
+                                                                <div style={{ color: '#e5e7eb', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                    {entry?.username || 'Unknown'}
+                                                                </div>
+                                                                <div style={{ color: '#6b7280', fontSize: '0.72rem' }}>
+                                                                    {Number(entry?.problemsSolved || 0)} solved
+                                                                </div>
+                                                            </div>
+                                                        </Link>
+
+                                                        <FollowButton
+                                                            targetUserId={uid}
+                                                            isSelf={isSelf}
+                                                            initialFollowing={Boolean(followMap[uid] ?? entry?.isFollowing)}
+                                                            size="sm"
+                                                            onStateChange={(nextState) => handleAuthorFollowStateChange(uid, nextState)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Trending Tags */}
                         <div style={{ ...glass, padding: '24px', marginBottom: '20px' }}>
                             <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '16px', color: '#e0e0e0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1435,7 +1963,7 @@ const Community = () => {
                             background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(168,85,247,0.08))',
                             border: '1px solid rgba(96,165,250,0.1)'
                         }}>
-                            <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '16px', color: '#e0e0e0', fontWeight: 600 }}>📊 Community Stats</h3>
+                            <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '16px', color: '#e0e0e0', fontWeight: 600 }}>ðŸ“Š Community Stats</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.88rem' }}>
                                     <span>Total Threads</span>
@@ -1450,7 +1978,7 @@ const Community = () => {
 
                         {/* Rules */}
                         <div style={{ ...glass, padding: '24px' }}>
-                            <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '12px', color: '#e0e0e0', fontWeight: 600 }}>📜 Community Rules</h3>
+                            <h3 style={{ marginTop: 0, fontSize: '1.05rem', marginBottom: '12px', color: '#e0e0e0', fontWeight: 600 }}>ðŸ“œ Community Rules</h3>
                             <ul style={{ margin: 0, paddingLeft: '16px', color: '#6b7280', fontSize: '0.82rem', lineHeight: 1.8 }}>
                                 <li>Be respectful and constructive</li>
                                 <li>No spam or self-promotion</li>
@@ -1491,3 +2019,4 @@ const Community = () => {
 };
 
 export default Community;
+
