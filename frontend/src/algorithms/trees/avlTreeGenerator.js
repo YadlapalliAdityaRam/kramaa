@@ -34,7 +34,15 @@ export const generateAVLTreeSteps = (values) => {
     let _vals = values;
     let _activeIdx = 0;
 
-    const addSnapshot = (desc, extraStates = {}, rotationType = null) => {
+    const getChildEdges = (node) => {
+        if (!node) return [];
+        const edges = [];
+        if (node.left) edges.push({ from: node.id, to: node.left.id });
+        if (node.right) edges.push({ from: node.id, to: node.right.id });
+        return edges;
+    };
+
+    const addSnapshot = (desc, extraStates = {}, rotationType = null, highlightEdges = []) => {
         steps.push({
             type: 'tree',
             description: desc,
@@ -43,7 +51,8 @@ export const generateAVLTreeSteps = (values) => {
             balances: { ...balances },
             arraySnapshot: [..._vals],
             activeArrayIndex: _activeIdx,
-            rotationType
+            rotationType,
+            highlightEdges
         });
     };
 
@@ -94,12 +103,28 @@ export const generateAVLTreeSteps = (values) => {
 
         let newlyAdded = null;
         if (val < node.val) {
-            addSnapshot(`Traversing left from ${node.val} to insert ${val}`);
+            addSnapshot(
+                `Traversing left from ${node.val} to insert ${val}`,
+                {
+                    [node.id]: 'visiting',
+                    ...(node.left ? { [node.left.id]: 'visiting' } : {})
+                },
+                null,
+                node.left ? [{ from: node.id, to: node.left.id }] : []
+            );
             const result = insert(node.left, val);
             node.left = result.node;
             newlyAdded = result.newlyAdded;
         } else if (val > node.val) {
-            addSnapshot(`Traversing right from ${node.val} to insert ${val}`);
+            addSnapshot(
+                `Traversing right from ${node.val} to insert ${val}`,
+                {
+                    [node.id]: 'visiting',
+                    ...(node.right ? { [node.right.id]: 'visiting' } : {})
+                },
+                null,
+                node.right ? [{ from: node.id, to: node.right.id }] : []
+            );
             const result = insert(node.right, val);
             node.right = result.node;
             newlyAdded = result.newlyAdded;
@@ -114,34 +139,76 @@ export const generateAVLTreeSteps = (values) => {
 
         // Update Heights Snapshot
         nodeStates[node.id] = 'updating';
-        addSnapshot(`Updated height and balance for node ${node.val}. Balance is ${balance}`);
+        addSnapshot(
+            `Updated height and balance for node ${node.val}. Balance is ${balance}`,
+            { [node.id]: 'updating' },
+            null,
+            getChildEdges(node)
+        );
         nodeStates[node.id] = 'default';
 
         // Detect Imbalance
         if (balance > 1 || balance < -1) {
             nodeStates[node.id] = 'unbalanced';
-            addSnapshot(`Imbalance detected at node ${node.val}! Balance factor is ${balance}`);
+            addSnapshot(
+                `Imbalance detected at node ${node.val}! Balance factor is ${balance}`,
+                { [node.id]: 'unbalanced' },
+                null,
+                getChildEdges(node)
+            );
             
             // Left Left Case
             if (balance > 1 && val < node.left.val) {
                 nodeStates[node.left.id] = 'rotating';
-                addSnapshot(`Balance factor of node ${node.val} is +2. Left-Left imbalance detected. Performing RIGHT rotation on ${node.val}.`, {}, 'LL Rotation');
+                addSnapshot(
+                    `Balance factor of node ${node.val} is +2. Left-Left imbalance detected. Performing RIGHT rotation on ${node.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        [node.left.id]: 'rotating'
+                    },
+                    'LL Rotation',
+                    [{ from: node.id, to: node.left.id }]
+                );
                 const newRoot = rightRotate(node);
                 nodeStates[newRoot.id] = 'balanced';
                 if (newRoot.right) nodeStates[newRoot.right.id] = 'balanced';
                 root = updateCurrentRootIfMatch(node, newRoot); // Crucial for mid-tree updates not acting as root unexpectedly if we are returning up tree, but wait, we only want to update `root` locally if this node was `root`. We'll just return `newRoot`.
-                addSnapshot(`Right rotation complete! Tree is balanced.`, {}, 'LL Rotation');
+                addSnapshot(
+                    `Right rotation complete! Tree is balanced.`,
+                    {
+                        [newRoot.id]: 'balanced',
+                        ...(newRoot.right ? { [newRoot.right.id]: 'balanced' } : {})
+                    },
+                    'LL Rotation',
+                    getChildEdges(newRoot)
+                );
                 return { node: newRoot, newlyAdded };
             }
 
             // Right Right Case
             if (balance < -1 && val > node.right.val) {
                 nodeStates[node.right.id] = 'rotating';
-                addSnapshot(`Balance factor of node ${node.val} is -2. Right-Right imbalance detected. Performing LEFT rotation on ${node.val}.`, {}, 'RR Rotation');
+                addSnapshot(
+                    `Balance factor of node ${node.val} is -2. Right-Right imbalance detected. Performing LEFT rotation on ${node.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        [node.right.id]: 'rotating'
+                    },
+                    'RR Rotation',
+                    [{ from: node.id, to: node.right.id }]
+                );
                 const newRoot = leftRotate(node);
                 nodeStates[newRoot.id] = 'balanced';
                 if (newRoot.left) nodeStates[newRoot.left.id] = 'balanced';
-                addSnapshot(`Left rotation complete! Tree is balanced.`, {}, 'RR Rotation');
+                addSnapshot(
+                    `Left rotation complete! Tree is balanced.`,
+                    {
+                        [newRoot.id]: 'balanced',
+                        ...(newRoot.left ? { [newRoot.left.id]: 'balanced' } : {})
+                    },
+                    'RR Rotation',
+                    getChildEdges(newRoot)
+                );
                 return { node: newRoot, newlyAdded };
             }
 
@@ -149,15 +216,44 @@ export const generateAVLTreeSteps = (values) => {
             if (balance > 1 && val > node.left.val) {
                 nodeStates[node.left.id] = 'rotating';
                 if (node.left.right) nodeStates[node.left.right.id] = 'rotating';
-                addSnapshot(`Balance factor of node ${node.val} is +2. Left-Right imbalance detected. First, performing LEFT rotation on child ${node.left.val}.`, {}, 'LR Rotation');
+                addSnapshot(
+                    `Balance factor of node ${node.val} is +2. Left-Right imbalance detected. First, performing LEFT rotation on child ${node.left.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        [node.left.id]: 'rotating',
+                        ...(node.left.right ? { [node.left.right.id]: 'rotating' } : {})
+                    },
+                    'LR Rotation',
+                    [
+                        { from: node.id, to: node.left.id },
+                        ...(node.left.right ? [{ from: node.left.id, to: node.left.right.id }] : [])
+                    ]
+                );
                 node.left = leftRotate(node.left);
-                addSnapshot(`Left rotation on child complete. Now performing RIGHT rotation on ${node.val}.`, {}, 'LR Rotation');
+                addSnapshot(
+                    `Left rotation on child complete. Now performing RIGHT rotation on ${node.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        ...(node.left ? { [node.left.id]: 'rotating' } : {})
+                    },
+                    'LR Rotation',
+                    node.left ? [{ from: node.id, to: node.left.id }] : []
+                );
                 
                 const newRoot = rightRotate(node);
                 nodeStates[newRoot.id] = 'balanced';
                 if (newRoot.left) nodeStates[newRoot.left.id] = 'balanced';
                 if (newRoot.right) nodeStates[newRoot.right.id] = 'balanced';
-                addSnapshot(`Right rotation complete! Tree is balanced.`, {}, 'LR Rotation');
+                addSnapshot(
+                    `Right rotation complete! Tree is balanced.`,
+                    {
+                        [newRoot.id]: 'balanced',
+                        ...(newRoot.left ? { [newRoot.left.id]: 'balanced' } : {}),
+                        ...(newRoot.right ? { [newRoot.right.id]: 'balanced' } : {})
+                    },
+                    'LR Rotation',
+                    getChildEdges(newRoot)
+                );
                 return { node: newRoot, newlyAdded };
             }
 
@@ -165,15 +261,44 @@ export const generateAVLTreeSteps = (values) => {
             if (balance < -1 && val < node.right.val) {
                 nodeStates[node.right.id] = 'rotating';
                 if (node.right.left) nodeStates[node.right.left.id] = 'rotating';
-                addSnapshot(`Balance factor of node ${node.val} is -2. Right-Left imbalance detected. First, performing RIGHT rotation on child ${node.right.val}.`, {}, 'RL Rotation');
+                addSnapshot(
+                    `Balance factor of node ${node.val} is -2. Right-Left imbalance detected. First, performing RIGHT rotation on child ${node.right.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        [node.right.id]: 'rotating',
+                        ...(node.right.left ? { [node.right.left.id]: 'rotating' } : {})
+                    },
+                    'RL Rotation',
+                    [
+                        { from: node.id, to: node.right.id },
+                        ...(node.right.left ? [{ from: node.right.id, to: node.right.left.id }] : [])
+                    ]
+                );
                 node.right = rightRotate(node.right);
-                addSnapshot(`Right rotation on child complete. Now performing LEFT rotation on ${node.val}.`, {}, 'RL Rotation');
+                addSnapshot(
+                    `Right rotation on child complete. Now performing LEFT rotation on ${node.val}.`,
+                    {
+                        [node.id]: 'unbalanced',
+                        ...(node.right ? { [node.right.id]: 'rotating' } : {})
+                    },
+                    'RL Rotation',
+                    node.right ? [{ from: node.id, to: node.right.id }] : []
+                );
 
                 const newRoot = leftRotate(node);
                 nodeStates[newRoot.id] = 'balanced';
                 if (newRoot.left) nodeStates[newRoot.left.id] = 'balanced';
                 if (newRoot.right) nodeStates[newRoot.right.id] = 'balanced';
-                addSnapshot(`Left rotation complete! Tree is balanced.`, {}, 'RL Rotation');
+                addSnapshot(
+                    `Left rotation complete! Tree is balanced.`,
+                    {
+                        [newRoot.id]: 'balanced',
+                        ...(newRoot.left ? { [newRoot.left.id]: 'balanced' } : {}),
+                        ...(newRoot.right ? { [newRoot.right.id]: 'balanced' } : {})
+                    },
+                    'RL Rotation',
+                    getChildEdges(newRoot)
+                );
                 return { node: newRoot, newlyAdded };
             }
         }
@@ -189,7 +314,8 @@ export const generateAVLTreeSteps = (values) => {
         nodeStates: {},
         balances: {},
         arraySnapshot: [...values],
-        activeArrayIndex: -1
+        activeArrayIndex: -1,
+        highlightEdges: []
     });
 
     for (let i = 0; i < values.length; i++) {
@@ -206,7 +332,12 @@ export const generateAVLTreeSteps = (values) => {
         if (result.newlyAdded) {
             // Need to add final snapshot with inserted node highlighted in yellow
             nodeStates[result.newlyAdded.id] = 'inserted';
-            addSnapshot(`Node ${val} successfully inserted and tree is balanced.`);
+            addSnapshot(
+                `Node ${val} successfully inserted and tree is balanced.`,
+                { [result.newlyAdded.id]: 'inserted' },
+                null,
+                []
+            );
         }
     }
 
@@ -219,7 +350,8 @@ export const generateAVLTreeSteps = (values) => {
         nodeStates: {},
         balances: { ...balances },
         arraySnapshot: [...values],
-        activeArrayIndex: -1
+        activeArrayIndex: -1,
+        highlightEdges: []
     });
 
     return steps;

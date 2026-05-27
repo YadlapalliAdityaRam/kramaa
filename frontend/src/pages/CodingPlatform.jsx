@@ -452,6 +452,13 @@ const CodingPlatform = () => {
         (Array.isArray(dailyCalendar?.challenges) ? dailyCalendar.challenges : [])
             .map((item) => [item.date, item])
     );
+    const calendarAnimationKey = [
+        calendarYear,
+        calendarMonth,
+        (Array.isArray(dailyCalendar?.challenges) ? dailyCalendar.challenges : [])
+            .map((item) => `${item.date}:${item.solved ? '1' : '0'}`)
+            .join('|')
+    ].join(':');
 
     const challengeCalendarCells = [];
     for (let i = 0; i < firstDayWeekOffset; i++) {
@@ -757,7 +764,13 @@ const CodingPlatform = () => {
                             ))}
                         </div>
 
-                        <div className="cp-calendar-grid">
+                        <motion.div
+                            key={calendarAnimationKey}
+                            className="cp-calendar-grid"
+                            initial={{ opacity: 0.6, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.22, ease: 'easeOut' }}
+                        >
                             {challengeCalendarCells.map((cell, index) => {
                                 if (!cell) {
                                     return <div key={`blank-${index}`} className="cp-calendar-cell empty" />;
@@ -787,7 +800,7 @@ const CodingPlatform = () => {
                                     </Link>
                                 );
                             })}
-                        </div>
+                        </motion.div>
 
                         <div className="cp-calendar-legend">
                             <span><span className="cp-legend-dot solved">&#10003;</span> Solved</span>

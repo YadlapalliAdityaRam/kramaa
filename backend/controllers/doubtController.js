@@ -34,16 +34,51 @@ const sanitizeInput = (text) => {
         .replace(/'/g, '&#039;');
 };
 
-const normalizeImageUrl = (rawUrl) => {
-    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+const EMBEDDED_UPLOAD_PATH_PATTERN = /(?:^|\/)(?:public\/)?(?:api\/)?uploads\/.+$/i;
 
-    let url = rawUrl.trim().replace(/\\/g, '/');
+const normalizeStoredUploadPath = (rawValue) => {
+    let url = String(rawValue || '').trim().replace(/\\/g, '/');
     if (!url) return null;
 
     url = url.replace(/^\.\/+/, '');
+    const embeddedUploadMatch = !/^https?:\/\//i.test(url)
+        ? url.match(EMBEDDED_UPLOAD_PATH_PATTERN)
+        : null;
+    if (embeddedUploadMatch) {
+        url = embeddedUploadMatch[0];
+    }
+
     url = url.replace(/^public\/uploads\//i, '/uploads/');
     url = url.replace(/^\/public\/uploads\//i, '/uploads/');
+    url = url.replace(/^api\/uploads\//i, '/uploads/');
+    url = url.replace(/^\/api\/uploads\//i, '/uploads/');
     if (/^uploads\//i.test(url)) url = `/${url}`;
+
+    return url;
+};
+
+const normalizeImageUrl = (rawUrl) => {
+    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+
+    let url = rawUrl.trim();
+    if (!url) return null;
+
+    if (/^https?:\/\//i.test(url)) {
+        try {
+            const parsed = new URL(url);
+            const normalizedPath = normalizeStoredUploadPath(`${parsed.pathname}${parsed.search || ''}`);
+            if (normalizedPath && normalizedPath.startsWith('/uploads/')) {
+                url = normalizedPath;
+            } else {
+                return rawUrl.trim();
+            }
+        } catch (error) {
+            // Fall back to plain string normalization below.
+        }
+    }
+
+    url = normalizeStoredUploadPath(url);
+    if (!url) return null;
 
     const publicBackendBaseUrl = String(
         process.env.PUBLIC_BACKEND_URL

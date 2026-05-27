@@ -9,6 +9,7 @@ import {
     FaCoins,
     FaCog,
     FaUser,
+    FaEnvelope,
     FaBars,
     FaTimes,
     FaCode
@@ -19,6 +20,8 @@ import ThemeToggle from '../ThemeToggle';
 import { algorithmList } from '../../../data/algorithmsData';
 import './Navbar.css';
 import './SearchSuggestions.css';
+
+const CONTACT_EMAIL = 'y23cs193@rvrjc.ac.in';
 
 const Navbar = () => {
     const location = useLocation();
@@ -75,6 +78,13 @@ const Navbar = () => {
     const navigateAndClose = (path) => {
         navigate(path);
         closeProfileDrawer();
+    };
+
+    const handleContactUs = () => {
+        closeProfileDrawer();
+        if (typeof window !== 'undefined') {
+            window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Kramaa Feedback')}`;
+        }
     };
 
     const handleProfileToggle = () => {
@@ -187,7 +197,8 @@ const Navbar = () => {
 
     const drawerMenuItems = [
         { label: 'My Profile', icon: <FaUser />, onClick: () => navigateAndClose('/profile') },
-        { label: 'Settings', icon: <FaCog />, onClick: () => navigateAndClose('/profile') }
+        { label: 'Settings', icon: <FaCog />, onClick: () => navigateAndClose('/profile') },
+        { label: 'Contact Us', icon: <FaEnvelope />, onClick: handleContactUs }
     ];
 
     const publicLinks = [

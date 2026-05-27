@@ -100,6 +100,7 @@ const normalizeSuggestedUser = (rawEntry) => {
 
 const stripApiSuffix = (baseUrl) => String(baseUrl || '').replace(/\/api\/?$/, '');
 const joinUrl = (baseUrl, path) => `${String(baseUrl || '').replace(/\/+$/, '')}/${String(path || '').replace(/^\/+/, '')}`;
+const EMBEDDED_UPLOAD_PATH_PATTERN = /(?:^|\/)(?:public\/)?(?:api\/)?uploads\/.+$/i;
 
 const getBackendBaseUrl = () => {
     // Prefer explicit env base URL in production.
@@ -138,8 +139,16 @@ const normalizeUploadPath = (rawPath) => {
 
     // Remove leading ./ and convert legacy "public/uploads/*" to "/uploads/*".
     path = path.replace(/^\.\//, '');
+    const embeddedUploadMatch = !/^https?:\/\//i.test(path)
+        ? path.match(EMBEDDED_UPLOAD_PATH_PATTERN)
+        : null;
+    if (embeddedUploadMatch) {
+        path = embeddedUploadMatch[0];
+    }
     path = path.replace(/^public\/uploads\//i, '/uploads/');
     path = path.replace(/^\/public\/uploads\//i, '/uploads/');
+    path = path.replace(/^api\/uploads\//i, '/uploads/');
+    path = path.replace(/^\/api\/uploads\//i, '/uploads/');
 
     if (/^uploads\//i.test(path)) return `/${path}`;
     if (/^\/uploads\//i.test(path)) return path;

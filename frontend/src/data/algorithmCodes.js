@@ -615,6 +615,151 @@ public void radixSort(int[] arr) {
     return -1;
 }`
     },
+    twoPointers: {
+        javascript: `function twoPointers(arr, target) {
+    let left = 0;
+    let right = arr.length - 1;
+
+    while (left < right) {
+        const sum = arr[left] + arr[right];
+
+        if (sum === target) {
+            return [left, right];
+        }
+
+        if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+
+    return [-1, -1];
+}`,
+        python: `def two_pointers(arr, target):
+    left = 0
+    right = len(arr) - 1
+
+    while left < right:
+        current_sum = arr[left] + arr[right]
+
+        if current_sum == target:
+            return [left, right]
+
+        if current_sum < target:
+            left += 1
+        else:
+            right -= 1
+
+    return [-1, -1]`,
+        cpp: `vector<int> twoPointers(const vector<int>& arr, int target) {
+    int left = 0;
+    int right = static_cast<int>(arr.size()) - 1;
+
+    while (left < right) {
+        int sum = arr[left] + arr[right];
+
+        if (sum == target) {
+            return {left, right};
+        }
+
+        if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+
+    return {-1, -1};
+}`,
+        java: `public int[] twoPointers(int[] arr, int target) {
+    int left = 0;
+    int right = arr.length - 1;
+
+    while (left < right) {
+        int sum = arr[left] + arr[right];
+
+        if (sum == target) {
+            return new int[] { left, right };
+        }
+
+        if (sum < target) {
+            left++;
+        } else {
+            right--;
+        }
+    }
+
+    return new int[] { -1, -1 };
+}`
+    },
+    slidingWindow: {
+        javascript: `function maxSumSubarray(arr, k) {
+    let windowSum = 0;
+    let maxSum = -Infinity;
+    let left = 0;
+
+    for (let right = 0; right < arr.length; right++) {
+        windowSum += arr[right];
+
+        if (right - left + 1 === k) {
+            maxSum = Math.max(maxSum, windowSum);
+            windowSum -= arr[left];
+            left++;
+        }
+    }
+
+    return maxSum;
+}`,
+        python: `def max_sum_subarray(arr, k):
+    window_sum = 0
+    max_sum = float('-inf')
+    left = 0
+
+    for right in range(len(arr)):
+        window_sum += arr[right]
+
+        if right - left + 1 == k:
+            max_sum = max(max_sum, window_sum)
+            window_sum -= arr[left]
+            left += 1
+
+    return max_sum`,
+        cpp: `int maxSumSubarray(const vector<int>& arr, int k) {
+    int windowSum = 0;
+    int maxSum = INT_MIN;
+    int left = 0;
+
+    for (int right = 0; right < static_cast<int>(arr.size()); right++) {
+        windowSum += arr[right];
+
+        if (right - left + 1 == k) {
+            maxSum = max(maxSum, windowSum);
+            windowSum -= arr[left];
+            left++;
+        }
+    }
+
+    return maxSum;
+}`,
+        java: `public int maxSumSubarray(int[] arr, int k) {
+    int windowSum = 0;
+    int maxSum = Integer.MIN_VALUE;
+    int left = 0;
+
+    for (int right = 0; right < arr.length; right++) {
+        windowSum += arr[right];
+
+        if (right - left + 1 == k) {
+            maxSum = Math.max(maxSum, windowSum);
+            windowSum -= arr[left];
+            left++;
+        }
+    }
+
+    return maxSum;
+}`
+    },
 
 
 
@@ -622,16 +767,19 @@ public void radixSort(int[] arr) {
         javascript: `function jumpSearch(arr, target) {
     const n = arr.length;
     const jump = Math.floor(Math.sqrt(n));
-    let prev = 0, curr = jump;
+    let start = 0;
+    let end = Math.min(jump, n) - 1;
 
-    while (curr < n && arr[curr] < target) {
-        prev = curr;
-        curr += jump;
+    while (end < n && arr[end] < target) {
+        start = end + 1;
+        end = Math.min(end + jump, n - 1);
     }
 
-    for (let i = prev; i <= Math.min(curr, n - 1); i++) {
+    for (let i = start; i <= end; i++) {
         if (arr[i] === target) return i;
+        if (arr[i] > target) break;
     }
+
     return -1;
 }`,
         python: `import math
@@ -639,48 +787,54 @@ public void radixSort(int[] arr) {
 def jump_search(arr, target):
     n = len(arr)
     jump = int(math.sqrt(n))
-    prev = 0
-    curr = jump
-    
-    while curr < n and arr[curr] < target:
-        prev = curr
-        curr += jump
-        
-    for i in range(prev, min(curr, n)):
+    start = 0
+    end = min(jump, n) - 1
+
+    while end < n and arr[end] < target:
+        start = end + 1
+        end = min(end + jump, n - 1)
+
+    for i in range(start, end + 1):
         if arr[i] == target:
             return i
-            
+        if arr[i] > target:
+            break
+
     return -1`,
         cpp: `int jumpSearch(vector<int>& arr, int target) {
     int n = arr.size();
     int jump = sqrt(n);
-    int prev = 0, curr = jump;
-    
-    while (curr < n && arr[curr] < target) {
-        prev = curr;
-        curr += jump;
+    int start = 0;
+    int end = min(jump, n) - 1;
+
+    while (end < n && arr[end] < target) {
+        start = end + 1;
+        end = min(end + jump, n - 1);
     }
-    
-    for (int i = prev; i <= min(curr, n - 1); i++) {
+
+    for (int i = start; i <= end; i++) {
         if (arr[i] == target) return i;
+        if (arr[i] > target) break;
     }
-    
+
     return -1;
 }`,
         java: `public int jumpSearch(int[] arr, int target) {
     int n = arr.length;
     int jump = (int) Math.sqrt(n);
-    int prev = 0, curr = jump;
-    
-    while (curr < n && arr[curr] < target) {
-        prev = curr;
-        curr += jump;
+    int start = 0;
+    int end = Math.min(jump, n) - 1;
+
+    while (end < n && arr[end] < target) {
+        start = end + 1;
+        end = Math.min(end + jump, n - 1);
     }
-    
-    for (int i = prev; i <= Math.min(curr, n - 1); i++) {
+
+    for (int i = start; i <= end; i++) {
         if (arr[i] == target) return i;
+        if (arr[i] > target) break;
     }
-    
+
     return -1;
 }`
     },
@@ -2895,6 +3049,1896 @@ public class Trie {
     }
 
     return result.size() == n ? result : new ArrayList<>();
+}`
+    },
+    shellSort: {
+        javascript: `function shellSort(arr) {
+    let gap = Math.floor(arr.length / 2);
+
+    while (gap > 0) {
+        for (let i = gap; i < arr.length; i++) {
+            const temp = arr[i];
+            let j = i;
+
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+
+            arr[j] = temp;
+        }
+
+        gap = Math.floor(gap / 2);
+    }
+
+    return arr;
+}`,
+        python: `def shell_sort(arr):
+    gap = len(arr) // 2
+
+    while gap > 0:
+        for i in range(gap, len(arr)):
+            temp = arr[i]
+            j = i
+
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+
+            arr[j] = temp
+
+        gap //= 2
+
+    return arr`,
+        cpp: `void shellSort(vector<int>& arr) {
+    for (int gap = static_cast<int>(arr.size()) / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < static_cast<int>(arr.size()); i++) {
+            int temp = arr[i];
+            int j = i;
+
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+
+            arr[j] = temp;
+        }
+    }
+}`,
+        java: `public void shellSort(int[] arr) {
+    for (int gap = arr.length / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < arr.length; i++) {
+            int temp = arr[i];
+            int j = i;
+
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+
+            arr[j] = temp;
+        }
+    }
+}`
+    },
+    timSort: {
+        javascript: `function insertionSort(arr, left, right) {
+    for (let i = left + 1; i <= right; i++) {
+        const key = arr[i];
+        let j = i - 1;
+
+        while (j >= left && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        arr[j + 1] = key;
+    }
+}
+
+function merge(arr, left, mid, right) {
+    const leftPart = arr.slice(left, mid + 1);
+    const rightPart = arr.slice(mid + 1, right + 1);
+    let i = 0, j = 0, k = left;
+
+    while (i < leftPart.length && j < rightPart.length) {
+        if (leftPart[i] <= rightPart[j]) {
+            arr[k++] = leftPart[i++];
+        } else {
+            arr[k++] = rightPart[j++];
+        }
+    }
+
+    while (i < leftPart.length) arr[k++] = leftPart[i++];
+    while (j < rightPart.length) arr[k++] = rightPart[j++];
+}
+
+function timSort(arr, minRun = 4) {
+    for (let start = 0; start < arr.length; start += minRun) {
+        const end = Math.min(start + minRun - 1, arr.length - 1);
+        insertionSort(arr, start, end);
+    }
+
+    for (let size = minRun; size < arr.length; size *= 2) {
+        for (let left = 0; left < arr.length; left += 2 * size) {
+            const mid = Math.min(left + size - 1, arr.length - 1);
+            const right = Math.min(left + 2 * size - 1, arr.length - 1);
+
+            if (mid < right) {
+                merge(arr, left, mid, right);
+            }
+        }
+    }
+
+    return arr;
+}`,
+        python: `def insertion_sort(arr, left, right):
+    for i in range(left + 1, right + 1):
+        key = arr[i]
+        j = i - 1
+
+        while j >= left and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+
+        arr[j + 1] = key
+
+def merge(arr, left, mid, right):
+    left_part = arr[left:mid + 1]
+    right_part = arr[mid + 1:right + 1]
+    i = j = 0
+    k = left
+
+    while i < len(left_part) and j < len(right_part):
+        if left_part[i] <= right_part[j]:
+            arr[k] = left_part[i]
+            i += 1
+        else:
+            arr[k] = right_part[j]
+            j += 1
+        k += 1
+
+    while i < len(left_part):
+        arr[k] = left_part[i]
+        i += 1
+        k += 1
+
+    while j < len(right_part):
+        arr[k] = right_part[j]
+        j += 1
+        k += 1
+
+def tim_sort(arr, min_run=4):
+    for start in range(0, len(arr), min_run):
+        end = min(start + min_run - 1, len(arr) - 1)
+        insertion_sort(arr, start, end)
+
+    size = min_run
+    while size < len(arr):
+        for left in range(0, len(arr), 2 * size):
+            mid = min(left + size - 1, len(arr) - 1)
+            right = min(left + 2 * size - 1, len(arr) - 1)
+            if mid < right:
+                merge(arr, left, mid, right)
+        size *= 2
+
+    return arr`,
+        cpp: `void insertionSort(vector<int>& arr, int left, int right) {
+    for (int i = left + 1; i <= right; i++) {
+        int key = arr[i];
+        int j = i - 1;
+
+        while (j >= left && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        arr[j + 1] = key;
+    }
+}
+
+void merge(vector<int>& arr, int left, int mid, int right) {
+    vector<int> leftPart(arr.begin() + left, arr.begin() + mid + 1);
+    vector<int> rightPart(arr.begin() + mid + 1, arr.begin() + right + 1);
+    int i = 0, j = 0, k = left;
+
+    while (i < static_cast<int>(leftPart.size()) && j < static_cast<int>(rightPart.size())) {
+        if (leftPart[i] <= rightPart[j]) {
+            arr[k++] = leftPart[i++];
+        } else {
+            arr[k++] = rightPart[j++];
+        }
+    }
+
+    while (i < static_cast<int>(leftPart.size())) arr[k++] = leftPart[i++];
+    while (j < static_cast<int>(rightPart.size())) arr[k++] = rightPart[j++];
+}
+
+void timSort(vector<int>& arr, int minRun = 4) {
+    for (int start = 0; start < static_cast<int>(arr.size()); start += minRun) {
+        int end = min(start + minRun - 1, static_cast<int>(arr.size()) - 1);
+        insertionSort(arr, start, end);
+    }
+
+    for (int size = minRun; size < static_cast<int>(arr.size()); size *= 2) {
+        for (int left = 0; left < static_cast<int>(arr.size()); left += 2 * size) {
+            int mid = min(left + size - 1, static_cast<int>(arr.size()) - 1);
+            int right = min(left + 2 * size - 1, static_cast<int>(arr.size()) - 1);
+
+            if (mid < right) {
+                merge(arr, left, mid, right);
+            }
+        }
+    }
+}`,
+        java: `public void insertionSort(int[] arr, int left, int right) {
+    for (int i = left + 1; i <= right; i++) {
+        int key = arr[i];
+        int j = i - 1;
+
+        while (j >= left && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        arr[j + 1] = key;
+    }
+}
+
+public void merge(int[] arr, int left, int mid, int right) {
+    int[] leftPart = Arrays.copyOfRange(arr, left, mid + 1);
+    int[] rightPart = Arrays.copyOfRange(arr, mid + 1, right + 1);
+    int i = 0, j = 0, k = left;
+
+    while (i < leftPart.length && j < rightPart.length) {
+        if (leftPart[i] <= rightPart[j]) {
+            arr[k++] = leftPart[i++];
+        } else {
+            arr[k++] = rightPart[j++];
+        }
+    }
+
+    while (i < leftPart.length) arr[k++] = leftPart[i++];
+    while (j < rightPart.length) arr[k++] = rightPart[j++];
+}
+
+public void timSort(int[] arr, int minRun) {
+    for (int start = 0; start < arr.length; start += minRun) {
+        int end = Math.min(start + minRun - 1, arr.length - 1);
+        insertionSort(arr, start, end);
+    }
+
+    for (int size = minRun; size < arr.length; size *= 2) {
+        for (int left = 0; left < arr.length; left += 2 * size) {
+            int mid = Math.min(left + size - 1, arr.length - 1);
+            int right = Math.min(left + 2 * size - 1, arr.length - 1);
+
+            if (mid < right) {
+                merge(arr, left, mid, right);
+            }
+        }
+    }
+}`
+    },
+    sentinelLinearSearch: {
+        javascript: `function sentinelLinearSearch(arr, target) {
+    const n = arr.length;
+    if (n === 0) return -1;
+
+    const last = arr[n - 1];
+    arr[n - 1] = target;
+
+    let i = 0;
+    while (arr[i] !== target) {
+        i++;
+    }
+
+    arr[n - 1] = last;
+    if (i < n - 1 || arr[n - 1] === target) {
+        return i;
+    }
+
+    return -1;
+}`,
+        python: `def sentinel_linear_search(arr, target):
+    n = len(arr)
+    if n == 0:
+        return -1
+
+    last = arr[-1]
+    arr[-1] = target
+
+    i = 0
+    while arr[i] != target:
+        i += 1
+
+    arr[-1] = last
+    if i < n - 1 or arr[-1] == target:
+        return i
+
+    return -1`,
+        cpp: `int sentinelLinearSearch(vector<int>& arr, int target) {
+    int n = static_cast<int>(arr.size());
+    if (n == 0) return -1;
+
+    int last = arr[n - 1];
+    arr[n - 1] = target;
+
+    int i = 0;
+    while (arr[i] != target) {
+        i++;
+    }
+
+    arr[n - 1] = last;
+    if (i < n - 1 || arr[n - 1] == target) {
+        return i;
+    }
+
+    return -1;
+}`,
+        java: `public int sentinelLinearSearch(int[] arr, int target) {
+    int n = arr.length;
+    if (n == 0) return -1;
+
+    int last = arr[n - 1];
+    arr[n - 1] = target;
+
+    int i = 0;
+    while (arr[i] != target) {
+        i++;
+    }
+
+    arr[n - 1] = last;
+    if (i < n - 1 || arr[n - 1] == target) {
+        return i;
+    }
+
+    return -1;
+}`
+    },
+    zAlgorithm: {
+        javascript: `function zAlgorithmSearch(text, pattern) {
+    const concat = pattern + '$' + text;
+    const z = new Array(concat.length).fill(0);
+    let left = 0;
+    let right = 0;
+
+    for (let i = 1; i < concat.length; i++) {
+        if (i <= right) {
+            z[i] = Math.min(right - i + 1, z[i - left]);
+        }
+
+        while (i + z[i] < concat.length && concat[z[i]] === concat[i + z[i]]) {
+            z[i]++;
+        }
+
+        if (i + z[i] - 1 > right) {
+            left = i;
+            right = i + z[i] - 1;
+        }
+    }
+
+    const matches = [];
+    for (let i = 0; i < z.length; i++) {
+        if (z[i] === pattern.length) {
+            matches.push(i - pattern.length - 1);
+        }
+    }
+
+    return matches;
+}`
+        ,
+        python: `def z_algorithm_search(text, pattern):
+    concat = pattern + '$' + text
+    z = [0] * len(concat)
+    left = 0
+    right = 0
+
+    for i in range(1, len(concat)):
+        if i <= right:
+            z[i] = min(right - i + 1, z[i - left])
+
+        while i + z[i] < len(concat) and concat[z[i]] == concat[i + z[i]]:
+            z[i] += 1
+
+        if i + z[i] - 1 > right:
+            left = i
+            right = i + z[i] - 1
+
+    matches = []
+    for i, value in enumerate(z):
+        if value == len(pattern):
+            matches.append(i - len(pattern) - 1)
+
+    return matches`,
+        cpp: `vector<int> zAlgorithmSearch(const string& text, const string& pattern) {
+    string concat = pattern + "$" + text;
+    vector<int> z(concat.size(), 0);
+    int left = 0, right = 0;
+
+    for (int i = 1; i < static_cast<int>(concat.size()); i++) {
+        if (i <= right) {
+            z[i] = min(right - i + 1, z[i - left]);
+        }
+
+        while (i + z[i] < static_cast<int>(concat.size()) && concat[z[i]] == concat[i + z[i]]) {
+            z[i]++;
+        }
+
+        if (i + z[i] - 1 > right) {
+            left = i;
+            right = i + z[i] - 1;
+        }
+    }
+
+    vector<int> matches;
+    for (int i = 0; i < static_cast<int>(z.size()); i++) {
+        if (z[i] == static_cast<int>(pattern.size())) {
+            matches.push_back(i - static_cast<int>(pattern.size()) - 1);
+        }
+    }
+
+    return matches;
+}`,
+        java: `public List<Integer> zAlgorithmSearch(String text, String pattern) {
+    String concat = pattern + "$" + text;
+    int[] z = new int[concat.length()];
+    int left = 0, right = 0;
+
+    for (int i = 1; i < concat.length(); i++) {
+        if (i <= right) {
+            z[i] = Math.min(right - i + 1, z[i - left]);
+        }
+
+        while (i + z[i] < concat.length() && concat.charAt(z[i]) == concat.charAt(i + z[i])) {
+            z[i]++;
+        }
+
+        if (i + z[i] - 1 > right) {
+            left = i;
+            right = i + z[i] - 1;
+        }
+    }
+
+    List<Integer> matches = new ArrayList<>();
+    for (int i = 0; i < z.length; i++) {
+        if (z[i] == pattern.length()) {
+            matches.add(i - pattern.length() - 1);
+        }
+    }
+
+    return matches;
+}`
+    },
+    cocktailShakerSort: {
+        javascript: `function cocktailShakerSort(arr) {
+    let start = 0;
+    let end = arr.length - 1;
+    let swapped = true;
+
+    while (swapped) {
+        swapped = false;
+
+        for (let i = start; i < end; i++) {
+            if (arr[i] > arr[i + 1]) {
+                [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+                swapped = true;
+            }
+        }
+
+        if (!swapped) break;
+
+        swapped = false;
+        end--;
+
+        for (let i = end - 1; i >= start; i--) {
+            if (arr[i] > arr[i + 1]) {
+                [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+                swapped = true;
+            }
+        }
+
+        start++;
+    }
+
+    return arr;
+}`,
+        python: `def cocktail_shaker_sort(arr):
+    start = 0
+    end = len(arr) - 1
+    swapped = True
+
+    while swapped:
+        swapped = False
+
+        for i in range(start, end):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+
+        if not swapped:
+            break
+
+        swapped = False
+        end -= 1
+
+        for i in range(end - 1, start - 1, -1):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+
+        start += 1
+
+    return arr`,
+        cpp: `void cocktailShakerSort(vector<int>& arr) {
+    int start = 0;
+    int end = static_cast<int>(arr.size()) - 1;
+    bool swapped = true;
+
+    while (swapped) {
+        swapped = false;
+
+        for (int i = start; i < end; i++) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+                swapped = true;
+            }
+        }
+
+        if (!swapped) break;
+
+        swapped = false;
+        end--;
+
+        for (int i = end - 1; i >= start; i--) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+                swapped = true;
+            }
+        }
+
+        start++;
+    }
+}`,
+        java: `public void cocktailShakerSort(int[] arr) {
+    int start = 0;
+    int end = arr.length - 1;
+    boolean swapped = true;
+
+    while (swapped) {
+        swapped = false;
+
+        for (int i = start; i < end; i++) {
+            if (arr[i] > arr[i + 1]) {
+                int temp = arr[i];
+                arr[i] = arr[i + 1];
+                arr[i + 1] = temp;
+                swapped = true;
+            }
+        }
+
+        if (!swapped) break;
+
+        swapped = false;
+        end--;
+
+        for (int i = end - 1; i >= start; i--) {
+            if (arr[i] > arr[i + 1]) {
+                int temp = arr[i];
+                arr[i] = arr[i + 1];
+                arr[i + 1] = temp;
+                swapped = true;
+            }
+        }
+
+        start++;
+    }
+}`
+    },
+    combSort: {
+        javascript: `function combSort(arr) {
+    let gap = arr.length;
+    let swapped = true;
+    const shrink = 1.3;
+
+    while (gap > 1 || swapped) {
+        gap = Math.max(1, Math.floor(gap / shrink));
+        swapped = false;
+
+        for (let i = 0; i + gap < arr.length; i++) {
+            if (arr[i] > arr[i + gap]) {
+                [arr[i], arr[i + gap]] = [arr[i + gap], arr[i]];
+                swapped = true;
+            }
+        }
+    }
+
+    return arr;
+}`,
+        python: `def comb_sort(arr):
+    gap = len(arr)
+    swapped = True
+    shrink = 1.3
+
+    while gap > 1 or swapped:
+        gap = max(1, int(gap / shrink))
+        swapped = False
+
+        for i in range(len(arr) - gap):
+            if arr[i] > arr[i + gap]:
+                arr[i], arr[i + gap] = arr[i + gap], arr[i]
+                swapped = True
+
+    return arr`,
+        cpp: `void combSort(vector<int>& arr) {
+    int gap = static_cast<int>(arr.size());
+    bool swapped = true;
+    const double shrink = 1.3;
+
+    while (gap > 1 || swapped) {
+        gap = max(1, static_cast<int>(gap / shrink));
+        swapped = false;
+
+        for (int i = 0; i + gap < static_cast<int>(arr.size()); i++) {
+            if (arr[i] > arr[i + gap]) {
+                swap(arr[i], arr[i + gap]);
+                swapped = true;
+            }
+        }
+    }
+}`,
+        java: `public void combSort(int[] arr) {
+    int gap = arr.length;
+    boolean swapped = true;
+    double shrink = 1.3;
+
+    while (gap > 1 || swapped) {
+        gap = Math.max(1, (int) (gap / shrink));
+        swapped = false;
+
+        for (int i = 0; i + gap < arr.length; i++) {
+            if (arr[i] > arr[i + gap]) {
+                int temp = arr[i];
+                arr[i] = arr[i + gap];
+                arr[i + gap] = temp;
+                swapped = true;
+            }
+        }
+    }
+}`
+    },
+    countingSort: {
+        javascript: `function countingSort(arr) {
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
+    const count = Array(max - min + 1).fill(0);
+    const output = Array(arr.length);
+
+    for (const value of arr) {
+        count[value - min]++;
+    }
+
+    for (let i = 1; i < count.length; i++) {
+        count[i] += count[i - 1];
+    }
+
+    for (let i = arr.length - 1; i >= 0; i--) {
+        const value = arr[i];
+        output[count[value - min] - 1] = value;
+        count[value - min]--;
+    }
+
+    return output;
+}`,
+        python: `def counting_sort(arr):
+    min_val = min(arr)
+    max_val = max(arr)
+    count = [0] * (max_val - min_val + 1)
+    output = [0] * len(arr)
+
+    for value in arr:
+        count[value - min_val] += 1
+
+    for i in range(1, len(count)):
+        count[i] += count[i - 1]
+
+    for i in range(len(arr) - 1, -1, -1):
+        value = arr[i]
+        output[count[value - min_val] - 1] = value
+        count[value - min_val] -= 1
+
+    return output`,
+        cpp: `vector<int> countingSort(const vector<int>& arr) {
+    int minVal = *min_element(arr.begin(), arr.end());
+    int maxVal = *max_element(arr.begin(), arr.end());
+    vector<int> count(maxVal - minVal + 1, 0);
+    vector<int> output(arr.size());
+
+    for (int value : arr) {
+        count[value - minVal]++;
+    }
+
+    for (int i = 1; i < static_cast<int>(count.size()); i++) {
+        count[i] += count[i - 1];
+    }
+
+    for (int i = static_cast<int>(arr.size()) - 1; i >= 0; i--) {
+        int value = arr[i];
+        output[count[value - minVal] - 1] = value;
+        count[value - minVal]--;
+    }
+
+    return output;
+}`,
+        java: `public int[] countingSort(int[] arr) {
+    int min = arr[0];
+    int max = arr[0];
+    for (int value : arr) {
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+    }
+
+    int[] count = new int[max - min + 1];
+    int[] output = new int[arr.length];
+
+    for (int value : arr) {
+        count[value - min]++;
+    }
+
+    for (int i = 1; i < count.length; i++) {
+        count[i] += count[i - 1];
+    }
+
+    for (int i = arr.length - 1; i >= 0; i--) {
+        int value = arr[i];
+        output[count[value - min] - 1] = value;
+        count[value - min]--;
+    }
+
+    return output;
+}`
+    },
+    coinChangeWays: {
+        javascript: `function coinChangeWays(coins, amount) {
+    const n = coins.length;
+    const dp = Array.from({ length: n + 1 }, () => Array(amount + 1).fill(0));
+
+    for (let i = 0; i <= n; i++) {
+        dp[i][0] = 1;
+    }
+
+    for (let i = 1; i <= n; i++) {
+        for (let sum = 1; sum <= amount; sum++) {
+            const exclude = dp[i - 1][sum];
+            const include = sum >= coins[i - 1] ? dp[i][sum - coins[i - 1]] : 0;
+            dp[i][sum] = exclude + include;
+        }
+    }
+
+    return dp[n][amount];
+}`,
+        python: `def coin_change_ways(coins, amount):
+    n = len(coins)
+    dp = [[0] * (amount + 1) for _ in range(n + 1)]
+
+    for i in range(n + 1):
+        dp[i][0] = 1
+
+    for i in range(1, n + 1):
+        for total in range(1, amount + 1):
+            exclude = dp[i - 1][total]
+            include = dp[i][total - coins[i - 1]] if total >= coins[i - 1] else 0
+            dp[i][total] = exclude + include
+
+    return dp[n][amount]`,
+        cpp: `int coinChangeWays(vector<int>& coins, int amount) {
+    int n = static_cast<int>(coins.size());
+    vector<vector<int>> dp(n + 1, vector<int>(amount + 1, 0));
+
+    for (int i = 0; i <= n; i++) {
+        dp[i][0] = 1;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        for (int sum = 1; sum <= amount; sum++) {
+            int exclude = dp[i - 1][sum];
+            int include = sum >= coins[i - 1] ? dp[i][sum - coins[i - 1]] : 0;
+            dp[i][sum] = exclude + include;
+        }
+    }
+
+    return dp[n][amount];
+}`,
+        java: `public int coinChangeWays(int[] coins, int amount) {
+    int n = coins.length;
+    int[][] dp = new int[n + 1][amount + 1];
+
+    for (int i = 0; i <= n; i++) {
+        dp[i][0] = 1;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        for (int sum = 1; sum <= amount; sum++) {
+            int exclude = dp[i - 1][sum];
+            int include = sum >= coins[i - 1] ? dp[i][sum - coins[i - 1]] : 0;
+            dp[i][sum] = exclude + include;
+        }
+    }
+
+    return dp[n][amount];
+}`
+    },
+    floydCycle: {
+        javascript: `function hasCycle(head) {
+    let slow = head;
+    let fast = head;
+
+    while (fast && fast.next) {
+        slow = slow.next;
+        fast = fast.next.next;
+
+        if (slow === fast) {
+            return true;
+        }
+    }
+
+    return false;
+}`,
+        python: `def has_cycle(head):
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            return True
+
+    return False`,
+        cpp: `bool hasCycle(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+
+        if (slow == fast) {
+            return true;
+        }
+    }
+
+    return false;
+}`,
+        java: `public boolean hasCycle(ListNode head) {
+    ListNode slow = head;
+    ListNode fast = head;
+
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+
+        if (slow == fast) {
+            return true;
+        }
+    }
+
+    return false;
+}`
+    },
+    editDistance: {
+        javascript: `function editDistance(word1, word2) {
+    const m = word1.length;
+    const n = word2.length;
+    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (word1[i - 1] === word2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(
+                    dp[i - 1][j],
+                    dp[i][j - 1],
+                    dp[i - 1][j - 1]
+                );
+            }
+        }
+    }
+
+    return dp[m][n];
+}`,
+        python: `def edit_distance(word1, word2):
+    m = len(word1)
+    n = len(word2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if word1[i - 1] == word2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = 1 + min(
+                    dp[i - 1][j],
+                    dp[i][j - 1],
+                    dp[i - 1][j - 1]
+                )
+
+    return dp[m][n]`,
+        cpp: `int editDistance(string word1, string word2) {
+    int m = static_cast<int>(word1.size());
+    int n = static_cast<int>(word2.size());
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+
+    for (int i = 0; i <= m; i++) dp[i][0] = i;
+    for (int j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (word1[i - 1] == word2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + min({
+                    dp[i - 1][j],
+                    dp[i][j - 1],
+                    dp[i - 1][j - 1]
+                });
+            }
+        }
+    }
+
+    return dp[m][n];
+}`,
+        java: `public int editDistance(String word1, String word2) {
+    int m = word1.length();
+    int n = word2.length();
+    int[][] dp = new int[m + 1][n + 1];
+
+    for (int i = 0; i <= m; i++) dp[i][0] = i;
+    for (int j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(
+                    dp[i - 1][j],
+                    Math.min(dp[i][j - 1], dp[i - 1][j - 1])
+                );
+            }
+        }
+    }
+
+    return dp[m][n];
+}`
+    },
+    eggDrop: {
+        javascript: `function eggDrop(eggs, floors) {
+    const dp = Array.from({ length: eggs + 1 }, () => Array(floors + 1).fill(0));
+
+    for (let f = 1; f <= floors; f++) {
+        dp[1][f] = f;
+    }
+
+    for (let e = 1; e <= eggs; e++) {
+        dp[e][0] = 0;
+        dp[e][1] = 1;
+    }
+
+    for (let e = 2; e <= eggs; e++) {
+        for (let f = 2; f <= floors; f++) {
+            dp[e][f] = Infinity;
+            for (let x = 1; x <= f; x++) {
+                const worstCase = 1 + Math.max(dp[e - 1][x - 1], dp[e][f - x]);
+                dp[e][f] = Math.min(dp[e][f], worstCase);
+            }
+        }
+    }
+
+    return dp[eggs][floors];
+}`,
+        python: `def egg_drop(eggs, floors):
+    dp = [[0] * (floors + 1) for _ in range(eggs + 1)]
+
+    for f in range(1, floors + 1):
+        dp[1][f] = f
+
+    for e in range(1, eggs + 1):
+        dp[e][0] = 0
+        dp[e][1] = 1
+
+    for e in range(2, eggs + 1):
+        for f in range(2, floors + 1):
+            dp[e][f] = float("inf")
+            for x in range(1, f + 1):
+                worst_case = 1 + max(dp[e - 1][x - 1], dp[e][f - x])
+                dp[e][f] = min(dp[e][f], worst_case)
+
+    return dp[eggs][floors]`,
+        cpp: `int eggDrop(int eggs, int floors) {
+    vector<vector<int>> dp(eggs + 1, vector<int>(floors + 1, 0));
+
+    for (int f = 1; f <= floors; f++) {
+        dp[1][f] = f;
+    }
+
+    for (int e = 1; e <= eggs; e++) {
+        dp[e][0] = 0;
+        dp[e][1] = 1;
+    }
+
+    for (int e = 2; e <= eggs; e++) {
+        for (int f = 2; f <= floors; f++) {
+            dp[e][f] = INT_MAX;
+            for (int x = 1; x <= f; x++) {
+                int worstCase = 1 + max(dp[e - 1][x - 1], dp[e][f - x]);
+                dp[e][f] = min(dp[e][f], worstCase);
+            }
+        }
+    }
+
+    return dp[eggs][floors];
+}`,
+        java: `public int eggDrop(int eggs, int floors) {
+    int[][] dp = new int[eggs + 1][floors + 1];
+
+    for (int f = 1; f <= floors; f++) {
+        dp[1][f] = f;
+    }
+
+    for (int e = 1; e <= eggs; e++) {
+        dp[e][0] = 0;
+        dp[e][1] = 1;
+    }
+
+    for (int e = 2; e <= eggs; e++) {
+        for (int f = 2; f <= floors; f++) {
+            dp[e][f] = Integer.MAX_VALUE;
+            for (int x = 1; x <= f; x++) {
+                int worstCase = 1 + Math.max(dp[e - 1][x - 1], dp[e][f - x]);
+                dp[e][f] = Math.min(dp[e][f], worstCase);
+            }
+        }
+    }
+
+    return dp[eggs][floors];
+}`
+    },
+    rabinKarp: {
+        javascript: `function rabinKarpSearch(text, pattern) {
+    const base = 256;
+    const mod = 101;
+    const m = pattern.length;
+    const n = text.length;
+    const matches = [];
+    let patternHash = 0;
+    let windowHash = 0;
+    let highestBase = 1;
+
+    for (let i = 0; i < m - 1; i++) {
+        highestBase = (highestBase * base) % mod;
+    }
+
+    for (let i = 0; i < m; i++) {
+        patternHash = (base * patternHash + pattern.charCodeAt(i)) % mod;
+        windowHash = (base * windowHash + text.charCodeAt(i)) % mod;
+    }
+
+    for (let i = 0; i <= n - m; i++) {
+        if (patternHash === windowHash) {
+            let matched = true;
+            for (let j = 0; j < m; j++) {
+                if (text[i + j] !== pattern[j]) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) matches.push(i);
+        }
+
+        if (i < n - m) {
+            windowHash = (base * (windowHash - text.charCodeAt(i) * highestBase) + text.charCodeAt(i + m)) % mod;
+            if (windowHash < 0) windowHash += mod;
+        }
+    }
+
+    return matches;
+}`,
+        python: `def rabin_karp_search(text, pattern):
+    base = 256
+    mod = 101
+    m = len(pattern)
+    n = len(text)
+    matches = []
+    pattern_hash = 0
+    window_hash = 0
+    highest_base = 1
+
+    for _ in range(m - 1):
+        highest_base = (highest_base * base) % mod
+
+    for i in range(m):
+        pattern_hash = (base * pattern_hash + ord(pattern[i])) % mod
+        window_hash = (base * window_hash + ord(text[i])) % mod
+
+    for i in range(n - m + 1):
+        if pattern_hash == window_hash:
+            if text[i:i + m] == pattern:
+                matches.append(i)
+
+        if i < n - m:
+            window_hash = (base * (window_hash - ord(text[i]) * highest_base) + ord(text[i + m])) % mod
+            window_hash %= mod
+
+    return matches`,
+        cpp: `vector<int> rabinKarpSearch(const string& text, const string& pattern) {
+    const int base = 256;
+    const int mod = 101;
+    int m = static_cast<int>(pattern.size());
+    int n = static_cast<int>(text.size());
+    vector<int> matches;
+    int patternHash = 0;
+    int windowHash = 0;
+    int highestBase = 1;
+
+    for (int i = 0; i < m - 1; i++) {
+        highestBase = (highestBase * base) % mod;
+    }
+
+    for (int i = 0; i < m; i++) {
+        patternHash = (base * patternHash + pattern[i]) % mod;
+        windowHash = (base * windowHash + text[i]) % mod;
+    }
+
+    for (int i = 0; i <= n - m; i++) {
+        if (patternHash == windowHash) {
+            bool matched = true;
+            for (int j = 0; j < m; j++) {
+                if (text[i + j] != pattern[j]) {
+                    matched = false;
+                    break;
+                }
+            }
+            if (matched) matches.push_back(i);
+        }
+
+        if (i < n - m) {
+            windowHash = (base * (windowHash - text[i] * highestBase) + text[i + m]) % mod;
+            if (windowHash < 0) windowHash += mod;
+        }
+    }
+
+    return matches;
+}`,
+        java: `public List<Integer> rabinKarpSearch(String text, String pattern) {
+    int base = 256;
+    int mod = 101;
+    int m = pattern.length();
+    int n = text.length();
+    List<Integer> matches = new ArrayList<>();
+    int patternHash = 0;
+    int windowHash = 0;
+    int highestBase = 1;
+
+    for (int i = 0; i < m - 1; i++) {
+        highestBase = (highestBase * base) % mod;
+    }
+
+    for (int i = 0; i < m; i++) {
+        patternHash = (base * patternHash + pattern.charAt(i)) % mod;
+        windowHash = (base * windowHash + text.charAt(i)) % mod;
+    }
+
+    for (int i = 0; i <= n - m; i++) {
+        if (patternHash == windowHash) {
+            if (text.substring(i, i + m).equals(pattern)) {
+                matches.add(i);
+            }
+        }
+
+        if (i < n - m) {
+            windowHash = (base * (windowHash - text.charAt(i) * highestBase) + text.charAt(i + m)) % mod;
+            if (windowHash < 0) windowHash += mod;
+        }
+    }
+
+    return matches;
+}`
+    },
+    fastExponentiation: {
+        javascript: `function fastExponentiation(base, exponent) {
+    let result = 1;
+    let currentBase = base;
+    let currentExponent = exponent;
+
+    while (currentExponent > 0) {
+        if (currentExponent % 2 === 1) {
+            result *= currentBase;
+        }
+        currentBase *= currentBase;
+        currentExponent = Math.floor(currentExponent / 2);
+    }
+
+    return result;
+}`,
+        python: `def fast_exponentiation(base, exponent):
+    result = 1
+    current_base = base
+    current_exponent = exponent
+
+    while current_exponent > 0:
+        if current_exponent % 2 == 1:
+            result *= current_base
+        current_base *= current_base
+        current_exponent //= 2
+
+    return result`,
+        cpp: `long long fastExponentiation(long long base, long long exponent) {
+    long long result = 1;
+    long long currentBase = base;
+    long long currentExponent = exponent;
+
+    while (currentExponent > 0) {
+        if (currentExponent % 2 == 1) {
+            result *= currentBase;
+        }
+        currentBase *= currentBase;
+        currentExponent /= 2;
+    }
+
+    return result;
+}`,
+        java: `public long fastExponentiation(long base, long exponent) {
+    long result = 1;
+    long currentBase = base;
+    long currentExponent = exponent;
+
+    while (currentExponent > 0) {
+        if (currentExponent % 2 == 1) {
+            result *= currentBase;
+        }
+        currentBase *= currentBase;
+        currentExponent /= 2;
+    }
+
+    return result;
+}`
+    },
+    jobSequencing: {
+        javascript: `function jobSequencing(jobs) {
+    jobs.sort((a, b) => b.profit - a.profit);
+    const maxDeadline = Math.max(...jobs.map((job) => job.deadline));
+    const slots = Array(maxDeadline).fill(null);
+    let totalProfit = 0;
+
+    for (const job of jobs) {
+        for (let slot = Math.min(job.deadline, maxDeadline) - 1; slot >= 0; slot--) {
+            if (!slots[slot]) {
+                slots[slot] = job.id;
+                totalProfit += job.profit;
+                break;
+            }
+        }
+    }
+
+    return { slots, totalProfit };
+}`,
+        python: `def job_sequencing(jobs):
+    jobs.sort(key=lambda job: job["profit"], reverse=True)
+    max_deadline = max(job["deadline"] for job in jobs)
+    slots = [None] * max_deadline
+    total_profit = 0
+
+    for job in jobs:
+        for slot in range(min(job["deadline"], max_deadline) - 1, -1, -1):
+            if slots[slot] is None:
+                slots[slot] = job["id"]
+                total_profit += job["profit"]
+                break
+
+    return slots, total_profit`,
+        cpp: `pair<vector<string>, int> jobSequencing(vector<Job>& jobs) {
+    sort(jobs.begin(), jobs.end(), [](const Job& a, const Job& b) {
+        return a.profit > b.profit;
+    });
+
+    int maxDeadline = 0;
+    for (const Job& job : jobs) {
+        maxDeadline = max(maxDeadline, job.deadline);
+    }
+
+    vector<string> slots(maxDeadline, "");
+    int totalProfit = 0;
+
+    for (const Job& job : jobs) {
+        for (int slot = min(job.deadline, maxDeadline) - 1; slot >= 0; slot--) {
+            if (slots[slot].empty()) {
+                slots[slot] = job.id;
+                totalProfit += job.profit;
+                break;
+            }
+        }
+    }
+
+    return {slots, totalProfit};
+}`,
+        java: `public Map<String, Object> jobSequencing(Job[] jobs) {
+    Arrays.sort(jobs, (a, b) -> b.profit - a.profit);
+    int maxDeadline = 0;
+    for (Job job : jobs) {
+        maxDeadline = Math.max(maxDeadline, job.deadline);
+    }
+
+    String[] slots = new String[maxDeadline];
+    int totalProfit = 0;
+
+    for (Job job : jobs) {
+        for (int slot = Math.min(job.deadline, maxDeadline) - 1; slot >= 0; slot--) {
+            if (slots[slot] == null) {
+                slots[slot] = job.id;
+                totalProfit += job.profit;
+                break;
+            }
+        }
+    }
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("slots", slots);
+    result.put("totalProfit", totalProfit);
+    return result;
+}`
+    },
+    kmp: {
+        javascript: `function buildLps(pattern) {
+    const lps = Array(pattern.length).fill(0);
+    let length = 0;
+
+    for (let i = 1; i < pattern.length; ) {
+        if (pattern[i] === pattern[length]) {
+            lps[i++] = ++length;
+        } else if (length > 0) {
+            length = lps[length - 1];
+        } else {
+            lps[i++] = 0;
+        }
+    }
+
+    return lps;
+}
+
+function kmpSearch(text, pattern) {
+    const lps = buildLps(pattern);
+    const matches = [];
+    let i = 0;
+    let j = 0;
+
+    while (i < text.length) {
+        if (text[i] === pattern[j]) {
+            i++;
+            j++;
+        }
+
+        if (j === pattern.length) {
+            matches.push(i - j);
+            j = lps[j - 1];
+        } else if (i < text.length && text[i] !== pattern[j]) {
+            if (j > 0) j = lps[j - 1];
+            else i++;
+        }
+    }
+
+    return matches;
+}`,
+        python: `def build_lps(pattern):
+    lps = [0] * len(pattern)
+    length = 0
+    i = 1
+
+    while i < len(pattern):
+        if pattern[i] == pattern[length]:
+            length += 1
+            lps[i] = length
+            i += 1
+        elif length > 0:
+            length = lps[length - 1]
+        else:
+            lps[i] = 0
+            i += 1
+
+    return lps
+
+def kmp_search(text, pattern):
+    lps = build_lps(pattern)
+    matches = []
+    i = 0
+    j = 0
+
+    while i < len(text):
+        if text[i] == pattern[j]:
+            i += 1
+            j += 1
+
+        if j == len(pattern):
+            matches.append(i - j)
+            j = lps[j - 1]
+        elif i < len(text) and text[i] != pattern[j]:
+            if j > 0:
+                j = lps[j - 1]
+            else:
+                i += 1
+
+    return matches`,
+        cpp: `vector<int> buildLps(const string& pattern) {
+    vector<int> lps(pattern.size(), 0);
+    int length = 0;
+
+    for (int i = 1; i < static_cast<int>(pattern.size()); ) {
+        if (pattern[i] == pattern[length]) {
+            lps[i++] = ++length;
+        } else if (length > 0) {
+            length = lps[length - 1];
+        } else {
+            lps[i++] = 0;
+        }
+    }
+
+    return lps;
+}
+
+vector<int> kmpSearch(const string& text, const string& pattern) {
+    vector<int> lps = buildLps(pattern);
+    vector<int> matches;
+    int i = 0;
+    int j = 0;
+
+    while (i < static_cast<int>(text.size())) {
+        if (text[i] == pattern[j]) {
+            i++;
+            j++;
+        }
+
+        if (j == static_cast<int>(pattern.size())) {
+            matches.push_back(i - j);
+            j = lps[j - 1];
+        } else if (i < static_cast<int>(text.size()) && text[i] != pattern[j]) {
+            if (j > 0) j = lps[j - 1];
+            else i++;
+        }
+    }
+
+    return matches;
+}`,
+        java: `public int[] buildLps(String pattern) {
+    int[] lps = new int[pattern.length()];
+    int length = 0;
+
+    for (int i = 1; i < pattern.length(); ) {
+        if (pattern.charAt(i) == pattern.charAt(length)) {
+            lps[i++] = ++length;
+        } else if (length > 0) {
+            length = lps[length - 1];
+        } else {
+            lps[i++] = 0;
+        }
+    }
+
+    return lps;
+}
+
+public List<Integer> kmpSearch(String text, String pattern) {
+    int[] lps = buildLps(pattern);
+    List<Integer> matches = new ArrayList<>();
+    int i = 0;
+    int j = 0;
+
+    while (i < text.length()) {
+        if (text.charAt(i) == pattern.charAt(j)) {
+            i++;
+            j++;
+        }
+
+        if (j == pattern.length()) {
+            matches.add(i - j);
+            j = lps[j - 1];
+        } else if (i < text.length() && text.charAt(i) != pattern.charAt(j)) {
+            if (j > 0) j = lps[j - 1];
+            else i++;
+        }
+    }
+
+    return matches;
+}`
+    },
+    manacher: {
+        javascript: `function longestPalindromeManacher(s) {
+    const transformed = "^#" + s.split("").join("#") + "#$";
+    const radius = Array(transformed.length).fill(0);
+    let center = 0;
+    let right = 0;
+
+    for (let i = 1; i < transformed.length - 1; i++) {
+        const mirror = 2 * center - i;
+        if (i < right) {
+            radius[i] = Math.min(right - i, radius[mirror]);
+        }
+
+        while (transformed[i + 1 + radius[i]] === transformed[i - 1 - radius[i]]) {
+            radius[i]++;
+        }
+
+        if (i + radius[i] > right) {
+            center = i;
+            right = i + radius[i];
+        }
+    }
+
+    let maxLen = 0;
+    let centerIndex = 0;
+    for (let i = 1; i < transformed.length - 1; i++) {
+        if (radius[i] > maxLen) {
+            maxLen = radius[i];
+            centerIndex = i;
+        }
+    }
+
+    const start = Math.floor((centerIndex - maxLen) / 2);
+    return s.substring(start, start + maxLen);
+}`,
+        python: `def longest_palindrome_manacher(s):
+    transformed = "^#" + "#".join(s) + "#$"
+    radius = [0] * len(transformed)
+    center = 0
+    right = 0
+
+    for i in range(1, len(transformed) - 1):
+        mirror = 2 * center - i
+        if i < right:
+            radius[i] = min(right - i, radius[mirror])
+
+        while transformed[i + 1 + radius[i]] == transformed[i - 1 - radius[i]]:
+            radius[i] += 1
+
+        if i + radius[i] > right:
+            center = i
+            right = i + radius[i]
+
+    max_len = 0
+    center_index = 0
+    for i in range(1, len(transformed) - 1):
+        if radius[i] > max_len:
+            max_len = radius[i]
+            center_index = i
+
+    start = (center_index - max_len) // 2
+    return s[start:start + max_len]`,
+        cpp: `string longestPalindromeManacher(const string& s) {
+    string transformed = "^#";
+    for (char ch : s) {
+        transformed += ch;
+        transformed += '#';
+    }
+    transformed += '$';
+
+    vector<int> radius(transformed.size(), 0);
+    int center = 0;
+    int right = 0;
+
+    for (int i = 1; i < static_cast<int>(transformed.size()) - 1; i++) {
+        int mirror = 2 * center - i;
+        if (i < right) {
+            radius[i] = min(right - i, radius[mirror]);
+        }
+
+        while (transformed[i + 1 + radius[i]] == transformed[i - 1 - radius[i]]) {
+            radius[i]++;
+        }
+
+        if (i + radius[i] > right) {
+            center = i;
+            right = i + radius[i];
+        }
+    }
+
+    int maxLen = 0;
+    int centerIndex = 0;
+    for (int i = 1; i < static_cast<int>(transformed.size()) - 1; i++) {
+        if (radius[i] > maxLen) {
+            maxLen = radius[i];
+            centerIndex = i;
+        }
+    }
+
+    int start = (centerIndex - maxLen) / 2;
+    return s.substr(start, maxLen);
+}`,
+        java: `public String longestPalindromeManacher(String s) {
+    StringBuilder transformed = new StringBuilder("^#");
+    for (char ch : s.toCharArray()) {
+        transformed.append(ch).append('#');
+    }
+    transformed.append('$');
+
+    int[] radius = new int[transformed.length()];
+    int center = 0;
+    int right = 0;
+
+    for (int i = 1; i < transformed.length() - 1; i++) {
+        int mirror = 2 * center - i;
+        if (i < right) {
+            radius[i] = Math.min(right - i, radius[mirror]);
+        }
+
+        while (transformed.charAt(i + 1 + radius[i]) == transformed.charAt(i - 1 - radius[i])) {
+            radius[i]++;
+        }
+
+        if (i + radius[i] > right) {
+            center = i;
+            right = i + radius[i];
+        }
+    }
+
+    int maxLen = 0;
+    int centerIndex = 0;
+    for (int i = 1; i < transformed.length() - 1; i++) {
+        if (radius[i] > maxLen) {
+            maxLen = radius[i];
+            centerIndex = i;
+        }
+    }
+
+    int start = (centerIndex - maxLen) / 2;
+    return s.substring(start, start + maxLen);
+}`
+    },
+    matrixChain: {
+        javascript: `function matrixChainOrder(dimensions) {
+    const n = dimensions.length;
+    const dp = Array.from({ length: n }, () => Array(n).fill(0));
+
+    for (let len = 2; len < n; len++) {
+        for (let i = 1; i < n - len + 1; i++) {
+            const j = i + len - 1;
+            dp[i][j] = Infinity;
+
+            for (let k = i; k < j; k++) {
+                const cost = dp[i][k] + dp[k + 1][j] + dimensions[i - 1] * dimensions[k] * dimensions[j];
+                dp[i][j] = Math.min(dp[i][j], cost);
+            }
+        }
+    }
+
+    return dp[1][n - 1];
+}`,
+        python: `def matrix_chain_order(dimensions):
+    n = len(dimensions)
+    dp = [[0] * n for _ in range(n)]
+
+    for length in range(2, n):
+        for i in range(1, n - length + 1):
+            j = i + length - 1
+            dp[i][j] = float("inf")
+
+            for k in range(i, j):
+                cost = dp[i][k] + dp[k + 1][j] + dimensions[i - 1] * dimensions[k] * dimensions[j]
+                dp[i][j] = min(dp[i][j], cost)
+
+    return dp[1][n - 1]`,
+        cpp: `int matrixChainOrder(vector<int>& dimensions) {
+    int n = static_cast<int>(dimensions.size());
+    vector<vector<int>> dp(n, vector<int>(n, 0));
+
+    for (int len = 2; len < n; len++) {
+        for (int i = 1; i < n - len + 1; i++) {
+            int j = i + len - 1;
+            dp[i][j] = INT_MAX;
+
+            for (int k = i; k < j; k++) {
+                int cost = dp[i][k] + dp[k + 1][j] + dimensions[i - 1] * dimensions[k] * dimensions[j];
+                dp[i][j] = min(dp[i][j], cost);
+            }
+        }
+    }
+
+    return dp[1][n - 1];
+}`,
+        java: `public int matrixChainOrder(int[] dimensions) {
+    int n = dimensions.length;
+    int[][] dp = new int[n][n];
+
+    for (int len = 2; len < n; len++) {
+        for (int i = 1; i < n - len + 1; i++) {
+            int j = i + len - 1;
+            dp[i][j] = Integer.MAX_VALUE;
+
+            for (int k = i; k < j; k++) {
+                int cost = dp[i][k] + dp[k + 1][j] + dimensions[i - 1] * dimensions[k] * dimensions[j];
+                dp[i][j] = Math.min(dp[i][j], cost);
+            }
+        }
+    }
+
+    return dp[1][n - 1];
+}`
+    },
+    rodCutting: {
+        javascript: `function rodCutting(prices) {
+    const n = prices.length;
+    const dp = Array(n + 1).fill(0);
+
+    for (let len = 1; len <= n; len++) {
+        for (let cut = 1; cut <= len; cut++) {
+            dp[len] = Math.max(dp[len], prices[cut - 1] + dp[len - cut]);
+        }
+    }
+
+    return dp[n];
+}`,
+        python: `def rod_cutting(prices):
+    n = len(prices)
+    dp = [0] * (n + 1)
+
+    for length in range(1, n + 1):
+        for cut in range(1, length + 1):
+            dp[length] = max(dp[length], prices[cut - 1] + dp[length - cut])
+
+    return dp[n]`,
+        cpp: `int rodCutting(vector<int>& prices) {
+    int n = static_cast<int>(prices.size());
+    vector<int> dp(n + 1, 0);
+
+    for (int len = 1; len <= n; len++) {
+        for (int cut = 1; cut <= len; cut++) {
+            dp[len] = max(dp[len], prices[cut - 1] + dp[len - cut]);
+        }
+    }
+
+    return dp[n];
+}`,
+        java: `public int rodCutting(int[] prices) {
+    int n = prices.length;
+    int[] dp = new int[n + 1];
+
+    for (int len = 1; len <= n; len++) {
+        for (int cut = 1; cut <= len; cut++) {
+            dp[len] = Math.max(dp[len], prices[cut - 1] + dp[len - cut]);
+        }
+    }
+
+    return dp[n];
+}`
+    },
+    boyerMoore: {
+        javascript: `function boyerMooreSearch(text, pattern) {
+    const lastOccurrence = {};
+    for (let i = 0; i < pattern.length; i++) {
+        lastOccurrence[pattern[i]] = i;
+    }
+
+    const matches = [];
+    let shift = 0;
+
+    while (shift <= text.length - pattern.length) {
+        let j = pattern.length - 1;
+
+        while (j >= 0 && pattern[j] === text[shift + j]) {
+            j--;
+        }
+
+        if (j < 0) {
+            matches.push(shift);
+            if (shift + pattern.length < text.length) {
+                const nextChar = text[shift + pattern.length];
+                shift += pattern.length - (lastOccurrence[nextChar] ?? -1);
+            } else {
+                shift += 1;
+            }
+        } else {
+            const badCharIndex = lastOccurrence[text[shift + j]] ?? -1;
+            shift += Math.max(1, j - badCharIndex);
+        }
+    }
+
+    return matches;
+}`,
+        python: `def boyer_moore_search(text, pattern):
+    last_occurrence = {}
+    for i, ch in enumerate(pattern):
+        last_occurrence[ch] = i
+
+    matches = []
+    shift = 0
+
+    while shift <= len(text) - len(pattern):
+        j = len(pattern) - 1
+
+        while j >= 0 and pattern[j] == text[shift + j]:
+            j -= 1
+
+        if j < 0:
+            matches.append(shift)
+            if shift + len(pattern) < len(text):
+                next_char = text[shift + len(pattern)]
+                shift += len(pattern) - last_occurrence.get(next_char, -1)
+            else:
+                shift += 1
+        else:
+            bad_char_index = last_occurrence.get(text[shift + j], -1)
+            shift += max(1, j - bad_char_index)
+
+    return matches`,
+        cpp: `vector<int> boyerMooreSearch(const string& text, const string& pattern) {
+    unordered_map<char, int> lastOccurrence;
+    for (int i = 0; i < static_cast<int>(pattern.size()); i++) {
+        lastOccurrence[pattern[i]] = i;
+    }
+
+    vector<int> matches;
+    int shift = 0;
+
+    while (shift <= static_cast<int>(text.size()) - static_cast<int>(pattern.size())) {
+        int j = static_cast<int>(pattern.size()) - 1;
+
+        while (j >= 0 && pattern[j] == text[shift + j]) {
+            j--;
+        }
+
+        if (j < 0) {
+            matches.push_back(shift);
+            if (shift + static_cast<int>(pattern.size()) < static_cast<int>(text.size())) {
+                char nextChar = text[shift + pattern.size()];
+                shift += pattern.size() - (lastOccurrence.count(nextChar) ? lastOccurrence[nextChar] : -1);
+            } else {
+                shift += 1;
+            }
+        } else {
+            int badCharIndex = lastOccurrence.count(text[shift + j]) ? lastOccurrence[text[shift + j]] : -1;
+            shift += max(1, j - badCharIndex);
+        }
+    }
+
+    return matches;
+}`,
+        java: `public List<Integer> boyerMooreSearch(String text, String pattern) {
+    Map<Character, Integer> lastOccurrence = new HashMap<>();
+    for (int i = 0; i < pattern.length(); i++) {
+        lastOccurrence.put(pattern.charAt(i), i);
+    }
+
+    List<Integer> matches = new ArrayList<>();
+    int shift = 0;
+
+    while (shift <= text.length() - pattern.length()) {
+        int j = pattern.length() - 1;
+
+        while (j >= 0 && pattern.charAt(j) == text.charAt(shift + j)) {
+            j--;
+        }
+
+        if (j < 0) {
+            matches.add(shift);
+            if (shift + pattern.length() < text.length()) {
+                char nextChar = text.charAt(shift + pattern.length());
+                shift += pattern.length() - lastOccurrence.getOrDefault(nextChar, -1);
+            } else {
+                shift += 1;
+            }
+        } else {
+            int badCharIndex = lastOccurrence.getOrDefault(text.charAt(shift + j), -1);
+            shift += Math.max(1, j - badCharIndex);
+        }
+    }
+
+    return matches;
 }`
     }
 };

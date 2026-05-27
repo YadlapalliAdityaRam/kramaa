@@ -1,100 +1,156 @@
-/**
- * Two Pointers Technique — Find pair with target sum in sorted array
- * 
- * Step types: init, compare, move-left, move-right, found, not-found, complete
- * Each step includes: array snapshot, pointer positions, description, color states
- */
+const DEFAULT_ARRAY = [1, 2, 4, 6, 8, 10];
+const DEFAULT_TARGET = 10;
+
+const sanitizeArray = (inputArray) => {
+    if (!Array.isArray(inputArray) || inputArray.length === 0) return [...DEFAULT_ARRAY];
+
+    const values = inputArray
+        .map((value) => Number(value))
+        .filter((value) => Number.isFinite(value))
+        .slice(0, 12);
+
+    return values.length > 0 ? values.sort((a, b) => a - b) : [...DEFAULT_ARRAY];
+};
 
 export const generateTwoPointersSteps = (inputArray, target) => {
+    const arr = sanitizeArray(inputArray);
+    const tgt = Number.isFinite(Number(target)) ? Number(target) : DEFAULT_TARGET;
     const steps = [];
-    
-    // Use defaults if not provided
-    let arr = (inputArray && inputArray.length > 0) ? [...inputArray] : [1, 2, 4, 6, 10];
-    const tgt = target ?? 8;
-    
-    // Sort array for two pointers
-    arr.sort((a, b) => a - b);
+    const discarded = new Set();
 
-    const makeStep = (type, desc, left, right, indices, sortedIndices, extra = {}) => ({
+    const getDiscardedIndices = () => Array.from(discarded).sort((a, b) => a - b);
+    const buildStep = ({
         type,
-        description: desc,
-        array: [...arr],
-        indices: indices || [],
-        sortedIndices: sortedIndices || [],
-        leftPointer: left,
-        rightPointer: right,
+        description,
+        leftPointer = -1,
+        rightPointer = -1,
+        indices = [],
+        discardedIndices = [],
+        foundPair = [],
+        decision = '',
+        sum = null
+    }) => ({
+        type,
+        description,
+        arraySnapshot: [...arr],
+        indices,
+        sortedIndices: discardedIndices,
+        leftPointer,
+        rightPointer,
+        leftValue: leftPointer >= 0 && leftPointer < arr.length ? arr[leftPointer] : null,
+        rightValue: rightPointer >= 0 && rightPointer < arr.length ? arr[rightPointer] : null,
+        sum,
         target: tgt,
-        ...extra
+        discardedIndices,
+        foundPair,
+        decision
     });
-
-    // Intro
-    steps.push(makeStep(
-        'info',
-        `📚 Two Pointers Technique: Use two indices moving inward from opposite ends of a sorted array to find a pair that sums to ${tgt}.`,
-        -1, -1, [], []
-    ));
-
-    steps.push(makeStep(
-        'info',
-        `📋 Sorted Array: [${arr.join(', ')}]. Target Sum: ${tgt}. Place LEFT pointer at index 0 and RIGHT pointer at index ${arr.length - 1}.`,
-        0, arr.length - 1, [0, arr.length - 1], []
-    ));
 
     let left = 0;
     let right = arr.length - 1;
     let found = false;
 
+    steps.push(buildStep({
+        type: 'info',
+        description: 'Two pointers use one index from the left and one from the right to avoid checking every pair.',
+        leftPointer: left,
+        rightPointer: right,
+        decision: 'Begin with the outermost pair.'
+    }));
+
+    steps.push(buildStep({
+        type: 'init',
+        description: `Initialize Left at ${arr[left]} and Right at ${arr[right]} in the sorted array [${arr.join(', ')}].`,
+        leftPointer: left,
+        rightPointer: right,
+        indices: [left, right],
+        decision: 'Compare the two ends first.'
+    }));
+
     while (left < right) {
         const sum = arr[left] + arr[right];
+        const discardedIndices = getDiscardedIndices();
 
-        // Show current comparison
-        steps.push(makeStep(
-            'compare',
-            `🔍 Comparing: arr[${left}]=${arr[left]} + arr[${right}]=${arr[right]} = ${sum}. Target = ${tgt}.`,
-            left, right, [left, right], []
-        ));
+        steps.push(buildStep({
+            type: 'compare',
+            description: `Compare ${arr[left]} + ${arr[right]} = ${sum} with target ${tgt}.`,
+            leftPointer: left,
+            rightPointer: right,
+            indices: [left, right],
+            discardedIndices,
+            sum,
+            decision: sum === tgt
+                ? 'The pair matches the target.'
+                : sum < tgt
+                    ? 'The sum is too small, so move Left right.'
+                    : 'The sum is too large, so move Right left.'
+        }));
 
         if (sum === tgt) {
-            // Found!
-            steps.push(makeStep(
-                'swap', // Use 'swap' type to get green highlight in AnimationCanvas
-                `✅ Found! ${arr[left]} + ${arr[right]} = ${tgt}. Pair found at indices [${left}, ${right}].`,
-                left, right, [left, right], [left, right],
-                { foundPair: [left, right] }
-            ));
             found = true;
+            steps.push(buildStep({
+                type: 'found',
+                description: `Found the pair ${arr[left]} and ${arr[right]}.`,
+                leftPointer: left,
+                rightPointer: right,
+                indices: [left, right],
+                discardedIndices,
+                foundPair: [left, right],
+                sum,
+                decision: 'Stop because the target sum is reached.'
+            }));
             break;
-        } else if (sum < tgt) {
-            steps.push(makeStep(
-                'compare',
-                `⬆️ Sum ${sum} < Target ${tgt}. Need larger sum → move LEFT pointer right (${left} → ${left + 1}).`,
-                left, right, [left], []
-            ));
-            left++;
+        }
+
+        if (sum < tgt) {
+            discarded.add(left);
+            left += 1;
+            steps.push(buildStep({
+                type: 'move-left',
+                description: `Because ${sum} is smaller than ${tgt}, discard ${arr[left - 1]} and move Left to ${arr[left]}.`,
+                leftPointer: left,
+                rightPointer: right,
+                indices: [left, right],
+                discardedIndices: getDiscardedIndices(),
+                sum,
+                decision: 'Moving Left right increases the sum in a sorted array.'
+            }));
         } else {
-            steps.push(makeStep(
-                'compare',
-                `⬇️ Sum ${sum} > Target ${tgt}. Need smaller sum → move RIGHT pointer left (${right} → ${right - 1}).`,
-                left, right, [right], []
-            ));
-            right--;
+            discarded.add(right);
+            right -= 1;
+            steps.push(buildStep({
+                type: 'move-right',
+                description: `Because ${sum} is larger than ${tgt}, discard ${arr[right + 1]} and move Right to ${arr[right]}.`,
+                leftPointer: left,
+                rightPointer: right,
+                indices: [left, right],
+                discardedIndices: getDiscardedIndices(),
+                sum,
+                decision: 'Moving Right left decreases the sum in a sorted array.'
+            }));
         }
     }
 
     if (!found) {
-        steps.push(makeStep(
-            'info',
-            `❌ No pair found that sums to ${tgt}. Pointers have crossed.`,
-            left, right, [], arr.map((_, i) => i)
-        ));
+        steps.push(buildStep({
+            type: 'not-found',
+            description: 'No valid pair remains because the pointers have met or crossed.',
+            leftPointer: left,
+            rightPointer: right,
+            discardedIndices: getDiscardedIndices(),
+            decision: 'All impossible pairs were removed one by one.'
+        }));
     }
 
-    // Final
-    steps.push(makeStep(
-        'info',
-        `🎯 Two Pointers complete! Time: O(n), Space: O(1). Each element visited at most once.`,
-        -1, -1, [], arr.map((_, i) => i)
-    ));
+    steps.push(buildStep({
+        type: 'completed',
+        description: 'Two Pointers complete. Each pointer only moves in one direction, so the scan stays linear.',
+        leftPointer: found ? left : -1,
+        rightPointer: found ? right : -1,
+        discardedIndices: getDiscardedIndices(),
+        foundPair: found ? [left, right] : [],
+        decision: 'Time Complexity: O(n) | Space Complexity: O(1).'
+    }));
 
     return steps;
 };

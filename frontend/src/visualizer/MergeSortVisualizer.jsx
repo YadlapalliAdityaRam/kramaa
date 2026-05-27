@@ -16,6 +16,7 @@ const MergeSortVisualizer = () => {
 
     const {
         currentStep,
+        currentStepIndex,
         isPlaying,
         play,
         pause,

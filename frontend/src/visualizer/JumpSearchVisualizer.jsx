@@ -1,22 +1,53 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { FaPlay, FaRandom } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 import DualView from './DualView';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateJumpSearchSteps } from '../algorithms/searching/jumpSearch';
 import { algorithmCodes } from '../data/algorithmCodes';
-import { toast } from 'react-hot-toast';
-import { FaPlay, FaRandom } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
 import './JumpSearchVisualizer.css';
 
+const EXAMPLES = [
+    { label: 'Example 1', array: [1, 3, 5, 7, 9, 11, 13, 15, 17], target: 11 },
+    { label: 'Example 2', array: [2, 4, 6, 8, 10, 12, 14, 16, 18], target: 14 }
+];
+
+const buildBlocks = (length, jumpSize) => {
+    const size = Math.max(1, jumpSize || 1);
+    const blocks = [];
+
+    for (let start = 0; start < length; start += size) {
+        const end = Math.min(start + size - 1, length - 1);
+        blocks.push({
+            start,
+            end,
+            indices: Array.from({ length: end - start + 1 }, (_, offset) => start + offset)
+        });
+    }
+
+    return blocks;
+};
+
+const createJumpFriendlyArray = () => {
+    const length = Math.floor(Math.random() * 4) + 9;
+    const start = Math.floor(Math.random() * 6) + 1;
+    const gap = Math.floor(Math.random() * 4) + 2;
+    return Array.from({ length }, (_, index) => start + index * gap);
+};
+
 const JumpSearchVisualizer = () => {
-    const [inputVal, setInputVal] = useState('2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30');
-    const [targetVal, setTargetVal] = useState('24');
-    const [arrayData, setArrayData] = useState([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]);
-    const [activeTarget, setActiveTarget] = useState(24);
+    const [inputVal, setInputVal] = useState('1, 3, 5, 7, 9, 11, 13, 15, 17');
+    const [targetVal, setTargetVal] = useState('11');
+    const [arrayData, setArrayData] = useState([1, 3, 5, 7, 9, 11, 13, 15, 17]);
+    const [activeTarget, setActiveTarget] = useState(11);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
-    const steps = useMemo(() => generateJumpSearchSteps(arrayData, activeTarget), [arrayData, activeTarget]);
+    const steps = useMemo(
+        () => generateJumpSearchSteps(arrayData, activeTarget),
+        [arrayData, activeTarget]
+    );
 
     const {
         currentStep,
@@ -34,71 +65,100 @@ const JumpSearchVisualizer = () => {
 
     useEffect(() => {
         reset();
-    }, [arrayData, activeTarget]);
+    }, [arrayData, activeTarget, reset]);
 
     const handleApply = () => {
-        const parsedArr = inputVal.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-        const parsedTarget = parseInt(targetVal);
+        const parsedArr = inputVal
+            .split(',')
+            .map((value) => parseInt(value.trim(), 10))
+            .filter((value) => !Number.isNaN(value));
+        const parsedTarget = parseInt(targetVal, 10);
 
         if (parsedArr.length === 0) {
-            toast.error("Please enter valid numbers for the array.");
+            toast.error('Please enter valid numbers for the array.');
             return;
         }
-        if (isNaN(parsedTarget)) {
-            toast.error("Please enter a valid target number.");
+        if (Number.isNaN(parsedTarget)) {
+            toast.error('Please enter a valid target number.');
             return;
         }
-        
-        // Sorting the array since Jump Search requires sorted data
+
         const sortedArr = [...parsedArr].sort((a, b) => a - b);
         setArrayData(sortedArr);
         setActiveTarget(parsedTarget);
-        toast.success("Array and Target applied. Array sorted.");
+        toast.success('Array and target applied. Array sorted for Jump Search.');
     };
 
     const handleRandomize = () => {
-        const randomArr = Array.from({ length: 16 }, () => Math.floor(Math.random() * 100) + 1).sort((a, b) => a - b);
+        const randomArr = createJumpFriendlyArray();
         const randomTarget = randomArr[Math.floor(Math.random() * randomArr.length)];
-        
+
         setArrayData(randomArr);
         setActiveTarget(randomTarget);
         setInputVal(randomArr.join(', '));
-        setTargetVal(randomTarget.toString());
-        toast.success("Randomized array and target");
+        setTargetVal(String(randomTarget));
+        toast.success('Generated a sorted demo array for Jump Search.');
     };
 
-    const codeSnippet = algorithmCodes.jumpSearch?.[activeLanguage] || '';
+    const loadExample = (example) => {
+        setArrayData(example.array);
+        setActiveTarget(example.target);
+        setInputVal(example.array.join(', '));
+        setTargetVal(String(example.target));
+        toast.success(`${example.label} loaded.`);
+    };
 
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'jumping': return 5;
-            case 'jump-stop': return 9;
-            case 'linear-scan': return 12;
-            case 'found': return 15;
-            case 'not-found': return 19;
-            default: return 0;
+            case 'setup':
+                return 3;
+            case 'jump-check':
+                return 7;
+            case 'jump-forward':
+                return 8;
+            case 'block-found':
+                return 12;
+            case 'linear-check':
+                return 13;
+            case 'found':
+                return 13;
+            case 'not-found':
+                return 17;
+            default:
+                return 0;
         }
     };
 
+    const codeSnippet = algorithmCodes.jumpSearch?.[activeLanguage] || '';
     const currentArray = currentStep?.arraySnapshot || arrayData;
-    const { jumpSize, prev, curr, scanIndex, type } = currentStep || {};
-    
-    // Derived values
-    const safePrev = prev !== undefined && prev !== null ? prev : -1;
-    const safeCurr = curr !== undefined && curr !== null ? curr : -1;
-    const safeScan = scanIndex !== undefined && scanIndex !== null ? scanIndex : -1;
-
-    // Helper to generate block boundaries
-    const getBlocks = () => {
-        const blocks = [];
-        if (!jumpSize) return blocks;
-        for (let i = 0; i < currentArray.length; i += jumpSize) {
-            blocks.push(i);
-        }
-        return blocks;
-    };
-    const blockStarts = getBlocks();
+    const jumpSize = Number.isFinite(currentStep?.jumpSize)
+        ? currentStep.jumpSize
+        : Math.max(1, Math.floor(Math.sqrt(currentArray.length || 1)));
+    const blocks = currentStep?.blocks?.length
+        ? currentStep.blocks
+        : buildBlocks(currentArray.length, jumpSize);
+    const activeBlock = currentStep?.activeBlock || blocks[0] || null;
+    const checkedBoundaryIndices = currentStep?.checkedBoundaryIndices || [];
+    const discardedSet = new Set(currentStep?.discardedIndices || []);
+    const jumpIndex = Number.isInteger(currentStep?.jumpIndex) ? currentStep.jumpIndex : -1;
+    const linearIndex = Number.isInteger(currentStep?.linearIndex) ? currentStep.linearIndex : -1;
+    const foundIndex = Number.isInteger(currentStep?.foundIndex) ? currentStep.foundIndex : -1;
+    const activeBlockIndex = Number.isInteger(currentStep?.activeBlockIndex) ? currentStep.activeBlockIndex : -1;
+    const resolvedActiveBlockIndex = activeBlock
+        ? (activeBlockIndex >= 0
+            ? activeBlockIndex
+            : blocks.findIndex((block) => block.start === activeBlock.start && block.end === activeBlock.end))
+        : -1;
+    const phase = currentStep?.phase || 'Ready';
+    const comparison = currentStep?.comparison || 'Jump Search will compare block boundaries first.';
+    const decision = currentStep?.decision || 'Press Search to start the animation.';
+    const blockLabel = activeBlock
+        ? `Block ${resolvedActiveBlockIndex + 1} [${activeBlock.start}..${activeBlock.end}]`
+        : 'No active block';
+    const checkedBoundaryValues = checkedBoundaryIndices.length
+        ? checkedBoundaryIndices.map((index) => currentArray[index]).join(' -> ')
+        : 'None yet';
 
     return (
         <DualView
@@ -107,9 +167,9 @@ const JumpSearchVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Jumps ahead in block sizes of √N, then performs a linear scan behind the overshoot."}
+            description={currentStep?.description || 'Jump ahead by sqrt(n) blocks, then linearly scan the selected block.'}
         >
-            <div className="jump-search-container">
+            <div className="jump-container">
                 <div className="jump-input-bar">
                     <div className="jump-input-group">
                         <label>Sorted Array:</label>
@@ -117,111 +177,214 @@ const JumpSearchVisualizer = () => {
                             type="text"
                             className="jump-value-input"
                             value={inputVal}
-                            onChange={(e) => setInputVal(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleApply()}
-                            placeholder="2, 4, 6..."
-                            style={{width: '320px'}}
+                            onChange={(event) => setInputVal(event.target.value)}
+                            onKeyDown={(event) => event.key === 'Enter' && handleApply()}
+                            placeholder="1, 3, 5, 7..."
                         />
                     </div>
                     <div className="jump-input-group">
                         <label>Target:</label>
                         <input
                             type="number"
-                            className="jump-value-input"
-                            style={{ width: '80px' }}
+                            className="jump-value-input jump-target-input"
                             value={targetVal}
-                            onChange={(e) => setTargetVal(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleApply()}
+                            onChange={(event) => setTargetVal(event.target.value)}
+                            onKeyDown={(event) => event.key === 'Enter' && handleApply()}
                         />
                     </div>
-                    <button className="jump-btn btn-primary" onClick={handleApply}>
-                        <FaPlay style={{fontSize: '0.8rem'}} /> Search
+                    <button className="jump-btn jump-btn-primary" onClick={handleApply}>
+                        <FaPlay /> Search
                     </button>
-                    <button className="jump-btn btn-secondary" onClick={handleRandomize}>
+                    <button className="jump-btn jump-btn-secondary" onClick={handleRandomize}>
                         <FaRandom /> Random
                     </button>
+                    <div className="jump-example-row">
+                        {EXAMPLES.map((example) => (
+                            <button
+                                key={example.label}
+                                className="jump-btn jump-btn-example"
+                                onClick={() => loadExample(example)}
+                            >
+                                {example.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="jump-visual-workspace">
                     <div className="jump-top-hud">
-                        <div className="jump-info-board">
-                           Length: <strong>{currentArray.length}</strong> 
-                           <span className="divider">|</span>
-                           Target: <strong>{activeTarget}</strong>
-                           <span className="divider">|</span>
-                           Block Size (√N): <strong>{jumpSize || Math.floor(Math.sqrt(currentArray.length))}</strong>
+                        <div className="jump-stat-grid">
+                            <div className="jump-stat-card">
+                                <span>Array Length</span>
+                                <strong>{currentArray.length}</strong>
+                            </div>
+                            <div className="jump-stat-card">
+                                <span>Jump Size</span>
+                                <strong>{jumpSize}</strong>
+                            </div>
+                            <div className="jump-stat-card">
+                                <span>Current Phase</span>
+                                <strong>{phase}</strong>
+                            </div>
+                            <div className="jump-stat-card">
+                                <span>Current Block</span>
+                                <strong>{blockLabel}</strong>
+                            </div>
+                        </div>
+
+                        <div className="jump-math-board">
+                            <div className="jump-math-title">Jump Size Rule</div>
+                            <div className="jump-math-equation">
+                                jump = floor(sqrt({currentArray.length || 0})) = {jumpSize}
+                            </div>
+                            <div className="jump-math-breakdown">
+                                <span>sqrt(n) = {Math.sqrt(currentArray.length || 0).toFixed(2)}</span>
+                                <span>Blocks = {blocks.length}</span>
+                                <span>Jump Search first checks each block boundary.</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="jump-main-array">
-                        <AnimatePresence>
-                            {currentArray.map((val, idx) => {
-                                let boxClass = 'jump-box';
-                                let statusLabel = null;
-                                
-                                const isBlockStart = blockStarts.includes(idx);
-                                
-                                // Logic for states
-                                const isCurrentJumpHead = type === 'jumping' && idx === safeCurr;
-                                const isPrevJumpTail = type === 'jumping' && idx === safePrev;
-                                
-                                const isInActiveLinearBlock = (type === 'jump-stop' || type === 'linear-scan') && idx >= safePrev && idx <= safeCurr;
-                                const isScanning = type === 'linear-scan' && idx === safeScan;
-                                const isFound = type === 'found' && (idx === safeCurr || idx === safeScan);
-                                const isDiscarded = (type === 'linear-scan' || type === 'jump-stop' || type === 'found') && (idx < safePrev || idx > safeCurr) && !isFound;
-                                
-                                if (isDiscarded) {
-                                    boxClass += ' discarded-box';
-                                } else if (isFound) {
-                                    boxClass += ' found-box';
-                                    statusLabel = 'Found!';
-                                } else if (isScanning) {
-                                    boxClass += ' scanning-box';
-                                    statusLabel = 'Linear Scan';
-                                } else if (isCurrentJumpHead) {
-                                    boxClass += ' jumping-head-box';
-                                    statusLabel = 'Jump Check';
-                                } else if (isPrevJumpTail) {
-                                    boxClass += ' jumping-tail-box';
-                                } else if (isInActiveLinearBlock) {
-                                    boxClass += ' act-block-box';
-                                } else {
-                                    boxClass += ' default-box';
-                                }
+                    <div className="jump-status-strip">
+                        <div className="jump-status-card">
+                            <span>Comparison</span>
+                            <strong>{comparison}</strong>
+                        </div>
+                        <div className="jump-status-card">
+                            <span>Decision</span>
+                            <strong>{decision}</strong>
+                        </div>
+                        <div className="jump-status-card">
+                            <span>Checked Boundaries</span>
+                            <strong>{checkedBoundaryValues}</strong>
+                        </div>
+                        <div className="jump-status-card">
+                            <span>Target</span>
+                            <strong>{activeTarget}</strong>
+                        </div>
+                    </div>
 
-                                return (
-                                    <div key={`item-${idx}`} className="jump-item-wrapper" style={{ marginRight: isBlockStart && idx !== 0 ? '16px' : '0' }}>
-                                        {/* Block Boundary divider simulation using margin on wrapper mapping to blockStarts */}
-                                        {statusLabel && (
-                                            <div className={`jump-status-label ${isFound ? 'found-lbl' : isScanning ? 'scan-lbl' : 'jump-lbl'}`}>
-                                                {statusLabel}
-                                            </div>
-                                        )}
-                                        <motion.div 
-                                            className={boxClass}
-                                            animate={{
-                                                y: isCurrentJumpHead ? -15 : (isScanning ? -10 : 0),
-                                                scale: isFound ? 1.05 : 1
-                                            }}
-                                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                        >
-                                            <span className="jump-val">{val}</span>
-                                        </motion.div>
-                                        <div className="jump-idx">{idx}</div>
+                    <div className="jump-block-grid">
+                        {blocks.map((block, blockIdx) => {
+                            const isActiveBlock = activeBlock
+                                && block.start === activeBlock.start
+                                && block.end === activeBlock.end;
+                            const isDiscardedBlock = block.indices.every((index) => discardedSet.has(index));
+                            const isCheckedBlock = checkedBoundaryIndices.includes(block.end) && !isActiveBlock && !isDiscardedBlock;
+
+                            let blockClass = 'jump-block-card future-block';
+                            let blockTag = 'Upcoming';
+
+                            if (isDiscardedBlock) {
+                                blockClass = 'jump-block-card discarded-block';
+                                blockTag = 'Discarded';
+                            } else if (isActiveBlock) {
+                                blockClass = 'jump-block-card active-block';
+                                blockTag = phase.includes('Linear') ? 'Linear Scan Block' : 'Current Jump Block';
+                            } else if (isCheckedBlock) {
+                                blockClass = 'jump-block-card checked-block';
+                                blockTag = 'Checked';
+                            }
+
+                            return (
+                                <motion.div
+                                    key={`block-${block.start}-${block.end}`}
+                                    className={blockClass}
+                                    animate={{
+                                        y: isActiveBlock ? -6 : 0,
+                                        scale: isActiveBlock ? 1.01 : 1
+                                    }}
+                                    transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                                >
+                                    <div className="jump-block-header">
+                                        <div>
+                                            <span className="jump-block-title">Block {blockIdx + 1}</span>
+                                            <strong>[{block.start}..{block.end}]</strong>
+                                        </div>
+                                        <span className="jump-block-chip">{blockTag}</span>
                                     </div>
-                                );
-                            })}
-                        </AnimatePresence>
+
+                                    <div className="jump-block-items">
+                                        {block.indices.map((idx) => {
+                                            const isBoundary = idx === block.end;
+                                            const isJumpPointer = idx === jumpIndex && foundIndex === -1 && linearIndex === -1;
+                                            const isLinearPointer = idx === linearIndex && foundIndex === -1;
+                                            const isFound = idx === foundIndex;
+                                            const isDiscarded = discardedSet.has(idx) && !isFound;
+                                            const isInsideActiveBlock = isActiveBlock && !isDiscardedBlock;
+                                            const labels = [];
+
+                                            let boxClass = 'jump-box default-box';
+                                            if (isDiscarded) {
+                                                boxClass = 'jump-box discarded-box';
+                                            } else if (isFound) {
+                                                boxClass = 'jump-box found-box';
+                                                labels.push({ text: 'Found', className: 'found-lbl' });
+                                            } else if (isLinearPointer) {
+                                                boxClass = 'jump-box linear-box';
+                                                labels.push({ text: 'Linear', className: 'linear-lbl' });
+                                            } else if (isJumpPointer) {
+                                                boxClass = 'jump-box jump-pointer-box';
+                                                labels.push({ text: 'Jump', className: 'jump-lbl' });
+                                            } else if (isBoundary) {
+                                                boxClass = 'jump-box boundary-box';
+                                            } else if (isInsideActiveBlock) {
+                                                boxClass = 'jump-box active-range-box';
+                                            }
+
+                                            if (isBoundary) {
+                                                labels.push({ text: 'Boundary', className: 'boundary-lbl' });
+                                            }
+
+                                            return (
+                                                <div key={`cell-${idx}`} className="jump-item-wrapper">
+                                                    {labels.length > 0 && (
+                                                        <div className="jump-status-stack">
+                                                            {labels.map((label) => (
+                                                                <div
+                                                                    key={`${idx}-${label.text}`}
+                                                                    className={`jump-status-label ${label.className}`}
+                                                                >
+                                                                    {label.text}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <motion.div
+                                                        className={boxClass}
+                                                        animate={{
+                                                            y: isJumpPointer || isLinearPointer || isFound ? -10 : 0,
+                                                            scale: isFound ? 1.06 : 1
+                                                        }}
+                                                        transition={{ type: 'spring', stiffness: 280, damping: 20 }}
+                                                    >
+                                                        <span className="jump-val">{currentArray[idx]}</span>
+                                                    </motion.div>
+                                                    <div className="jump-idx">{idx}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="jump-block-footer">
+                                        <span>Boundary Check</span>
+                                        <strong>
+                                            index {block.end}, value {currentArray[block.end]}
+                                        </strong>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
 
                 <div className="jump-footer">
                     <div className="jump-legend">
-                        <div className="leg-item"><span className="dot block-indicator"></span> Block Division (√N gap)</div>
-                        <div className="leg-item"><span className="dot yellow"></span> Jump Check</div>
-                        <div className="leg-item"><span className="dot blue"></span> Target Block</div>
-                        <div className="leg-item"><span className="dot orange"></span> Linear Scan</div>
-                        <div className="leg-item"><span className="dot green"></span> Found</div>
+                        <div className="leg-item"><span className="dot yellow" /> Jump Pointer</div>
+                        <div className="leg-item"><span className="dot blue" /> Block Boundary / Active Block</div>
+                        <div className="leg-item"><span className="dot orange" /> Linear Search Pointer</div>
+                        <div className="leg-item"><span className="dot green" /> Found Element</div>
+                        <div className="leg-item"><span className="dot gray" /> Discarded Elements</div>
                     </div>
                 </div>
 
@@ -242,19 +405,16 @@ const JumpSearchVisualizer = () => {
                     />
                 </div>
 
-                {/* Education Panel */}
                 <div className="cs-education-panel">
                     <div className="cs-edu-grid">
                         <div className="cs-edu-section">
                             <h3>How It Works</h3>
                             <p>
-                                Jump Search is a searching algorithm for sorted arrays. The basic idea is to check fewer elements (than linear search) 
-                                by jumping ahead by fixed steps or skipping some elements in place of searching all elements.
+                                Jump Search improves Linear Search on sorted arrays by skipping ahead in blocks instead of checking every element one by one. It uses the block boundary values to quickly decide which part of the array can be ignored.
                             </p>
-                            <h3 style={{ marginTop: '16px' }}>The Block Jump</h3>
+                            <h3 style={{ marginTop: '16px' }}>Why the Block Scan Matters</h3>
                             <p>
-                                The optimal block jump size is √N where N is the length of the array. It jumps forward by √N until the element at the 
-                                current jump index is greater than the target. Then, it performs a linear search from the previous step to find the target.
+                                The yellow jump pointer checks the last value of each block. As soon as a boundary becomes large enough, the algorithm knows the target must be inside that blue block, so it switches to the orange linear scan.
                             </p>
                         </div>
                         <div className="cs-edu-section">
@@ -266,11 +426,11 @@ const JumpSearchVisualizer = () => {
                                 </div>
                                 <div className="cs-complexity-item">
                                     <span>Time (Average)</span>
-                                    <span style={{ color: '#fbbf24' }}>O(√n)</span>
+                                    <span style={{ color: '#fbbf24' }}>O(sqrt(n))</span>
                                 </div>
                                 <div className="cs-complexity-item">
                                     <span>Time (Worst)</span>
-                                    <span style={{ color: '#fbbf24' }}>O(√n)</span>
+                                    <span style={{ color: '#fbbf24' }}>O(sqrt(n))</span>
                                 </div>
                                 <div className="cs-complexity-item">
                                     <span>Space Complexity</span>
@@ -278,9 +438,12 @@ const JumpSearchVisualizer = () => {
                                 </div>
                                 <div className="cs-complexity-item">
                                     <span>Data Requirement</span>
-                                    <span style={{ color: '#fbbf24' }}>Sorted Array</span>
+                                    <span style={{ color: '#60a5fa' }}>Sorted Array</span>
                                 </div>
                             </div>
+                            <p style={{ marginTop: '12px', color: 'var(--text-secondary)' }}>
+                                Jump Search is efficient because it skips whole blocks first, then performs a short linear search only where the target can still exist.
+                            </p>
                         </div>
                     </div>
                 </div>

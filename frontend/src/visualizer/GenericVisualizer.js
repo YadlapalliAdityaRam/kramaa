@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import DualView from './DualView';
 import AnimationCanvas from './AnimationCanvas';
 import GraphCanvas from './GraphCanvas';
-import TreeCanvas from './TreeCanvas';
+import TreeCanvas, { TREE_STATE_COLORS } from './TreeCanvas';
 import DPTableCanvas from './DPTableCanvas';
 import ActivityCanvas from './ActivityCanvas';
 import GridCanvas from './GridCanvas';
@@ -123,6 +123,28 @@ import { generateFloydCycleSteps } from '../algorithms/graphs/floydCycle';
 // Stable constants to avoid creating new references each render
 const DUMMY_ARRAY = [1];
 const EMPTY_STEPS = [];
+const BINARY_TREE_LEGEND = [
+    {
+        label: 'Default',
+        description: 'Node has not been explored yet.',
+        color: TREE_STATE_COLORS.default
+    },
+    {
+        label: 'Exploring',
+        description: 'Traversal is moving through this node.',
+        color: TREE_STATE_COLORS.visiting
+    },
+    {
+        label: 'Current Visit',
+        description: 'This node is being added to the traversal result now.',
+        color: TREE_STATE_COLORS.current
+    },
+    {
+        label: 'Visited',
+        description: 'This node was already recorded in the result.',
+        color: TREE_STATE_COLORS.visited
+    }
+];
 
 // ──────────────────────────────────────────────────────────
 // Algorithm registry: maps URL slug to config
@@ -270,6 +292,8 @@ const CORE_ALGORITHM_REGISTRY = {
         canvasType: 'array',
         generator: (values, target) => generateTwoPointersSteps(values, target),
         needsTarget: true,
+        defaultData: [1, 2, 4, 6, 8, 10],
+        defaultTarget: 10,
         codeKey: 'twoPointers'
     },
     'searching/sliding-window': {
@@ -277,6 +301,8 @@ const CORE_ALGORITHM_REGISTRY = {
         canvasType: 'array',
         generator: (values, target) => generateSlidingWindowSteps(values, target),
         needsTarget: true,
+        defaultData: [2, 1, 5, 1, 3, 2],
+        defaultTarget: 3,
         codeKey: 'slidingWindow'
     },
 
@@ -905,6 +931,8 @@ const VisualizerEngine = ({ config, slug }) => {
                 return (
                     <AnimationCanvas
                         array={anim.currentArray}
+                        algorithmName={name}
+                        currentStep={step}
                         currentIndices={step?.type === 'swap' ? step.indices : []}
                         compareIndices={step?.type === 'compare' ? step.indices : []}
                         sortedIndices={step?.sortedIndices || []}
@@ -996,6 +1024,111 @@ const VisualizerEngine = ({ config, slug }) => {
                     <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                         {anim.currentStep?.description || 'Ready to start'}
                     </span>
+                    {name === 'Two Pointers Technique' && Number.isFinite(anim.currentStep?.sum) && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            marginLeft: 'auto'
+                        }}>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(59,130,246,0.14)',
+                                color: '#93c5fd'
+                            }}>
+                                L: {anim.currentStep?.leftValue}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(249,115,22,0.16)',
+                                color: '#fdba74'
+                            }}>
+                                R: {anim.currentStep?.rightValue}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(250,204,21,0.14)',
+                                color: '#fde68a'
+                            }}>
+                                Sum: {anim.currentStep?.leftValue} + {anim.currentStep?.rightValue} = {anim.currentStep?.sum}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(34,197,94,0.14)',
+                                color: '#86efac'
+                            }}>
+                                Target: {anim.currentStep?.target}
+                            </span>
+                        </div>
+                    )}
+                    {name === 'Sliding Window Technique' && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            marginLeft: 'auto'
+                        }}>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(59,130,246,0.14)',
+                                color: '#93c5fd'
+                            }}>
+                                Window: {Number.isInteger(anim.currentStep?.windowLeft) && Number.isInteger(anim.currentStep?.windowRight) && anim.currentStep?.windowRight >= anim.currentStep?.windowLeft
+                                    ? `[${anim.currentStep?.windowLeft}..${anim.currentStep?.windowRight}]`
+                                    : 'building'}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(250,204,21,0.14)',
+                                color: '#fde68a'
+                            }}>
+                                Sum: {Number.isFinite(anim.currentStep?.windowSum) ? anim.currentStep?.windowSum : '-'}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(34,197,94,0.14)',
+                                color: '#86efac'
+                            }}>
+                                Best: {Number.isFinite(anim.currentStep?.bestSum) ? anim.currentStep?.bestSum : 'waiting'}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(34,197,94,0.08)',
+                                color: '#bbf7d0'
+                            }}>
+                                Best Window: {Number.isInteger(anim.currentStep?.bestLeft) && Number.isInteger(anim.currentStep?.bestRight) && anim.currentStep?.bestRight >= anim.currentStep?.bestLeft
+                                    ? `[${anim.currentStep?.bestLeft}..${anim.currentStep?.bestRight}]`
+                                    : 'waiting'}
+                            </span>
+                            <span style={{
+                                fontSize: '0.82rem',
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                background: 'rgba(255,255,255,0.1)',
+                                color: '#e2e8f0'
+                            }}>
+                                k = {anim.currentStep?.k ?? searchTarget}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Traversal type selector for Binary Tree */}
                     {name === 'Binary Tree Traversals' && (
@@ -1120,6 +1253,44 @@ const VisualizerEngine = ({ config, slug }) => {
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {renderCanvas()}
                     </div>
+                    {canvasType === 'tree' && name === 'Binary Tree Traversals' && (
+                        <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            padding: '8px 16px 0'
+                        }}>
+                            {BINARY_TREE_LEGEND.map((item) => (
+                                <div
+                                    key={item.label}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '8px 12px',
+                                        borderRadius: '12px',
+                                        background: 'rgba(15, 23, 42, 0.45)',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        color: '#e2e8f0',
+                                        fontSize: '0.82rem'
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            width: '10px',
+                                            height: '10px',
+                                            borderRadius: '999px',
+                                            background: item.color,
+                                            boxShadow: `0 0 12px ${item.color}`
+                                        }}
+                                    />
+                                    <span style={{ fontWeight: 700 }}>{item.label}:</span>
+                                    <span style={{ color: '#cbd5e1' }}>{item.description}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Dynamic Algorithm Parameters */}

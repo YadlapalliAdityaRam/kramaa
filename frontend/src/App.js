@@ -248,7 +248,9 @@ const AppContent = () => {
                     <Route path="/algorithms/searching/exponential-search" element={<ExponentialSearchVisualizer />} />
                     <Route path="/algorithms/searching/fibonacci-search" element={<FibonacciSearchVisualizer />} />
                     <Route path="/algorithms/searching/interpolation-search" element={<InterpolationSearchVisualizer />} />
+                    <Route path="/algorithms/searching/interpolation" element={<InterpolationSearchVisualizer />} />
                     <Route path="/algorithms/searching/jump-search" element={<JumpSearchVisualizer />} />
+                    <Route path="/algorithms/searching/jump" element={<JumpSearchVisualizer />} />
                     <Route path="/algorithms/searching/sentinel-linear" element={<SentinelLinearSearchVisualizer />} />
 
                     <Route path="/algorithms/math/sieve" element={<SieveVisualizer />} />
@@ -294,6 +296,7 @@ const AppContent = () => {
 
 
                     {/* Trees */}
+                    <Route path="/algorithms/trees/avl-tree" element={<AVLTreeVisualizer />} />
                     <Route path="/algorithms/trees/avl" element={<AVLTreeVisualizer />} />
 
                     {/* Fallback generic route for any other algorithm under /algorithms */}

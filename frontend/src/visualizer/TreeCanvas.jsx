@@ -12,7 +12,7 @@ const toFiniteNumber = (value, fallback = 0) => {
     return Number.isFinite(numeric) ? numeric : fallback;
 };
 
-const stateColors = {
+export const TREE_STATE_COLORS = {
     default: '#4a5568',
     current: '#8b5cf6',
     visiting: '#06b6d4',
@@ -139,9 +139,9 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
                         const pos = positions[node.id];
                         if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return null;
                         const state = nodeStates[node.id] || 'default';
-                        const color = node.color === 'red' ? stateColors['red-node'] :
-                            node.color === 'black' ? stateColors['black-node'] :
-                                stateColors[state] || stateColors.default;
+                        const color = node.color === 'red' ? TREE_STATE_COLORS['red-node'] :
+                            node.color === 'black' ? TREE_STATE_COLORS['black-node'] :
+                                TREE_STATE_COLORS[state] || TREE_STATE_COLORS.default;
                         const isActive = state !== 'default';
 
                         return (

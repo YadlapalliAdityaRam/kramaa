@@ -1,136 +1,186 @@
-/**
- * Sliding Window Technique — Maximum sum of subarray of size k
- * 
- * Step types: init, expand, slide, shrink, complete
- * Each step includes: array snapshot, window boundaries, current / best sums
- */
+const DEFAULT_ARRAY = [2, 1, 5, 1, 3, 2];
+const DEFAULT_K = 3;
+
+const sanitizeArray = (inputArray) => {
+    if (!Array.isArray(inputArray) || inputArray.length === 0) return [...DEFAULT_ARRAY];
+
+    const values = inputArray
+        .map((value) => Number(value))
+        .filter((value) => Number.isFinite(value))
+        .slice(0, 12);
+
+    return values.length > 0 ? values : [...DEFAULT_ARRAY];
+};
 
 export const generateSlidingWindowSteps = (inputArray, kValue) => {
+    const arr = sanitizeArray(inputArray);
+    const k = Number.isFinite(Number(kValue)) ? Math.max(1, Math.min(arr.length, Math.round(Number(kValue)))) : Math.min(DEFAULT_K, arr.length);
     const steps = [];
 
-    // Use defaults if not provided
-    const arr = (inputArray && inputArray.length > 0) ? [...inputArray] : [2, 1, 5, 1, 3, 2];
-    const k = kValue ?? Math.min(3, arr.length);
+    const buildWindowIndices = (left, right) => {
+        if (left < 0 || right < left) return [];
+        return Array.from({ length: right - left + 1 }, (_, index) => left + index);
+    };
 
-    if (k > arr.length || k <= 0) {
-        steps.push({
-            type: 'info',
-            description: `❌ Window size k=${k} is invalid for array of length ${arr.length}.`,
-            array: [...arr],
-            indices: [],
-            sortedIndices: [],
-            windowLeft: -1,
-            windowRight: -1,
-            windowSum: 0,
-            bestSum: 0,
-            bestLeft: -1,
-            bestRight: -1
-        });
-        return steps;
-    }
-
-    const makeStep = (type, desc, wLeft, wRight, windowSum, bestSum, bestL, bestR, indices, sortedIndices) => ({
+    const buildStep = ({
         type,
-        description: desc,
-        array: [...arr],
-        indices: indices || [],
-        sortedIndices: sortedIndices || [],
-        windowLeft: wLeft,
-        windowRight: wRight,
+        description,
+        windowLeft = -1,
+        windowRight = -1,
+        windowSum = 0,
+        bestSum = null,
+        bestLeft = -1,
+        bestRight = -1,
+        incomingIndex = -1,
+        outgoingIndex = -1,
+        decision = '',
+        highlightBestWindow = false
+    }) => ({
+        type,
+        description,
+        arraySnapshot: [...arr],
+        indices: [incomingIndex, outgoingIndex].filter((index) => index >= 0),
+        windowLeft,
+        windowRight,
         windowSum,
         bestSum,
-        bestLeft: bestL,
-        bestRight: bestR,
-        k
+        bestLeft,
+        bestRight,
+        currentWindowIndices: buildWindowIndices(windowLeft, windowRight),
+        bestWindowIndices: buildWindowIndices(bestLeft, bestRight),
+        incomingIndex,
+        outgoingIndex,
+        decision,
+        k,
+        highlightBestWindow
     });
 
-    // Intro
-    steps.push(makeStep(
-        'info',
-        `📚 Sliding Window Technique: Find the maximum sum of any subarray of size k=${k}. Array: [${arr.join(', ')}].`,
-        -1, -1, 0, -Infinity, -1, -1, [], []
-    ));
-
-    steps.push(makeStep(
-        'info',
-        `📋 Strategy: Build initial window of size ${k}, then slide it right by adding the incoming element and removing the outgoing element. Track the maximum sum.`,
-        -1, -1, 0, -Infinity, -1, -1, [], []
-    ));
-
-    // Phase 1: Build initial window
-    let windowSum = 0;
-    for (let i = 0; i < k; i++) {
-        windowSum += arr[i];
-        const windowIndices = [];
-        for (let j = 0; j <= i; j++) windowIndices.push(j);
-
-        steps.push(makeStep(
-            'compare',
-            `🔧 Building window: Adding arr[${i}]=${arr[i]}. Window sum = ${windowSum}. (${i + 1}/${k} elements)`,
-            0, i, windowSum, -Infinity, -1, -1, [i], windowIndices
-        ));
+    if (k <= 0 || k > arr.length) {
+        return [buildStep({
+            type: 'invalid',
+            description: `Window size ${k} is invalid for an array of length ${arr.length}.`,
+            decision: 'Choose a window size between 1 and the array length.'
+        })];
     }
 
-    let bestSum = windowSum;
-    let bestLeft = 0;
-    let bestRight = k - 1;
+    let left = 0;
+    let windowSum = 0;
+    let bestSum = -Infinity;
+    let bestLeft = -1;
+    let bestRight = -1;
 
-    const windowIndices = [];
-    for (let j = 0; j < k; j++) windowIndices.push(j);
+    steps.push(buildStep({
+        type: 'info',
+        description: 'Sliding Window keeps a running total for the current group instead of recalculating every subarray from scratch.',
+        windowLeft: 0,
+        windowRight: -1,
+        bestSum: null,
+        decision: `Goal: find the maximum sum of any subarray of size ${k}.`
+    }));
 
-    steps.push(makeStep(
-        'swap', // green highlight for initial best
-        `✅ Initial window [0..${k - 1}] built. Sum = ${windowSum}. This is our current best!`,
-        0, k - 1, windowSum, bestSum, bestLeft, bestRight, [], windowIndices
-    ));
+    steps.push(buildStep({
+        type: 'init',
+        description: `Initialize the window on array [${arr.join(', ')}] with Left = 0 and Right = 0.`,
+        windowLeft: 0,
+        windowRight: -1,
+        bestSum: null,
+        decision: 'Start expanding the window one element at a time.'
+    }));
 
-    // Phase 2: Slide window
-    for (let i = k; i < arr.length; i++) {
-        const outgoing = arr[i - k];
-        const incoming = arr[i];
+    for (let right = 0; right < arr.length; right += 1) {
+        windowSum += arr[right];
 
-        // Show incoming
-        steps.push(makeStep(
-            'compare',
-            `➡️ Sliding window: Remove outgoing arr[${i - k}]=${outgoing}, add incoming arr[${i}]=${incoming}.`,
-            i - k, i, windowSum, bestSum, bestLeft, bestRight, [i - k, i], []
-        ));
+        steps.push(buildStep({
+            type: 'expand',
+            description: `Expand the window by including arr[${right}] = ${arr[right]}. Running sum becomes ${windowSum}.`,
+            windowLeft: left,
+            windowRight: right,
+            windowSum,
+            bestSum: Number.isFinite(bestSum) ? bestSum : null,
+            bestLeft,
+            bestRight,
+            incomingIndex: right,
+            decision: `Window size is now ${right - left + 1}.`
+        }));
 
-        windowSum = windowSum - outgoing + incoming;
-        const wLeft = i - k + 1;
-        const wRight = i;
+        if (right - left + 1 < k) {
+            steps.push(buildStep({
+                type: 'check-window',
+                description: `The window has ${right - left + 1} element${right - left + 1 === 1 ? '' : 's'}, so keep expanding until it reaches size ${k}.`,
+                windowLeft: left,
+                windowRight: right,
+                windowSum,
+                bestSum: Number.isFinite(bestSum) ? bestSum : null,
+                bestLeft,
+                bestRight,
+                decision: 'No result is checked until the window size becomes k.'
+            }));
+            continue;
+        }
 
-        const currentWindowIndices = [];
-        for (let j = wLeft; j <= wRight; j++) currentWindowIndices.push(j);
-
+        const currentWindowText = `[${arr.slice(left, right + 1).join(', ')}]`;
         if (windowSum > bestSum) {
             bestSum = windowSum;
-            bestLeft = wLeft;
-            bestRight = wRight;
+            bestLeft = left;
+            bestRight = right;
 
-            steps.push(makeStep(
-                'swap', // green highlight for new best
-                `⭐ New maximum! Window [${wLeft}..${wRight}] sum = ${windowSum} > previous best. Updated best sum = ${bestSum}!`,
-                wLeft, wRight, windowSum, bestSum, bestLeft, bestRight, [], currentWindowIndices
-            ));
+            steps.push(buildStep({
+                type: 'best-update',
+                description: `Window ${currentWindowText} has sum ${windowSum}. This is the best sum seen so far.`,
+                windowLeft: left,
+                windowRight: right,
+                windowSum,
+                bestSum,
+                bestLeft,
+                bestRight,
+                decision: `Update maximum sum to ${bestSum}.`,
+                highlightBestWindow: true
+            }));
         } else {
-            steps.push(makeStep(
-                'compare',
-                `📊 Window [${wLeft}..${wRight}] sum = ${windowSum}. Best remains ${bestSum} at [${bestLeft}..${bestRight}].`,
-                wLeft, wRight, windowSum, bestSum, bestLeft, bestRight, [], currentWindowIndices
-            ));
+            steps.push(buildStep({
+                type: 'check-window',
+                description: `Window ${currentWindowText} has sum ${windowSum}. The best sum still remains ${bestSum}.`,
+                windowLeft: left,
+                windowRight: right,
+                windowSum,
+                bestSum,
+                bestLeft,
+                bestRight,
+                decision: 'Record the result, then slide the window forward.'
+            }));
         }
+
+        if (right < arr.length - 1) {
+            steps.push(buildStep({
+                type: 'shrink',
+                description: `Slide the window forward by removing arr[${left}] = ${arr[left]} before moving Left.`,
+                windowLeft: left,
+                windowRight: right,
+                windowSum,
+                bestSum,
+                bestLeft,
+                bestRight,
+                outgoingIndex: left,
+                decision: `Subtract ${arr[left]} so the next window can reuse the current sum.`
+            }));
+        }
+
+        windowSum -= arr[left];
+        left += 1;
     }
 
-    // Final
-    const bestIndices = [];
-    for (let j = bestLeft; j <= bestRight; j++) bestIndices.push(j);
-
-    steps.push(makeStep(
-        'info',
-        `🎯 Sliding Window complete! Maximum sum = ${bestSum} at subarray [${bestLeft}..${bestRight}] = [${arr.slice(bestLeft, bestRight + 1).join(', ')}]. Time: O(n), Space: O(1).`,
-        bestLeft, bestRight, bestSum, bestSum, bestLeft, bestRight, [], bestIndices
-    ));
+    steps.push(buildStep({
+        type: 'completed',
+        description: `Sliding Window complete. Best window is [${arr.slice(bestLeft, bestRight + 1).join(', ')}] with maximum sum ${bestSum}.`,
+        windowLeft: bestLeft,
+        windowRight: bestRight,
+        windowSum: bestSum,
+        bestSum,
+        bestLeft,
+        bestRight,
+        decision: 'Each element entered and left the window once, so the algorithm stays O(n).',
+        highlightBestWindow: true
+    }));
 
     return steps;
 };

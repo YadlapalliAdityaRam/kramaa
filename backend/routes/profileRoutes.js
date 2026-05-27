@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const UserAnalytics = require('../models/UserAnalytics');
 const Submission = require('../models/Submission');
+const ActivityEvent = require('../models/ActivityEvent');
 const Contest = require('../models/Contest');
 const ContestResult = require('../models/ContestResult');
 const Problem = require('../models/Problem');
@@ -957,6 +958,26 @@ router.get('/daily-challenge-calendar', protect, async (req, res) => {
 
         const trackedProblemIds = [...new Set(challengeDays.map((entry) => entry.problemId))];
 
+        const completionEvents = await ActivityEvent.find({
+            userId: req.user.id,
+            activityType: 'daily_challenge_completed',
+            createdAt: { $gte: monthStartUtc, $lte: monthEndUtc }
+        })
+            .select('problemId createdAt metadata')
+            .sort({ createdAt: 1 })
+            .lean();
+
+        const completionEventsByDateKey = new Map();
+        completionEvents.forEach((eventDoc) => {
+            const metadataDateKey = String(eventDoc?.metadata?.dateKey || '').trim();
+            const dateKey = metadataDateKey || formatUtcDateKey(eventDoc?.createdAt);
+            if (!dateKey) return;
+            if (!completionEventsByDateKey.has(dateKey)) {
+                completionEventsByDateKey.set(dateKey, []);
+            }
+            completionEventsByDateKey.get(dateKey).push(eventDoc);
+        });
+
         const acceptedSubmissions = await Submission.find({
             user: req.user.id,
             status: 'accepted',
@@ -978,13 +999,27 @@ router.get('/daily-challenge-calendar', protect, async (req, res) => {
         });
 
         const challenges = challengeDays.map((entry) => {
-            const sameDayAccepted = acceptedByDateKey.get(entry.date) || [];
             let solvedAt = null;
+            const sameDayCompletionEvents = completionEventsByDateKey.get(entry.date) || [];
 
-            for (const submission of sameDayAccepted) {
-                if (String(submission.problem) === entry.problemId) {
-                    solvedAt = submission.createdAt;
+            for (const eventDoc of sameDayCompletionEvents) {
+                const completedProblemId = eventDoc?.problemId
+                    ? String(eventDoc.problemId)
+                    : String(eventDoc?.metadata?.problemId || '').trim();
+                if (!completedProblemId || completedProblemId === entry.problemId) {
+                    solvedAt = eventDoc.createdAt;
                     break;
+                }
+            }
+
+            if (!solvedAt) {
+                const sameDayAccepted = acceptedByDateKey.get(entry.date) || [];
+
+                for (const submission of sameDayAccepted) {
+                    if (String(submission.problem) === entry.problemId) {
+                        solvedAt = submission.createdAt;
+                        break;
+                    }
                 }
             }
 

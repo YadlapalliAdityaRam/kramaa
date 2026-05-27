@@ -107,6 +107,19 @@ const NAME_OVERRIDES = {
         ],
         coreIdea: 'Halve the search space after every comparison.'
     },
+    'Jump Search': {
+        whatItDoes: [
+            'It searches a sorted array by skipping ahead in blocks instead of checking every element.',
+            'After locating the right block, it scans only that short block linearly.'
+        ],
+        howItWorks: [
+            'Compute a jump size of about sqrt(n).',
+            'Check the last element of each block while jumping ahead.',
+            'Stop when a block boundary is greater than or equal to the target.',
+            'Linearly scan inside that block to find the exact index.'
+        ],
+        coreIdea: 'Skip large portions of the array first, then do a short linear scan only where the target can still exist.'
+    },
     'Linear Search': {
         howItWorks: [
             'Start from the first element.',
@@ -162,6 +175,34 @@ const NAME_OVERRIDES = {
             'It computes how to make a target amount using given coin values.',
             'Depending on variant, it gives minimum coins or number of ways.'
         ]
+    },
+    'Two Pointers Technique': {
+        whatItDoes: [
+            'It finds a pair in a sorted array whose sum matches a target value.',
+            'It avoids checking every pair by moving only the pointer that can improve the answer.'
+        ],
+        howItWorks: [
+            'Place Left at the first element and Right at the last element.',
+            'Add the two pointed values and compare the sum with the target.',
+            'If the sum is too small, move Left one step to the right.',
+            'If the sum is too large, move Right one step to the left.',
+            'Stop when you find the pair or when the pointers meet.'
+        ],
+        coreIdea: 'Each comparison removes impossible pairs, so the array is scanned in one pass instead of using nested loops.'
+    },
+    'Sliding Window Technique': {
+        whatItDoes: [
+            'It finds the best fixed-size subarray by reusing the previous window calculation.',
+            'It updates the sum by adding the incoming element and removing the outgoing element.'
+        ],
+        howItWorks: [
+            'Start with Left and Right at the beginning of the array.',
+            'Expand the window by moving Right and adding the new value to the running sum.',
+            'When the window reaches size k, check whether it improves the answer.',
+            'Remove the Left value from the sum and move Left forward.',
+            'Repeat until the window reaches the end of the array.'
+        ],
+        coreIdea: 'Update the current window incrementally instead of recomputing every subarray sum from scratch.'
     }
 };
 
@@ -218,4 +259,3 @@ export const buildAlgorithmOverview = ({
         }
     };
 };
-

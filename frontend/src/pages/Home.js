@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import {
     FaEye, FaCode, FaRobot, FaTrophy, FaRoute, FaMedal,
     FaStar, FaArrowRight, FaChevronRight,
-    FaCheckCircle, FaUsers, FaLightbulb, FaFire,
+    FaCheckCircle, FaLightbulb, FaFire,
     FaBolt, FaCrown, FaGem, FaShieldAlt, FaAward, FaRocket,
     FaTerminal, FaLayerGroup, FaNetworkWired, FaBrain
 } from 'react-icons/fa';
@@ -126,7 +126,6 @@ const Home = () => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const [liveStats, setLiveStats] = useState({
         algorithmsCount: null,
-        usersCount: null,
         updatedAt: null
     });
     const [socialWidgets, setSocialWidgets] = useState({
@@ -138,6 +137,7 @@ const Home = () => {
     });
     const [socialLoading, setSocialLoading] = useState(false);
     const [suggestedFollowState, setSuggestedFollowState] = useState({});
+    const minimumAlgorithmDisplayCount = 70;
 
     useEffect(() => {
         let cancelled = false;
@@ -148,11 +148,9 @@ const Home = () => {
                 if (cancelled) return;
 
                 const algorithmsCount = Number(data?.data?.algorithmsCount);
-                const usersCount = Number(data?.data?.usersCount);
 
                 setLiveStats({
                     algorithmsCount: Number.isFinite(algorithmsCount) ? algorithmsCount : null,
-                    usersCount: Number.isFinite(usersCount) ? usersCount : null,
                     updatedAt: data?.data?.updatedAt || null
                 });
             } catch (error) {
@@ -239,18 +237,18 @@ const Home = () => {
         };
     }, [isAuthenticated, user?._id]);
 
+    const visibleAlgorithmCount = Math.max(
+        Number.isFinite(liveStats.algorithmsCount) ? liveStats.algorithmsCount : algorithmList.length,
+        minimumAlgorithmDisplayCount
+    );
+
     const statsCards = [
         {
             label: 'Algorithms',
-            value: liveStats.algorithmsCount,
+            value: visibleAlgorithmCount,
+            suffix: '+',
             icon: <FaEye />,
             color: '#6366f1'
-        },
-        {
-            label: 'Users',
-            value: liveStats.usersCount,
-            icon: <FaUsers />,
-            color: '#10b981'
         }
     ];
 
@@ -370,7 +368,7 @@ const Home = () => {
                                     {s.icon}
                                 </div>
                                 <div className="stat-number">
-                                    {Number.isFinite(s.value) ? s.value.toLocaleString() : '—'}
+                                    {Number.isFinite(s.value) ? `${s.value.toLocaleString()}${s.suffix || ''}` : '—'}
                                 </div>
                                 <div className="stat-label">{s.label}</div>
                             </div>

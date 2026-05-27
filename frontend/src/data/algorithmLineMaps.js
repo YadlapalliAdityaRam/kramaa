@@ -63,11 +63,67 @@ export const algorithmLineMaps = {
         cpp: { compare: 5, 'move-left': 7, 'move-right': 6, found: 5, 'not-found': 9, completed: 9 },
         java: { compare: 5, 'move-left': 7, 'move-right': 6, found: 5, 'not-found': 9, completed: 9 }
     },
+    twoPointers: {
+        javascript: { compare: 6, found: 8, 'move-left': 12, 'move-right': 14, 'not-found': 19, completed: 19 },
+        python: { compare: 6, found: 8, 'move-left': 11, 'move-right': 13, 'not-found': 16, completed: 16 },
+        cpp: { compare: 6, found: 8, 'move-left': 12, 'move-right': 14, 'not-found': 18, completed: 18 },
+        java: { compare: 6, found: 8, 'move-left': 12, 'move-right': 14, 'not-found': 18, completed: 18 }
+    },
+    slidingWindow: {
+        javascript: { expand: 6, 'check-window': 8, 'best-update': 8, shrink: 10, completed: 14 },
+        python: { expand: 6, 'check-window': 8, 'best-update': 8, shrink: 10, completed: 13 },
+        cpp: { expand: 6, 'check-window': 8, 'best-update': 8, shrink: 10, completed: 14 },
+        java: { expand: 6, 'check-window': 8, 'best-update': 8, shrink: 10, completed: 14 }
+    },
     jumpSearch: {
-        javascript: { jump: 5, compare: 8, found: 8, 'not-found': 10, completed: 10 },
-        python: { jump: 6, compare: 9, found: 13, 'not-found': 16, completed: 16 },
-        cpp: { jump: 5, compare: 6, found: 12, 'not-found': 16, completed: 16 },
-        java: { jump: 5, compare: 6, found: 12, 'not-found': 16, completed: 16 }
+        javascript: {
+            setup: 3,
+            jump: 7,
+            compare: 7,
+            'jump-check': 7,
+            'jump-forward': 8,
+            'block-found': 12,
+            'linear-check': 13,
+            found: 13,
+            'not-found': 17,
+            completed: 17
+        },
+        python: {
+            setup: 5,
+            jump: 8,
+            compare: 8,
+            'jump-check': 8,
+            'jump-forward': 9,
+            'block-found': 11,
+            'linear-check': 12,
+            found: 13,
+            'not-found': 17,
+            completed: 17
+        },
+        cpp: {
+            setup: 4,
+            jump: 7,
+            compare: 7,
+            'jump-check': 7,
+            'jump-forward': 8,
+            'block-found': 12,
+            'linear-check': 13,
+            found: 13,
+            'not-found': 17,
+            completed: 17
+        },
+        java: {
+            setup: 4,
+            jump: 7,
+            compare: 7,
+            'jump-check': 7,
+            'jump-forward': 8,
+            'block-found': 12,
+            'linear-check': 13,
+            found: 13,
+            'not-found': 17,
+            completed: 17
+        }
     },
     interpolationSearch: {
         javascript: { probe: 4, compare: 7, 'move-left': 9, 'move-right': 8, found: 7, 'not-found': 10, completed: 10 },
@@ -167,6 +223,43 @@ export const algorithmLineMaps = {
         javascript: { compare: 4, mark: 8, completed: 11 }
     },
     shellSort: {
-        javascript: { compare: 7, swap: 8, completed: 14 }
+        javascript: { 'gap-change': 4, compare: 9, swap: 10, placed: 13, completed: 20 }
+    },
+    timSort: {
+        javascript: {
+            'identify-run': 33,
+            compare: 6,
+            shift: 7,
+            'insert-complete': 11,
+            'run-sorted': 35,
+            'phase-2': 38,
+            'merge-start': 43,
+            'merge-compare': 20,
+            'merge-copy': 22,
+            'merge-complete': 44,
+            completed: 49
+        }
+    },
+    sentinelLinearSearch: {
+        javascript: {
+            'sentinel-placed': 7,
+            scan: 10,
+            'loop-stopped': 14,
+            found: 16,
+            'not-found': 19
+        }
+    },
+    zAlgorithm: {
+        javascript: {
+            init: 2,
+            'box-range': 12,
+            'inside-box': 8,
+            'copy-existing': 9,
+            'box-extension': 16,
+            compare: 12,
+            mismatch: 16,
+            found: 25,
+            completed: 29
+        }
     }
 };
