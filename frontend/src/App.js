@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from './components/common/Navigation/Navbar';
 import { Toaster, toast } from 'react-hot-toast';
+import { Analytics } from '@vercel/analytics/react';
 import LoaderOverlay from './components/common/LoaderOverlay';
 import TopProgressBar from './components/common/TopProgressBar';
 import PageTransition from './components/common/PageTransition';
@@ -89,6 +90,7 @@ import LearningPath from './pages/LearningPath';
 import Community from './pages/Community';
 import Profile from './pages/Profile';
 import Contests from './pages/Contests';
+import Leaderboard from './pages/Leaderboard';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
 import Login from './pages/auth/Login';
@@ -320,6 +322,7 @@ const AppContent = () => {
                     <Route path="/community" element={<Community />} />
                     <Route path="/profile/:username?" element={<Profile />} />
                     <Route path="/contests" element={<Contests />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -403,6 +406,7 @@ function App() {
   return (
     <Router>
       <AppContent />
+      <Analytics />
     </Router>
   );
 }
