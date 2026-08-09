@@ -5,15 +5,16 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateCycleSortSteps } from '../algorithms/sorting/cycleSort';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
+import { FaRandom, FaCheck, FaRedo, FaInfoCircle, FaHdd } from 'react-icons/fa';
 import './CycleSortVisualizer.css';
 
 const DEFAULT_ARRAY = [5, 2, 8, 4, 1, 9, 3, 7];
 
 const CycleSortVisualizer = () => {
-    const [arrayInput, setArrayInput] = useState(DEFAULT_ARRAY);
-    const [arraySize, setArraySize] = useState(8);
-    const [showIntuition, setShowIntuition] = useState(true);
+    const [arrayInput, setArrayInput]         = useState(DEFAULT_ARRAY);
+    const [inputValue, setInputValue]         = useState(DEFAULT_ARRAY.join(", "));
     const [activeLanguage, setActiveLanguage] = useState('javascript');
+    const [showIntuition, setShowIntuition]   = useState(true);
 
     const steps = useMemo(
         () => generateCycleSortSteps(arrayInput),
@@ -35,163 +36,183 @@ const CycleSortVisualizer = () => {
     } = useGenericAnimation(steps);
 
     const handleGenerateRandom = () => {
-        const newArray = Array.from({ length: arraySize }, () => Math.floor(Math.random() * 90) + 10);
+        const size = 8;
+        const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 85) + 10);
         setArrayInput(newArray);
+        setInputValue(newArray.join(", "));
         reset();
-        toast.success(`Generated random array of size ${arraySize}!`);
+        toast.success(`Generated random array!`);
     };
 
-    const handleManualInput = (newArray) => {
-        setArrayInput(newArray);
-        setArraySize(newArray.length);
-        reset();
-        toast.success('Array updated!');
-    };
+    const handleCustomInput = () => {
+        const values = inputValue.split(",")
+            .map(v => parseInt(v.trim(), 10))
+            .filter(v => !isNaN(v));
 
-    const handleSizeChange = (e) => {
-        const newSize = parseInt(e.target.value, 10);
-        setArraySize(newSize);
-        const newArray = Array.from({ length: newSize }, () => Math.floor(Math.random() * 90) + 10);
-        setArrayInput(newArray);
+        if (values.length < 3) {
+            toast.error("Please enter at least 3 numbers.");
+            return;
+        }
+        if (values.length > 15) {
+            toast.error("Maximum 15 numbers allowed.");
+            return;
+        }
+
+        setArrayInput(values);
         reset();
+        toast.success("Custom array updated!");
     };
 
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'info': return 4;
-            case 'pickup': return 16;
-            case 'count': return 21;
-            case 'place': return 35;
-            case 'rotate-start': return 45;
-            case 'completed': return 74;
-            default: return 0;
+            case 'info':         return 4;
+            case 'pickup':       return 5;
+            case 'count':        return 10;
+            case 'place':        return 16;
+            case 'rotate-start': return 27;
+            case 'completed':    return 31;
+            default:             return 0;
         }
     };
 
-    const renderArray = () => {
-        if (!currentStep) return null;
-        const { array, sortedIndices, heldItem, heldFrom, scanningIdx, targetPos } = currentStep;
-
-        return (
-            <div className="cycle-visualization-stack">
-                <div className="cycle-array-container">
-                    {array.map((val, idx) => {
-                        let state = 'default';
-                        if (sortedIndices.includes(idx)) state = 'sorted';
-                        if (idx === scanningIdx) state = 'scanning';
-                        if (idx === targetPos) state = 'target';
-                        if (idx === heldFrom && heldItem === null) state = 'empty';
-                        if (currentStep.type === 'pickup' && idx === heldFrom) state = 'pickup';
-
-                        return (
-                            <div key={idx} className="cycle-cell-wrapper">
-                                <div className={`cycle-cell state-${state}`} id={`cell-${idx}`}>
-                                    {val}
-                                </div>
-                                <div className="cycle-idx">{idx}</div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* SVG Overlay for Arrows */}
-                {heldItem !== null && targetPos !== -1 && (
-                    <svg className="cycle-arrows-overlay">
-                        <defs>
-                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
-                            </marker>
-                        </defs>
-                        {/* Logic to draw arrow from held to target would go here, 
-                            but for visual intuition we can highlight target slot */}
-                    </svg>
-                )}
-            </div>
-        );
-    };
+    const currentArray = currentStep?.array || arrayInput;
+    const maxValue     = Math.max(...currentArray, 1);
+    const codeSnippet  = algorithmCodes.cycleSort?.[activeLanguage] || '';
+    const stepData     = currentStep || {};
 
     return (
         <DualView
-            algorithmName="Cycle Sort (Minimal Writes)"
-            code={algorithmCodes.cycleSort?.[activeLanguage] || ''}
+            algorithmName="Cycle Sort (Optimal Memory Writes)"
+            code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || 'Cycle Sort minimizes array writes by placing each element directly into its final position.'}
+            codeSnippetCategory="sorting"
+            description={
+                <div className="cyc-desc-wrapper">
+                    <span className="cyc-badge">In-Place O(N²) / O(1) Memory Writes</span>
+                    <span className="cyc-desc-text">
+                        {currentStep?.description || 'Press Play to observe Cycle Sort performing theoretically minimum memory writes.'}
+                    </span>
+                </div>
+            }
         >
-            <div className="cycle-container">
-                <div className="cycle-header-bar">
-                    <button className="floyd-toggle-btn" onClick={() => setShowIntuition(!showIntuition)}>
-                        {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
-                    </button>
-                    <div className="cycle-settings">
-                        <label>Size: {arraySize}</label>
+            <div className="cyc-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="cyc-input-panel">
+                    <div className="cyc-input-group">
+                        <label className="cyc-input-label">Array:</label>
                         <input
-                            type="range"
-                            min="4"
-                            max="12"
-                            value={arraySize}
-                            onChange={handleSizeChange}
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCustomInput()}
+                            placeholder="5, 2, 8, 4, 1"
+                            className="cyc-text-input"
                         />
+                        <button onClick={handleCustomInput} className="cyc-btn cyc-btn-primary">
+                            <FaCheck /> Apply
+                        </button>
                     </div>
-                    <div className="cycle-stats-mini">
-                        <div className="mini-stat">Writes: <span>{currentStep?.writes || 0}</span></div>
+
+                    <div className="cyc-btn-group">
+                        <button onClick={handleGenerateRandom} className="cyc-btn cyc-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => setShowIntuition(!showIntuition)} className="cyc-btn cyc-btn-outline">
+                            <FaInfoCircle /> {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
+                        </button>
+                        <button onClick={() => { setArrayInput(DEFAULT_ARRAY); setInputValue(DEFAULT_ARRAY.join(", ")); reset(); }} className="cyc-btn cyc-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="cyc-legend">
+                        <div className="cyc-leg-item"><span className="cyc-dot cyc-dot-held"></span> Held Element</div>
+                        <div className="cyc-leg-item"><span className="cyc-dot cyc-dot-scan"></span> Scanning Index</div>
+                        <div className="cyc-leg-item"><span className="cyc-dot cyc-dot-target"></span> Target Pos</div>
+                        <div className="cyc-leg-item"><span className="cyc-dot cyc-dot-sorted"></span> Sorted</div>
                     </div>
                 </div>
 
+                {/* Educational Intuition Card */}
                 {showIntuition && (
-                    <div className="floyd-intuition-panel">
-                        <h4>🏷️ The Numbered Lockers Analogy</h4>
+                    <div className="cyc-intuition-panel">
+                        <h4>🔄 The Minimal Write Advantage</h4>
                         <p>
-                            Imagine sorting items into lockers where each item has a specific home based on its value.
+                            Cycle Sort decomposes the array into permutation cycles. Each element is placed directly into its <strong>final sorted position</strong>, making at most <strong>O(N) total writes</strong> to memory—ideal for Flash or EEPROM storage!
                         </p>
-                        <ul>
-                            <li><strong>Pick up</strong> an item from a locker.</li>
-                            <li><strong>Count</strong> how many items are smaller than it to find its "Correct Locker".</li>
-                            <li><strong>Place</strong> it there, and if another item was in its way, pick that one up and repeat!</li>
-                        </ul>
-                        <p className="edu-note-small">This minimizes "Writes" because every item moves to its final home only once.</p>
                     </div>
                 )}
 
-                <div className="cycle-visual-area">
-                    {renderArray()}
+                {/* ── Main Canvas Stage: Live Metrics & Animated Bars ─────── */}
+                <div className="cyc-canvas-wrapper">
 
-                    <div className="cycle-held-section">
-                        <div className="held-label">Held Element</div>
-                        <div className={`held-slot ${currentStep?.heldItem !== null ? 'active' : ''}`}>
-                            {currentStep?.heldItem !== null ? (
-                                <div className="held-item-disc">
-                                    {currentStep?.heldItem}
+                    {/* Cycle State Dashboard Cards */}
+                    <div className="cyc-metrics-row">
+                        <div className="cyc-metric-card held-card">
+                            <span className="m-lbl">Held Element</span>
+                            <span className="m-val purple">
+                                {stepData.heldItem !== undefined && stepData.heldItem !== null ? stepData.heldItem : '-'}
+                            </span>
+                        </div>
+                        <div className="cyc-metric-card">
+                            <span className="m-lbl">Target Position (Pos)</span>
+                            <span className="m-val red">
+                                {stepData.targetPos !== undefined && stepData.targetPos !== -1 ? `idx ${stepData.targetPos}` : '-'}
+                            </span>
+                        </div>
+                        <div className="cyc-metric-card">
+                            <span className="m-lbl">Memory Writes</span>
+                            <span className="m-val green">
+                                <FaHdd style={{ fontSize: '0.9rem', marginRight: '4px' }} /> {stepData.writes ?? 0}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Animated Bar Chart Grid */}
+                    <div className="cyc-bars-container">
+                        {currentArray.map((val, idx) => {
+                            const heightPercent = Math.max(22, (val / maxValue) * 100);
+
+                            const isSorted  = stepData.sortedIndices?.includes(idx);
+                            const isScan    = idx === stepData.scanningIdx;
+                            const isTarget  = idx === stepData.targetPos;
+                            const isHeldFrom= idx === stepData.heldFrom;
+
+                            let stateClass = 'default';
+                            let badgeLabel = null;
+
+                            if (isSorted) { stateClass = 'sorted'; badgeLabel = 'Sorted'; }
+                            if (isTarget) { stateClass = 'target'; badgeLabel = 'Target'; }
+                            if (isScan)   { stateClass = 'scanning'; badgeLabel = 'Scan'; }
+                            if (isHeldFrom) { stateClass = 'held'; badgeLabel = 'Held'; }
+
+                            return (
+                                <div key={idx} className="cyc-bar-wrapper">
+                                    {badgeLabel && (
+                                        <span className={`cyc-top-badge badge-${stateClass}`}>
+                                            {badgeLabel}
+                                        </span>
+                                    )}
+                                    <div
+                                        className={`cyc-bar ${stateClass}`}
+                                        style={{ height: `${heightPercent}%` }}
+                                    >
+                                        <span className="cyc-bar-val">{val}</span>
+                                    </div>
+                                    <span className="cyc-bar-idx">[{idx}]</span>
                                 </div>
-                            ) : (
-                                <div className="held-item-empty">Empty</div>
-                            )}
-                        </div>
+                            );
+                        })}
                     </div>
+
                 </div>
 
-                <div className="floyd-footer">
-                    <div className="floyd-complexity">
-                        <div className="comp-item">
-                            <span className="label">Time Complexity:</span>
-                            <span className="val">O(N²)</span>
-                        </div>
-                        <div className="comp-item">
-                            <span className="label">Space Complexity:</span>
-                            <span className="val">O(1)</span>
-                        </div>
-                    </div>
-                    <div className="floyd-legend">
-                        <div className="leg-item"><span className="dot yellow"></span> Current</div>
-                        <div className="leg-item"><span className="dot blue"></span> Home (Target)</div>
-                        <div className="leg-item"><span className="dot red"></span> Cycle/Held</div>
-                        <div className="leg-item"><span className="dot green"></span> Sorted</div>
-                    </div>
-                </div>
-
-                <div className="cycle-controls-wrapper">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="cyc-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -205,10 +226,9 @@ const CycleSortVisualizer = () => {
                         currentStep={currentStepIndex}
                         totalSteps={steps.length}
                         onScrub={setIndex}
-                        onGenerateRandom={handleGenerateRandom}
-                        onManualInput={handleManualInput}
                     />
                 </div>
+
             </div>
         </DualView>
     );

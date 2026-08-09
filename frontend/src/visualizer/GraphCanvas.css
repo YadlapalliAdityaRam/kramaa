@@ -1,32 +1,41 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   GraphCanvas.css — Theme-Adaptive + Layout Fixed
+   .graph-canvas now has a guaranteed min-height so the ResizeObserver
+   always gets real dimensions at first paint, preventing blank renders.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Outer canvas wrapper ────────────────────────────────────────────── */
 .graph-canvas {
+    flex: 1;                /* grow to fill parent flex column */
+    width: 100%;
+    min-height: 300px;      /* hard floor so wrapRef always measures >0 */
+    position: relative;     /* anchor for the absolutely-positioned SVG */
+    box-sizing: border-box;
+}
+
+/* ── The SVG: absolute-fill so it always matches its wrapper exactly ─── */
+.graph-svg {
+    display: block;
+    position: absolute;
+    inset: 0;               /* top:0; right:0; bottom:0; left:0 */
     width: 100%;
     height: 100%;
-    min-height: 350px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    padding: 8px 0;
+    overflow: visible;
 }
 
-.graph-svg {
-    width: 100%;
-    height: auto;
-    min-height: 350px;
-    flex: 1;
-}
-
+/* ── Empty / overlay states ──────────────────────────────────────────── */
 .graph-canvas-empty {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    color: #cfcfcf;
+    min-height: 300px;
+    color: var(--text-muted);
     font-size: 1.05rem;
     font-weight: 600;
+    transition: color 0.2s ease;
 }
 
+/* ── Edge weight labels (SVG paint-order for legibility) ─────────────── */
 .edge-weight {
     pointer-events: none;
     user-select: none;
@@ -37,126 +46,57 @@
     font-weight: 800;
     letter-spacing: 0.01em;
 }
+.edge-weight-active  { fill: #ffffff; stroke: rgba(2, 6, 23, 0.9); stroke-width: 3px; }
+.edge-weight-bg      { fill: rgba(2, 6, 23, 0.88); stroke: rgba(241, 245, 249, 0.58); stroke-width: 1.2px; }
+.edge-weight-bg-active { fill: rgba(3, 105, 161, 0.92); stroke: rgba(255, 255, 255, 0.82); }
 
-.edge-weight-active {
-    fill: #ffffff;
-    stroke: rgba(2, 6, 23, 0.9);
-    stroke-width: 3px;
-}
+[data-theme="light"] .edge-weight           { fill: #0f172a; stroke: rgba(255,255,255,.96); stroke-width: 3px; }
+[data-theme="light"] .edge-weight-active    { fill: #0f172a; stroke: #ffffff; stroke-width: 3.2px; }
+[data-theme="light"] .edge-weight-bg        { fill: rgba(255,255,255,.95); stroke: rgba(15,23,42,.36); }
+[data-theme="light"] .edge-weight-bg-active { fill: rgba(191,219,254,.95); stroke: rgba(30,64,175,.58); }
 
-.edge-weight-bg {
-    fill: rgba(2, 6, 23, 0.88);
-    stroke: rgba(241, 245, 249, 0.58);
-    stroke-width: 1.2px;
-}
-
-.edge-weight-bg-active {
-    fill: rgba(3, 105, 161, 0.92);
-    stroke: rgba(255, 255, 255, 0.82);
-}
-
-[data-theme="light"] .edge-weight {
-    fill: #0f172a;
-    stroke: rgba(255, 255, 255, 0.96);
-    stroke-width: 3px;
-}
-
-[data-theme="light"] .edge-weight-active {
-    fill: #0f172a;
-    stroke: #ffffff;
-    stroke-width: 3.2px;
-}
-
-[data-theme="light"] .edge-weight-bg {
-    fill: rgba(255, 255, 255, 0.95);
-    stroke: rgba(15, 23, 42, 0.36);
-}
-
-[data-theme="light"] .edge-weight-bg-active {
-    fill: rgba(191, 219, 254, 0.95);
-    stroke: rgba(30, 64, 175, 0.58);
-}
-
-/* Distance Table */
+/* ── Distance table ──────────────────────────────────────────────────── */
 .distance-table {
-    background: #1e1e1e;
+    background: var(--surface-bg);
     border-radius: 14px;
     padding: 12px 16px;
     width: 100%;
     max-width: 500px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--surface-shadow);
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
-
-.distance-table,
-.distance-table * {
-    color: #f5f5f5;
-}
+.distance-table, .distance-table * { color: var(--text-primary); }
 
 .dt-header {
     font-size: 0.84rem;
     font-weight: 600;
-    color: #cfcfcf !important;
+    color: var(--text-muted) !important;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 10px;
+    transition: color 0.2s ease;
 }
 
-.dt-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
+.dt-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .dt-cell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #252525;
+    background: var(--surface-bg-raised);
     border-radius: 10px;
     padding: 7px 12px;
     min-width: 48px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    border: 1px solid var(--surface-border);
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
+.dt-cell-active { background: var(--algo-tab-active-bg); border-color: var(--algo-tab-active-color); }
+.dt-node { font-size: 0.78rem; color: var(--text-muted) !important; font-weight: 600; }
+.dt-dist { font-size: 1rem; font-weight: 800; color: var(--text-primary) !important; }
 
-.dt-cell-active {
-    background: rgba(37, 99, 235, 0.22);
-    border-color: rgba(96, 165, 250, 0.45);
-}
-
-.dt-node {
-    font-size: 0.78rem;
-    color: #cfcfcf !important;
-    font-weight: 600;
-}
-
-.dt-dist {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #f5f5f5 !important;
-}
-
-@media (max-width: 768px) {
-    .graph-canvas {
-        min-height: 240px;
-        gap: 12px;
-        padding: 4px 0;
-    }
-
-    .graph-svg {
-        min-height: 220px;
-    }
-
-    .distance-table {
-        padding: 10px 12px;
-    }
-}
-
-/* Interactive Graph Canvas Overlays */
-.graph-canvas-interactive {
-    cursor: default;
-}
+/* ── Interactive graph overlays ──────────────────────────────────────── */
+.graph-canvas-interactive { cursor: default; }
 
 .graph-canvas-overlay-text {
     position: absolute;
@@ -164,9 +104,10 @@
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-muted);
     pointer-events: none;
     user-select: none;
+    transition: color 0.2s ease;
 }
 
 .graph-canvas-toast {
@@ -174,13 +115,23 @@
     top: 15px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(30, 41, 59, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
     padding: 8px 16px;
     border-radius: 8px;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 0.9rem;
     pointer-events: none;
     z-index: 10;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--surface-shadow);
+    white-space: nowrap;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .graph-canvas      { min-height: 260px; }
+    .graph-svg         { min-height: 240px; }
+    .graph-canvas-empty{ min-height: 240px; }
+    .distance-table    { padding: 10px 12px; }
 }

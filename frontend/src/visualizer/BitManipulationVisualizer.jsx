@@ -5,8 +5,8 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateBitManipulationSteps } from '../algorithms/math/bitManipulation';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { FaCalculator, FaMicrochip, FaArrowRight, FaSyncAlt } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FaMicrochip, FaRandom, FaHashtag, FaRedo } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 import './BitManipulationVisualizer.css';
 
 const BitManipulationVisualizer = () => {
@@ -52,6 +52,13 @@ const BitManipulationVisualizer = () => {
         toast.success("Random numbers generated!");
     };
 
+    const handleResetDemo = () => {
+        setValA(5);
+        setValB(3);
+        setOperation('AND');
+        reset();
+    };
+
     const handleOpChange = (op) => {
         setOperation(op);
         if (op === 'LSHIFT' || op === 'RSHIFT') {
@@ -64,13 +71,12 @@ const BitManipulationVisualizer = () => {
         binB: '00000000',
         resultBin: '00000000',
         activeBit: -1,
-        description: "Select an operation and enter numbers to begin."
+        description: "Select an operation and enter values to observe bitwise manipulation."
     };
 
     const codeSnippet = algorithmCodes.bitManipulation?.[activeLanguage] || '';
 
     const getActiveLine = (step) => {
-        // Generic snippet lines for tricks
         if (!step) return 1;
         if (step.type === 'compare') {
             if (operation === 'AND') return 3;
@@ -84,7 +90,7 @@ const BitManipulationVisualizer = () => {
     };
 
     const isBinaryOp = operation === 'AND' || operation === 'OR' || operation === 'XOR';
-    const isShiftOp = operation === 'LSHIFT' || operation === 'RSHIFT';
+    const isShiftOp  = operation === 'LSHIFT' || operation === 'RSHIFT';
 
     return (
         <DualView
@@ -93,31 +99,35 @@ const BitManipulationVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentData.description}
-        >
-            <div className="bit-container">
-                <div className="bit-header">
-                    <div className="card-title">
-                        <FaMicrochip /> BITWISE OPERATIONS
-                    </div>
-                    <div className="top-controls">
-                        <button className="bit-btn secondary" onClick={handleRandom}>
-                            <FaSyncAlt /> Random
-                        </button>
-                    </div>
+            description={
+                <div className="bit-desc-wrapper">
+                    <span className="bit-badge">Bitwise Operations</span>
+                    <span className="bit-desc-text">
+                        {currentData.description}
+                    </span>
                 </div>
+            }
+        >
+            <div className="bit-visualizer-wrapper">
 
-                <div className="bit-input-section">
-                    <div className="input-group">
-                        <label>Value A:</label>
+                {/* ── Top Controls & Input Panel ────────────────────────── */}
+                <div className="bit-input-panel">
+                    {/* Operand A Input */}
+                    <div className="bit-input-group">
+                        <label className="bit-input-label">
+                            <FaHashtag className="bit-icon" /> Value A:
+                        </label>
                         <input
                             type="number"
-                            min="0" max="255"
+                            min="0"
+                            max="255"
                             value={valA}
-                            onChange={(e) => setValA(Number(e.target.value) || 0)}
+                            onChange={(e) => setValA(Math.min(255, Math.max(0, Number(e.target.value) || 0)))}
+                            className="bit-number-input"
                         />
                     </div>
 
+                    {/* Operation Selector Pills */}
                     <div className="op-selector">
                         {['AND', 'OR', 'XOR', 'NOT', 'LSHIFT', 'RSHIFT'].map((op) => (
                             <button
@@ -125,29 +135,43 @@ const BitManipulationVisualizer = () => {
                                 className={`op-btn ${operation === op ? 'active' : ''}`}
                                 onClick={() => handleOpChange(op)}
                             >
-                                {op === 'LSHIFT' ? '<<' : op === 'RSHIFT' ? '>>' : op}
+                                {op === 'LSHIFT' ? '<< (Left Shift)' : op === 'RSHIFT' ? '>> (Right Shift)' : op}
                             </button>
                         ))}
                     </div>
 
+                    {/* Operand B / Shift Amount Input */}
                     {operation !== 'NOT' && (
-                        <div className="input-group">
-                            <label>{isShiftOp ? 'Shift by:' : 'Value B:'}</label>
+                        <div className="bit-input-group">
+                            <label className="bit-input-label">
+                                {isShiftOp ? 'Shift By:' : 'Value B:'}
+                            </label>
                             <input
                                 type="number"
-                                min={isShiftOp ? "0" : "0"}
+                                min="0"
                                 max={isShiftOp ? "7" : "255"}
                                 value={valB}
-                                onChange={(e) => setValB(Number(e.target.value) || 0)}
+                                onChange={(e) => setValB(Math.min(isShiftOp ? 7 : 255, Math.max(0, Number(e.target.value) || 0)))}
+                                className="bit-number-input"
                             />
                         </div>
                     )}
+
+                    <div className="bit-btn-group">
+                        <button className="bit-btn bit-btn-secondary" onClick={handleRandom}>
+                            <FaRandom /> Random
+                        </button>
+                        <button className="bit-btn bit-btn-outline" onClick={handleResetDemo}>
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
                 </div>
 
+                {/* ── Main Bit Visualization Stage Card ─────────────────── */}
                 <div className="bit-stage-card">
                     <div className="bit-grid">
 
-                        {/* Operand A */}
+                        {/* Operand A Row */}
                         <div className="bit-row">
                             <div className="row-label">A = {valA}</div>
                             <div className="binary-cells">
@@ -162,7 +186,7 @@ const BitManipulationVisualizer = () => {
                             </div>
                         </div>
 
-                        {/* Operand B (if applicable) */}
+                        {/* Operand B Row */}
                         {isBinaryOp && (
                             <div className="bit-row op-row">
                                 <div className="row-label op-label">{operation} B = {valB}</div>
@@ -194,10 +218,10 @@ const BitManipulationVisualizer = () => {
                                             className="shift-track"
                                             animate={{
                                                 x: currentData.type === 'shift-end'
-                                                    ? (currentData.shiftDir === 'left' ? -1 * currentData.shiftAmount * 40 : currentData.shiftAmount * 40)
+                                                    ? (currentData.shiftDir === 'left' ? -1 * currentData.shiftAmount * 44 : currentData.shiftAmount * 44)
                                                     : 0
                                             }}
-                                            transition={{ duration: 0.8, ease: "easeInOut" }}
+                                            transition={{ duration: 0.7, ease: "easeInOut" }}
                                         >
                                             {currentData.resultBin.split('').map((bit, idx) => (
                                                 <div
@@ -220,15 +244,15 @@ const BitManipulationVisualizer = () => {
                                             >
                                                 {bit}
                                             </div>
-                                        )
+                                        );
                                     })
                                 )}
                             </div>
                         </div>
 
-                        {/* Bit Indexes */}
+                        {/* Bit Position Index Row */}
                         <div className="bit-row index-row">
-                            <div className="row-label"></div>
+                            <div className="row-label">Bit Index</div>
                             <div className="binary-cells index-cells">
                                 {[7, 6, 5, 4, 3, 2, 1, 0].map(idx => (
                                     <div key={`idx-${idx}`} className="index-cell">{idx}</div>
@@ -239,13 +263,15 @@ const BitManipulationVisualizer = () => {
                     </div>
                 </div>
 
+                {/* ── Legend ───────────────────────────────────────────── */}
                 <div className="bit-legend">
-                    <div className="leg-item"><span className="box box-compare"></span> Comparing</div>
-                    <div className="leg-item"><span className="box box-write"></span> Writing</div>
-                    <div className="leg-item"><span className="box box-result"></span> Final Bit</div>
-                    <div className="leg-item"><span className="box box-shift"></span> Shifted Insert</div>
+                    <div className="leg-item"><span className="box box-compare"></span> Comparing Bits</div>
+                    <div className="leg-item"><span className="box box-write"></span> Writing Bit</div>
+                    <div className="leg-item"><span className="box box-result"></span> Result Bit</div>
+                    <div className="leg-item"><span className="box box-shift"></span> Shift Fill</div>
                 </div>
 
+                {/* ── Controls Bar ─────────────────────────────────────── */}
                 <div className="bit-controls-wrapper">
                     <AnimationControls
                         inputType="none"

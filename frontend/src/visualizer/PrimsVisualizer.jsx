@@ -6,8 +6,7 @@ import AnimationControls from '../components/animation-controls/AnimationControl
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generatePrimsSteps } from '../algorithms/graphs/prims';
 import { defaultWeightedGraph } from '../algorithms/graphs/graphData';
-import { generateFallbackCode } from './algorithmFallbacks';
-import { motion, AnimatePresence } from 'framer-motion';
+import { algorithmCodes } from '../data/algorithmCodes';
 
 import './PrimsVisualizer.css';
 
@@ -18,25 +17,22 @@ const PrimsVisualizer = () => {
     const steps = useMemo(() => generatePrimsSteps(graphData), [graphData]);
     const anim = useGenericAnimation(steps);
 
-    const codeSnippet = useMemo(() => generateFallbackCode({
-        name: "Prim's Minimum Spanning Tree",
-        categoryKey: "graphs",
-        language: activeLanguage
-    }), [activeLanguage]);
+    const codeSnippet = algorithmCodes.prims?.[activeLanguage] || '';
 
-    const handleGraphUpdate = (newNodes, newEdges) => {
-        setGraphData({ nodes: newNodes, edges: newEdges });
+    const handleGraphUpdate = (g, e) => {
+        const data = Array.isArray(g) ? { nodes: g, edges: e } : g;
+        setGraphData(data);
         anim.reset();
     };
 
     const getActiveLine = () => {
         if (!anim.currentStep) return 1;
         const desc = anim.currentStep.description || '';
-        if (desc.includes('start')) return 2;
-        if (desc.includes('Added all edges')) return 5;
-        if (desc.includes('Selected')) return 6;
-        if (desc.includes('Added all new outgoing')) return 8;
-        if (desc.includes('Finished')) return 10;
+        if (desc.includes('start')) return 5;
+        if (desc.includes('Added all edges')) return 13;
+        if (desc.includes('Selected')) return 11;
+        if (desc.includes('Added all new outgoing')) return 13;
+        if (desc.includes('Finished')) return 17;
         return 1;
     };
 
@@ -46,7 +42,6 @@ const PrimsVisualizer = () => {
     const visitedNodes = currentStep?.visitedNodes || [];
     const mstEdgeList = currentStep?.mstEdges || [];
 
-    // Build MST-only edge states: only show accepted edges
     const mstEdgeStates = useMemo(() => {
         const states = {};
         (graphData.edges || []).forEach(e => {
@@ -76,6 +71,7 @@ const PrimsVisualizer = () => {
             activeLine={getActiveLine()}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
+            codeSnippetCategory="graphs"
             description={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     <span className="prim-step-badge">
@@ -87,9 +83,8 @@ const PrimsVisualizer = () => {
                 </div>
             }
         >
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
+            <div className="prim-wrapper">
 
-                {/* ── Top: Full Graph + MST Construction side by side ── */}
                 <GraphInput
                     nodes={graphData.nodes || []}
                     edges={graphData.edges || []}
@@ -98,9 +93,8 @@ const PrimsVisualizer = () => {
                 />
 
                 <div className="prim-dual-graphs">
-                    {/* Full Graph View */}
                     <div className="prim-graph-panel">
-                        <div className="prim-graph-label">Original Graph</div>
+                        <div className="prim-graph-label">Original Graph (Priority Queue)</div>
                         <div className="prim-graph-canvas-wrap">
                             <GraphCanvas
                                 nodes={graphData.nodes || []}
@@ -111,9 +105,8 @@ const PrimsVisualizer = () => {
                         </div>
                     </div>
 
-                    {/* MST Construction View */}
                     <div className="prim-graph-panel prim-mst-panel">
-                        <div className="prim-graph-label prim-mst-label">MST Construction</div>
+                        <div className="prim-graph-label prim-mst-label">MST Spanning Tree</div>
                         <div className="prim-graph-canvas-wrap">
                             <GraphCanvas
                                 nodes={graphData.nodes || []}
@@ -125,75 +118,40 @@ const PrimsVisualizer = () => {
                     </div>
                 </div>
 
-                {/* ── Bottom: Priority Queue + Visited Nodes + MST Weight ── */}
                 <div className="prim-info-row">
-
-                    {/* Priority Queue / Candidate Edge Panel */}
-                    <div className="prim-info-card prim-pq-card">
-                        <h4 className="prim-card-title">🚥 Priority Queue (Candidate Edges)</h4>
-                        <div className="prim-edge-list">
-                            {candidateEdges.length === 0 && (
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '4px' }}>
-                                    Queue is empty
-                                </div>
-                            )}
-                            <AnimatePresence initial={false}>
-                                {candidateEdges.map((edge) => {
-                                    const isTarget = activeEdge &&
-                                        ((activeEdge.from === edge.from && activeEdge.to === edge.to) ||
-                                            (activeEdge.from === edge.to && activeEdge.to === edge.from));
-
-                                    return (
-                                        <motion.div
-                                            key={edge.originalId || `${edge.from}-${edge.to}`}
-                                            className={`prim-edge-item ${isTarget ? 'pe-active' : ''}`}
-                                            layout
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <span className="pe-nodes">({edge.from},{edge.to})</span>
-                                            <span className="pe-weight">w={edge.weight}</span>
-                                            {isTarget && <span className="pe-badge">Current Edge</span>}
-                                        </motion.div>
-                                    );
-                                })}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-
-                    {/* Visited Nodes */}
                     <div className="prim-info-card">
-                        <h4 className="prim-card-title">📍 Visited Nodes</h4>
-                        <div className="prim-nodes-wrap">
-                            <AnimatePresence>
-                                {visitedNodes.map((nId) => (
-                                    <motion.div
-                                        key={nId}
-                                        initial={{ opacity: 0, scale: 0 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="prim-visited-node"
+                        <h4 className="prim-card-title">⏳ Candidate Edges (Priority Queue)</h4>
+                        <div className="prim-pq-list">
+                            {candidateEdges.map(edge => {
+                                const isCurrent = activeEdge &&
+                                    ((activeEdge.from === edge.from && activeEdge.to === edge.to) ||
+                                     (activeEdge.from === edge.to && activeEdge.to === edge.from));
+                                return (
+                                    <div
+                                        key={edge.originalId || `${edge.from}-${edge.to}`}
+                                        className={`prim-pq-item ${isCurrent ? 'pq-current' : ''}`}
                                     >
-                                        {nId}
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
+                                        <span className="pq-edge">({edge.from},{edge.to})</span>
+                                        <span className="pq-weight">w={edge.weight}</span>
+                                    </div>
+                                );
+                            })}
+                            {candidateEdges.length === 0 && (
+                                <div className="prim-empty-pq">PQ Empty</div>
+                            )}
                         </div>
                     </div>
 
-                    {/* MST Weight */}
                     <div className="prim-info-card prim-weight-card">
-                        <h4 className="prim-card-title">⚡ MST Weight</h4>
+                        <h4 className="prim-card-title">⚡ MST Total Weight</h4>
                         <div className="prim-total-weight">
                             {currentStep?.totalWeight || 0}
                         </div>
-                        <div className="prim-edge-count">
-                            {mstEdgeList.length} / {(graphData.nodes?.length || 1) - 1} edges
+                        <div className="prim-node-count">
+                            {visitedNodes.length} / {graphData.nodes?.length || 1} nodes connected
                         </div>
                     </div>
 
-                    {/* Legend */}
                     <div className="prim-info-card prim-legend-card">
                         <h4 className="prim-card-title">🎨 Legend</h4>
                         <div className="prim-legend-items">
@@ -205,21 +163,20 @@ const PrimsVisualizer = () => {
                     </div>
                 </div>
 
-                {/* ── Controls ── */}
                 <div className="prim-controls-bar">
                     <AnimationControls
                         inputType="none"
                         isPlaying={anim.isPlaying}
                         onPlay={anim.play}
                         onPause={anim.pause}
-                        onStepForward={anim.stepForward}
-                        onStepBackward={anim.stepBackward}
+                        onNext={anim.stepForward}
+                        onPrev={anim.stepBackward}
                         onReset={anim.reset}
                         speed={anim.speed}
                         onSpeedChange={anim.setSpeed}
                         currentStep={anim.currentStepIndex}
                         totalSteps={anim.totalSteps}
-                        onScrub={anim.setStep}
+                        onScrub={anim.setIndex}
                     />
                 </div>
             </div>

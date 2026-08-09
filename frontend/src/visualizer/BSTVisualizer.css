@@ -41,10 +41,12 @@
     bottom: 20px;
     left: 20px;
     right: 20px;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--surface-bg);
     padding: 10px;
     border-radius: 12px;
+    border: 1px solid var(--surface-border);
     backdrop-filter: blur(8px);
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .info-panel {
@@ -73,7 +75,8 @@
 
 .divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-border);
+    transition: background 0.25s ease;
 }
 
 .playback-controls {
@@ -116,9 +119,11 @@
 }
 
 .traversal-result {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
     padding: 15px;
     border-radius: 8px;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .result-values {
@@ -144,26 +149,17 @@
 }
 
 .badge {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
     color: var(--text-secondary);
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 0.8rem;
     font-weight: 600;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
-/* Light Theme Support */
-[data-theme='light'] .array-overlay {
-    background: rgba(255, 255, 255, 0.8);
-}
-
-[data-theme='light'] .divider {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme='light'] .badge {
-    background: rgba(0, 0, 0, 0.05);
-}
+/* Light Theme — handled by CSS custom properties above */
 
 @media (max-width: 1024px) {
     .visualizer-container {

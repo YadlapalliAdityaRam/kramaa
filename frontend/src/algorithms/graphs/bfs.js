@@ -1,4 +1,4 @@
-import { buildAdjList } from './graphData';
+import { buildAdjList } from './graphData.js';
 
 export const generateBFSSteps = (graph, startNode) => {
     const steps = [];

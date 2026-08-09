@@ -102,17 +102,25 @@ const stripApiSuffix = (baseUrl) => String(baseUrl || '').replace(/\/api\/?$/, '
 const joinUrl = (baseUrl, path) => `${String(baseUrl || '').replace(/\/+$/, '')}/${String(path || '').replace(/^\/+/, '')}`;
 const EMBEDDED_UPLOAD_PATH_PATTERN = /(?:^|\/)(?:public\/)?(?:api\/)?uploads\/.+$/i;
 
+/**
+ * Returns the absolute backend base URL (no trailing slash) ONLY when an explicit
+ * hostname is configured.  Returns null when running with a same-origin / proxy
+ * setup (e.g. VITE_API_URL=/api) so that image URLs stay as relative paths and
+ * route through the Vite dev-proxy or the same-origin reverse-proxy in production.
+ */
 const getBackendBaseUrl = () => {
-    // Prefer explicit env base URL in production.
+    // Prefer an explicitly configured absolute API URL.
     const configuredApiUrl = String(
         import.meta.env.VITE_API_URL ||
         import.meta.env.VITE_API_BASE_URL ||
         ''
     ).trim().replace(/\/+$/, '');
-    const configuredBaseUrl = configuredApiUrl ? stripApiSuffix(configuredApiUrl) : '';
-    if (configuredBaseUrl) return configuredBaseUrl;
+    // Only trust it if it starts with http(s)://  — relative paths mean same-origin proxy.
+    if (/^https?:\/\//i.test(configuredApiUrl)) {
+        return stripApiSuffix(configuredApiUrl);
+    }
 
-    // Secondary fallback: explicit backend/socket host.
+    // Explicit backend / socket host variable.
     const configuredBackendUrl = String(
         import.meta.env.VITE_SOCKET_URL ||
         import.meta.env.VITE_BACKEND_URL ||
@@ -122,15 +130,15 @@ const getBackendBaseUrl = () => {
         return stripApiSuffix(configuredBackendUrl);
     }
 
-    // Fall back to runtime API base used by axios.
+    // Axios runtime base URL (only trust absolute ones).
     const runtimeApiBaseUrl = String(getCurrentApiBaseUrl() || '').trim().replace(/\/+$/, '');
     if (/^https?:\/\//i.test(runtimeApiBaseUrl)) {
         return stripApiSuffix(runtimeApiBaseUrl);
     }
 
-    // Same-origin fallback.
-    if (typeof window !== 'undefined') return String(window.location.origin || '').replace(/\/+$/, '');
-    return '';
+    // No explicit absolute backend URL configured — return null so callers fall back
+    // to relative paths that work through the Vite proxy or same-origin reverse-proxy.
+    return null;
 };
 
 const normalizeUploadPath = (rawPath) => {
@@ -170,16 +178,15 @@ const getImageUrl = (url) => {
     // Normalize the path first
     const normalizedPath = normalizeUploadPath(raw);
 
-    // Upload assets are stored on the backend. Prefer the backend-hosted absolute URL first so
-    // deployed frontends (for example Vercel) do not start with a broken /uploads request.
     if (normalizedPath.startsWith('/uploads/')) {
         const backendBaseUrl = getBackendBaseUrl();
-        if (backendBaseUrl) return joinUrl(backendBaseUrl, normalizedPath);
-
-        const apiUploadPath = toApiUploadPath(normalizedPath);
-        if (apiUploadPath) return apiUploadPath;
-
-        return normalizedPath;
+        // When an absolute backend host is known, build the full URL.
+        if (backendBaseUrl && /^https?:\/\//i.test(backendBaseUrl)) {
+            return joinUrl(backendBaseUrl, normalizedPath);
+        }
+        // Otherwise use the /api/uploads/ path which both the Vite dev-proxy and
+        // the backend's own /api/uploads route handle correctly.
+        return toApiUploadPath(normalizedPath) || normalizedPath;
     }
 
     if (/^https?:\/\//i.test(raw)) {
@@ -188,10 +195,11 @@ const getImageUrl = (url) => {
             const path = normalizeUploadPath(`${parsed.pathname}${parsed.search || ''}`);
             if (path.startsWith('/uploads/')) {
                 const backendBaseUrl = getBackendBaseUrl();
-                if (backendBaseUrl) return joinUrl(backendBaseUrl, path);
-
-                const apiUploadPath = toApiUploadPath(path);
-                return apiUploadPath || path;
+                if (backendBaseUrl && /^https?:\/\//i.test(backendBaseUrl)) {
+                    return joinUrl(backendBaseUrl, path);
+                }
+                // Strip the origin — keep only the path so the proxy handles it.
+                return toApiUploadPath(path) || path;
             }
             return raw;
         } catch (error) {
@@ -207,20 +215,33 @@ const getImageCandidates = (url) => {
     if (!raw) return [];
 
     const candidates = [];
+    const normalizedPath = normalizeUploadPath(raw);
+
+    // 1. Primary: resolved URL (may be absolute or relative depending on config)
     const preferred = getImageUrl(raw);
     if (preferred) candidates.push(preferred);
-    if (raw && raw !== preferred) candidates.push(raw);
 
-    const normalizedPath = normalizeUploadPath(raw);
-    if (normalizedPath.startsWith('/')) {
+    if (normalizedPath.startsWith('/uploads/')) {
         const backendBaseUrl = getBackendBaseUrl();
-        if (backendBaseUrl) candidates.push(joinUrl(backendBaseUrl, normalizedPath));
 
+        // 2. Absolute backend URL (only when an explicit hostname is configured)
+        if (backendBaseUrl && /^https?:\/\//i.test(backendBaseUrl)) {
+            candidates.push(joinUrl(backendBaseUrl, normalizedPath));
+        }
+
+        // 3. /api/uploads/ route — proxied by both Vite dev server and backend
         const apiUploadPath = toApiUploadPath(normalizedPath);
         if (apiUploadPath) candidates.push(apiUploadPath);
 
-        if (typeof window !== 'undefined') candidates.push(joinUrl(window.location.origin, normalizedPath));
+        // 4. Plain /uploads/ route — also proxied by Vite dev server
         candidates.push(normalizedPath);
+
+        // 5. Fallback: try current window origin + path (last resort)
+        if (typeof window !== 'undefined') {
+            candidates.push(joinUrl(window.location.origin, normalizedPath));
+        }
+    } else if (raw && raw !== preferred) {
+        candidates.push(raw);
     }
 
     return [...new Set(candidates.filter(Boolean))];
@@ -1516,7 +1537,7 @@ const Community = () => {
     // If a thread is active, show detail view
     if (activeThreadId) {
         return (
-            <div className="main-content">
+            <div className="main-content community-page">
                 <div style={{ maxWidth: '900px', margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
                     <AnimatePresence mode="wait">
                         <ThreadDetail
@@ -1553,7 +1574,7 @@ const Community = () => {
     }
 
     return (
-        <div className="main-content">
+        <div className="main-content community-page">
             <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
 
                 {/* â”€â”€ Header â”€â”€ */}

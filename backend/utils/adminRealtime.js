@@ -12,7 +12,6 @@ const emitAdminRefresh = (appOrReq, payload = {}) => {
     const app = appOrReq?.app || appOrReq;
     const io = app?.get?.('io');
     if (!io) return;
-
     const sections = normalizeSections(payload.sections);
 
     io.to(ADMIN_ROOM).emit(ADMIN_REFRESH_EVENT, {

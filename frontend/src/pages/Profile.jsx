@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,9 +7,9 @@ import api from '../utils/api';
 import { logout } from '../redux/slices/authSlice';
 import {
     FaGithub, FaLinkedin, FaTwitter, FaGlobe, FaMapMarkerAlt, FaUniversity, FaEdit,
-    FaCode, FaFire, FaTrophy, FaCalendarAlt, FaEnvelope, FaChartBar, FaBookmark,
-    FaStar, FaMedal, FaClock, FaMemory, FaBolt, FaChevronDown, FaShareAlt, FaComment,
-    FaUsers, FaTimes
+    FaCode, FaFire, FaCalendarAlt, FaEnvelope, FaChartBar, FaBookmark,
+    FaClock, FaMemory, FaBolt, FaChevronDown, FaShareAlt, FaComment,
+    FaUsers, FaTimes, FaCamera, FaUser, FaTrophy, FaStar
 } from 'react-icons/fa';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import ReportModal from '../components/common/ReportModal';
@@ -230,6 +230,19 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
     const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const DAY_LABEL_WIDTH = 34;
 
+    const [isLight, setIsLight] = useState(() => (
+        typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light'
+    ));
+
+    useEffect(() => {
+        const updateTheme = () => {
+            setIsLight(document.documentElement.getAttribute('data-theme') === 'light');
+        };
+        const observer = new MutationObserver(updateTheme);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => observer.disconnect();
+    }, []);
+
     const toDateKey = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -270,7 +283,6 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
             const count = (inRange && !isFuture) ? Number(rawHeatmap[key] || 0) : 0;
 
             week.push({ key, count, inRange, isFuture });
-
         }
 
         weeks.push(week);
@@ -334,7 +346,13 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
     }, 0);
 
     const getColor = (count) => {
-        if (count === 0) return 'rgba(255,255,255,0.06)';
+        if (count === 0) return isLight ? '#e2e8f0' : 'rgba(255,255,255,0.07)';
+        if (isLight) {
+            if (count <= 2) return '#86efac';
+            if (count <= 5) return '#34d399';
+            if (count <= 10) return '#10b981';
+            return '#047857';
+        }
         if (count <= 2) return '#0e4429';
         if (count <= 5) return '#006d32';
         if (count <= 10) return '#26a641';
@@ -349,26 +367,27 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
     return (
         <div style={{ overflowX: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #9ca3af)' }}>
-                    {totalInYear} submissions in {year} • {activeDaysInYear} active days
+                <span style={{ fontSize: '0.8rem', color: 'var(--ws-text-secondary, var(--text-secondary, #9ca3af))' }}>
+                    {totalInYear} submissions in {year} &bull; {activeDaysInYear} active days
                 </span>
                 <select
                     value={year}
                     onChange={(e) => onYearChange(parseInt(e.target.value))}
                     style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.15)',
+                        background: 'var(--ws-card, rgba(255,255,255,0.08))',
+                        border: '1px solid var(--ws-border, rgba(255,255,255,0.15))',
                         borderRadius: '6px',
-                        color: 'var(--text-primary, white)',
+                        color: 'var(--ws-text, var(--text-primary, white))',
                         padding: '4px 8px',
                         fontSize: '0.8rem',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        outline: 'none'
                     }}
                 >
                     {yearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
             </div>
-            <div style={{ marginBottom: '8px', fontSize: '0.75rem', color: 'var(--text-muted, #888)' }}>
+            <div style={{ marginBottom: '8px', fontSize: '0.75rem', color: 'var(--ws-text-muted, var(--text-muted, #888))' }}>
                 Total active days: {activeDaysOverall}
             </div>
 
@@ -378,7 +397,6 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
                         const bandStart = getWeekLeft(band.startWeek);
                         const bandEnd = getWeekLeft(band.endWeek) + CELL;
                         const center = (bandStart + bandEnd) / 2;
-
                         return (
                             <span
                                 key={`${band.label}-${band.startWeek}`}
@@ -387,7 +405,7 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
                                     left: `${center}px`,
                                     transform: 'translateX(-50%)',
                                     fontSize: '0.68rem',
-                                    color: 'var(--text-muted, #888)',
+                                    color: 'var(--ws-text-muted, var(--text-muted, #888))',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
@@ -405,7 +423,7 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
                                 style={{
                                     height: `${CELL}px`,
                                     fontSize: '0.62rem',
-                                    color: 'var(--text-muted, #666)',
+                                    color: 'var(--ws-text-muted, var(--text-muted, #666))',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'flex-end',
@@ -437,7 +455,7 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
                                             height: `${CELL}px`,
                                             borderRadius: '2px',
                                             backgroundColor: day.inRange && !day.isFuture ? getColor(day.count) : 'transparent',
-                                            border: day.inRange ? '1px solid rgba(255,255,255,0.03)' : '1px solid transparent'
+                                            border: day.inRange ? (isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)') : '1px solid transparent'
                                         }}
                                     />
                                 ))}
@@ -448,14 +466,14 @@ const ActivityHeatmap = ({ heatmap, selectedYear, onYearChange }) => {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px', justifyContent: 'flex-end' }}>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted, #666)', marginRight: '4px' }}>Less</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--ws-text-muted, var(--text-muted, #666))', marginRight: '4px' }}>Less</span>
                 {[0, 1, 3, 6, 11].map((value, idx) => (
                     <div
                         key={idx}
-                        style={{ width: `${CELL}px`, height: `${CELL}px`, borderRadius: '2px', backgroundColor: getColor(value) }}
+                        style={{ width: `${CELL}px`, height: `${CELL}px`, borderRadius: '2px', backgroundColor: getColor(value), border: isLight ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)' }}
                     />
                 ))}
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted, #666)', marginLeft: '4px' }}>More</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--ws-text-muted, var(--text-muted, #666))', marginLeft: '4px' }}>More</span>
             </div>
         </div>
     );
@@ -500,9 +518,9 @@ const LanguageStats = ({ stats }) => {
 
 // --- Difficulty Breakdown ---
 const DifficultyBreakdown = ({ stats }) => {
-    const easy = stats.easySolved || 0;
-    const medium = stats.mediumSolved || 0;
-    const hard = stats.hardSolved || 0;
+    const easy = stats?.easySolved || 0;
+    const medium = stats?.mediumSolved || 0;
+    const hard = stats?.hardSolved || 0;
     const totalSolved = easy + medium + hard;
     const total = totalSolved || 1;
     const [activeKey, setActiveKey] = useState(null);
@@ -575,54 +593,6 @@ const DifficultyBreakdown = ({ stats }) => {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted, #888)' }}>{item.label}</div>
                         <div style={{ fontSize: '0.66rem', color: '#6b7280', marginTop: '2px' }}>{item.percentile}%</div>
                     </button>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-// --- Badges Grid ---
-const BadgesSection = ({ badges, loading }) => {
-    if (loading || !badges) return <p style={{ color: 'var(--text-muted, #888)' }}>Loading badges...</p>;
-
-    return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ margin: 0 }}>Badges</h3>
-                <span style={{ color: 'var(--text-muted, #888)', fontSize: '0.85rem' }}>
-                    {badges.earned}/{badges.total} earned
-                </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px' }}>
-                {badges.badges?.map(badge => (
-                    <motion.div
-                        key={badge.id}
-                        whileHover={badge.earned ? { scale: 1.08 } : {}}
-                        style={{
-                            padding: '12px 8px', borderRadius: '12px', textAlign: 'center',
-                            background: badge.earned ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-                            border: `1px solid ${badge.earned ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)'}`,
-                            opacity: badge.earned ? 1 : 0.4,
-                            cursor: 'default'
-                        }}
-                        title={badge.description}
-                    >
-                        <div style={{ fontSize: '1.8rem', marginBottom: '4px', filter: badge.earned ? 'none' : 'grayscale(1)' }}>
-                            {badge.icon}
-                        </div>
-                        <div style={{ fontSize: '0.65rem', color: badge.earned ? 'white' : '#666', fontWeight: '500' }}>
-                            {badge.name}
-                        </div>
-                        {badge.earned && (
-                            <div style={{
-                                fontSize: '0.55rem', marginTop: '4px',
-                                color: badge.tier === 'platinum' ? '#e5e7eb' : badge.tier === 'gold' ? '#eab308' : badge.tier === 'silver' ? '#9ca3af' : '#cd7f32',
-                                textTransform: 'uppercase', fontWeight: 'bold'
-                            }}>
-                                {badge.tier}
-                            </div>
-                        )}
-                    </motion.div>
                 ))}
             </div>
         </div>
@@ -1557,7 +1527,9 @@ const Profile = () => {
     const [analytics, setAnalytics] = useState(null);
     const [recentSubs, setRecentSubs] = useState([]);
     const [performance, setPerformance] = useState(null);
-    const [badgesData, setBadgesData] = useState(null);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const avatarInputRef = useRef(null);
+    const historySectionRef = useRef(null);
     const [contestStats, setContestStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -1586,6 +1558,14 @@ const Profile = () => {
     ));
     const isMobile = viewportWidth <= 768;
     const isTablet = viewportWidth > 768 && viewportWidth <= 1100;
+
+    const scrollToHistorySection = () => {
+        setTimeout(() => {
+            if (historySectionRef.current) {
+                historySectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 80);
+    };
 
     // Messaging states
     const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
@@ -1653,52 +1633,30 @@ const Profile = () => {
     const fetchProfile = async () => {
         setLoading(true);
         try {
-            let res;
-            if (paramUsername) {
-                // Public profile
-                res = await api.get(`/profiles/user/${paramUsername}`);
-                setIsOwnProfile(isAuthenticated && authUser && authUser.username === paramUsername);
+            const isOwnReq = !paramUsername || (authUser && authUser.username === paramUsername);
+            const profileEndpoint = isOwnReq ? '/profiles/me' : `/profiles/user/${paramUsername}`;
+
+            const [profileRes, analyticsRes, performanceRes, contestRes] = await Promise.allSettled([
+                api.get(profileEndpoint),
+                api.get('/profiles/analytics'),
+                api.get('/profiles/performance'),
+                api.get('/profiles/contest-stats'),
+            ]);
+
+            if (profileRes.status === 'fulfilled') {
+                const profileData = profileRes.value.data;
+                setProfile(profileData);
+                const fetchedUserId = String(profileData?.user?._id || '');
+                const authId = String(authUser?._id || authUser?.id || '');
+                setIsOwnProfile(!!authId && fetchedUserId === authId);
             } else {
-                if (!isAuthenticated) { setLoading(false); return; }
-
-                // Fetch all profile data in parallel but tolerate optional endpoint failures.
-                const [
-                    meResult,
-                    analyticsResult,
-                    subsResult,
-                    perfResult,
-                    badgesResult,
-                    contestResult
-                ] = await Promise.allSettled([
-                    api.get('/profiles/me', { timeout: 30000 }),
-                    api.get('/profiles/analytics', { timeout: 30000 }),
-                    api.get('/profiles/submissions?limit=10', { timeout: 30000 }),
-                    api.get('/profiles/performance', { timeout: 30000 }),
-                    api.get('/profiles/badges', { timeout: 30000 }),
-                    api.get('/profiles/contest-stats', { timeout: 30000 })
-                ]);
-
-                if (meResult.status !== 'fulfilled') {
-                    throw meResult.reason || new Error('Failed to load profile');
-                }
-
-                const meData = meResult.value?.data || null;
-                const analyticsData = analyticsResult.status === 'fulfilled' ? analyticsResult.value?.data || null : null;
-                const subsData = subsResult.status === 'fulfilled' ? subsResult.value?.data || null : null;
-                const perfData = perfResult.status === 'fulfilled' ? perfResult.value?.data || null : null;
-                const badgesData = badgesResult.status === 'fulfilled' ? badgesResult.value?.data || null : null;
-                const contestData = contestResult.status === 'fulfilled' ? contestResult.value?.data || null : null;
-
-                res = { data: { profile: meData, analytics: analyticsData } };
-                setRecentSubs(subsData?.submissions || []);
-                setPerformance(perfData);
-                setBadgesData(badgesData);
-                setContestStats(contestData);
-                setIsOwnProfile(true);
+                setProfile(null);
             }
 
-            setProfile(res.data.profile);
-            setAnalytics(res.data.analytics);
+            if (analyticsRes.status === 'fulfilled') setAnalytics(analyticsRes.value.data);
+            if (performanceRes.status === 'fulfilled') setPerformance(performanceRes.value.data);
+            if (contestRes.status === 'fulfilled') setContestStats(contestRes.value.data);
+
         } catch (err) {
             console.error("Profile Fetch Error:", err);
             toast.error("Could not load profile.");
@@ -1818,16 +1776,21 @@ const Profile = () => {
         }
 
         setHistoryView(view);
+        scrollToHistorySection();
+
         if (view === 'solved') {
             await fetchSolvedHistory(1, false);
+            scrollToHistorySection();
             return;
         }
         if (view === 'submissions') {
             await fetchSubmissionsHistory(1, false);
+            scrollToHistorySection();
             return;
         }
         if (view === 'starred') {
             await fetchStarredHistory();
+            scrollToHistorySection();
         }
     };
 
@@ -2077,7 +2040,7 @@ const Profile = () => {
     // --- Guard renders ---
     if (!isAuthenticated && !paramUsername) {
         return (
-            <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+            <div className="main-content profile-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
                 <div style={{ textAlign: 'center' }}>
                     <h2>Please Login</h2>
                     <p>You need to be logged in to view your profile.</p>
@@ -2086,8 +2049,8 @@ const Profile = () => {
             </div>
         );
     }
-    if (loading) return <div className="main-content" style={{ padding: '40px', color: 'var(--text-primary, white)' }}>Loading...</div>;
-    if (!profile) return <div className="main-content" style={{ padding: '40px', color: 'var(--text-primary, white)' }}>Profile not found.</div>;
+    if (loading) return <div className="main-content profile-page profile-page-loading" aria-live="polite">Loading profile…</div>;
+    if (!profile) return <div className="main-content profile-page profile-page-loading">Profile not found.</div>;
 
     const userObj = profile.user || {};
     const viewingUserId = String(userObj._id || '');
@@ -2160,27 +2123,90 @@ const Profile = () => {
         : acceptanceRate;
 
     return (
-        <div className="main-content">
+        <div className="main-content profile-page">
             <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
 
                 {/* =============== TOP: HEADER + QUICK STATS =============== */}
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : (isTablet ? 'minmax(0, 1fr)' : 'minmax(320px, 1fr) 2fr'), gap: '24px', marginBottom: '32px' }}>
+
 
                     {/* User Info Card */}
                     <div className="glass-panel" style={{ padding: 0, borderRadius: '20px', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ height: '100px', background: 'linear-gradient(135deg, #111827, #374151)' }} />
 
                         <div style={{ padding: '0 28px 28px', marginTop: '-50px', position: 'relative', textAlign: 'center' }}>
-                            <div style={{
-                                width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 12px',
-                                background: 'linear-gradient(135deg, var(--primary-teal), var(--primary-blue))',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '2.5rem', fontWeight: 'bold', border: '4px solid #1f2937'
-                            }}>
-                                {userObj.avatar && userObj.avatar !== 'default-avatar.png'
-                                    ? <img src={userObj.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
-                                    : userObj.username?.charAt(0).toUpperCase()
-                                }
+                            {isOwnProfile && (
+                                <input
+                                    type="file"
+                                    ref={avatarInputRef}
+                                    style={{ display: 'none' }}
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const formData = new FormData();
+                                        formData.append('avatar', file);
+                                        setAvatarUploading(true);
+                                        try {
+                                            const res = await api.post('/profiles/avatar', formData, {
+                                                headers: { 'Content-Type': 'multipart/form-data' }
+                                            });
+                                            toast.success('Profile picture updated!');
+                                            if (res.data?.user?.avatar || res.data?.avatar) {
+                                                const newAvatar = res.data?.user?.avatar || res.data?.avatar;
+                                                setProfile(prev => ({
+                                                    ...prev,
+                                                    user: { ...prev?.user, avatar: newAvatar }
+                                                }));
+                                            } else {
+                                                fetchProfile();
+                                            }
+                                        } catch (err) {
+                                            toast.error(err.response?.data?.message || 'Failed to upload image');
+                                        } finally {
+                                            setAvatarUploading(false);
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {/* Instagram-style Avatar with Camera overlay on hover */}
+                            <div
+                                style={{
+                                    width: '100px', height: '100px', borderRadius: '50%', margin: '0 auto 12px',
+                                    position: 'relative', overflow: 'hidden',
+                                    background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    border: '4px solid #1f2937', cursor: isOwnProfile ? 'pointer' : 'default'
+                                }}
+                                onClick={() => isOwnProfile && avatarInputRef.current?.click()}
+                                title={isOwnProfile ? "Click to change profile picture" : undefined}
+                            >
+                                {userObj.avatar && userObj.avatar !== 'default-avatar.png' ? (
+                                    <img src={userObj.avatar} alt={userObj.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    /* Instagram-like default user avatar SVG/icon */
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#374151', color: '#9ca3af' }}>
+                                        <FaUser size={54} style={{ marginTop: '12px' }} />
+                                    </div>
+                                )}
+
+                                {isOwnProfile && (
+                                    <div
+                                        style={{
+                                            position: 'absolute', inset: 0,
+                                            background: 'rgba(0,0,0,0.45)',
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                            color: '#fff', opacity: avatarUploading ? 1 : 0, transition: 'opacity 0.2s',
+                                            fontSize: '0.75rem', fontWeight: '600'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                        onMouseLeave={(e) => { if (!avatarUploading) e.currentTarget.style.opacity = '0'; }}
+                                    >
+                                        <FaCamera size={20} style={{ marginBottom: '2px' }} />
+                                        <span>{avatarUploading ? 'Uploading...' : 'Change'}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Action buttons */}
@@ -2322,7 +2348,6 @@ const Profile = () => {
                             />
                             <StatCard icon={<FaFire />} value={userObj.streak?.current || 0} label="Day Streak" color="#f97316" subtitle={`Best: ${userObj.streak?.longest || 0}`} />
                             <StatCard icon={<FaChartBar />} value={`${acceptanceRate}%`} label="Acceptance" color="#22c55e" />
-                            <StatCard icon={<FaBolt />} value={finalScore.toFixed(2)} label="Total Score" color="#06b6d4" />
                             <StatCard icon={<FaStar />} value={perf.globalRank || '-'} label="Global Rank" color="#a855f7" subtitle={perf.percentile ? `Top ${100 - perf.percentile}%` : ''} />
                         </div>
 
@@ -2385,12 +2410,6 @@ const Profile = () => {
                     />
                 )}
 
-                {/* =============== MIDDLE: BADGES =============== */}
-                {isOwnProfile && badgesData && (
-                    <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px' }}>
-                        <BadgesSection badges={badgesData} loading={false} />
-                    </div>
-                )}
 
                 {/* =============== LOWER: LANGUAGE + SKILL + RECENT =============== */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
@@ -2446,7 +2465,7 @@ const Profile = () => {
                 </div>
 
                 {isOwnProfile && historyView && !isProgressView && (
-                    <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px' }}>
+                    <div ref={historySectionRef} className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', scrollMarginTop: '80px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', gap: '10px', flexWrap: 'wrap' }}>
                             <h3 style={{ margin: 0, fontSize: '0.95rem' }}>
                                 {historyView === 'solved'
@@ -2465,7 +2484,8 @@ const Profile = () => {
                                         cursor: 'pointer',
                                         fontSize: '0.75rem',
                                         background: historyView === 'solved' ? 'rgba(234,179,8,0.2)' : 'rgba(255,255,255,0.08)',
-                                        color: historyView === 'solved' ? '#facc15' : '#d1d5db'
+                                        color: historyView === 'solved' ? '#facc15' : '#d1d5db',
+                                        fontWeight: '600'
                                     }}
                                 >
                                     Solved
@@ -2479,7 +2499,8 @@ const Profile = () => {
                                         cursor: 'pointer',
                                         fontSize: '0.75rem',
                                         background: historyView === 'submissions' ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.08)',
-                                        color: historyView === 'submissions' ? '#60a5fa' : '#d1d5db'
+                                        color: historyView === 'submissions' ? '#60a5fa' : '#d1d5db',
+                                        fontWeight: '600'
                                     }}
                                 >
                                     Submissions
@@ -2493,13 +2514,16 @@ const Profile = () => {
                                         cursor: 'pointer',
                                         fontSize: '0.75rem',
                                         background: historyView === 'starred' ? 'rgba(250,204,21,0.2)' : 'rgba(255,255,255,0.08)',
-                                        color: historyView === 'starred' ? '#facc15' : '#d1d5db'
+                                        color: historyView === 'starred' ? '#facc15' : '#d1d5db',
+                                        fontWeight: '600'
                                     }}
                                 >
                                     Saved
                                 </button>
                                 <button
-                                    onClick={() => setHistoryView(null)}
+                                    onClick={() => {
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
                                     style={{
                                         border: '1px solid rgba(255,255,255,0.15)',
                                         borderRadius: '6px',
@@ -2509,8 +2533,25 @@ const Profile = () => {
                                         background: 'transparent',
                                         color: 'var(--text-secondary, #9ca3af)'
                                     }}
+                                    title="Scroll to top"
                                 >
-                                    Close
+                                    ↑ Top
+                                </button>
+                                <button
+                                    onClick={() => setHistoryView(null)}
+                                    style={{
+                                        border: '1px solid rgba(239,68,68,0.35)',
+                                        borderRadius: '6px',
+                                        padding: '6px 10px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.75rem',
+                                        background: 'rgba(239,68,68,0.12)',
+                                        color: '#f87171',
+                                        fontWeight: '600'
+                                    }}
+                                    title="Close list"
+                                >
+                                    ✕ Close
                                 </button>
                             </div>
                         </div>

@@ -11,6 +11,8 @@ import StringMatchMiniCanvas from './StringMatchMiniCanvas';
 import AStarMiniCanvas from './AStarMiniCanvas';
 import GridCanvas from './GridCanvas';
 import InputArrayDisplay from '../components/InputArrayDisplay';
+import { FaPlay, FaStop, FaRedo, FaRandom, FaTrophy, FaExpandAlt, FaInfoCircle } from 'react-icons/fa';
+import './MultiAlgoVisualizer.css';
 
 import { generateBubbleSortSteps } from '../algorithms/sorting/bubbleSort';
 import { generateSelectionSortSteps } from '../algorithms/sorting/selectionSort';
@@ -43,7 +45,7 @@ import { generateBellmanFordSteps } from '../algorithms/graphs/bellmanFord';
 import { generatePrimsSteps } from '../algorithms/graphs/prims';
 import { generateAStarGridSteps } from '../algorithms/graphs/aStarGridCompare';
 import { generateKruskalsSteps } from '../algorithms/graphs/kruskals';
-import { defaultGraph, defaultWeightedGraph } from '../algorithms/graphs/graphData';
+import { defaultGraph, defaultWeightedGraph, comparisonGraph, comparisonWeightedGraph } from '../algorithms/graphs/graphData';
 import { 
     generateBinaryTreeTraversalSteps, 
     generateBSTInsertSteps,
@@ -164,33 +166,33 @@ const GENERATORS = {
 
     'Breadth-First Search (BFS)': {
         canvasType: 'graph',
-        graphData: defaultGraph,
-        generate: (_data, _target, params, graphData) => generateBFSSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+        graphData: comparisonGraph,
+        generate: (_data, _target, params, graphData) => generateBFSSteps(graphData || comparisonGraph, resolveGraphStartNode(graphData || comparisonGraph, params))
     },
     'Depth-First Search (DFS)': {
         canvasType: 'graph',
-        graphData: defaultGraph,
-        generate: (_data, _target, params, graphData) => generateDFSSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+        graphData: comparisonGraph,
+        generate: (_data, _target, params, graphData) => generateDFSSteps(graphData || comparisonGraph, resolveGraphStartNode(graphData || comparisonGraph, params))
     },
     "Dijkstra's Algorithm": {
         canvasType: 'graph',
-        graphData: defaultWeightedGraph,
-        generate: (_data, _target, params, graphData) => generateDijkstraSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
+        graphData: comparisonWeightedGraph,
+        generate: (_data, _target, params, graphData) => generateDijkstraSteps(graphData || comparisonWeightedGraph, resolveGraphStartNode(graphData || comparisonWeightedGraph, params))
     },
     'Bellman-Ford': {
         canvasType: 'graph',
-        graphData: defaultWeightedGraph,
-        generate: (_data, _target, params, graphData) => generateBellmanFordSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
+        graphData: comparisonWeightedGraph,
+        generate: (_data, _target, params, graphData) => generateBellmanFordSteps(graphData || comparisonWeightedGraph, resolveGraphStartNode(graphData || comparisonWeightedGraph, params))
     },
     "Prim's MST": {
         canvasType: 'graph',
-        graphData: defaultWeightedGraph,
-        generate: (_data, _target, params, graphData) => generatePrimsSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
+        graphData: comparisonWeightedGraph,
+        generate: (_data, _target, params, graphData) => generatePrimsSteps(graphData || comparisonWeightedGraph, resolveGraphStartNode(graphData || comparisonWeightedGraph, params))
     },
     "Kruskal's MST": {
         canvasType: 'graph',
-        graphData: defaultWeightedGraph,
-        generate: (_data, _t, _p, graphData) => generateKruskalsSteps(graphData || defaultWeightedGraph)
+        graphData: comparisonWeightedGraph,
+        generate: (_data, _t, _p, graphData) => generateKruskalsSteps(graphData || comparisonWeightedGraph)
     },
     'A* Search': {
         canvasType: 'astar',
@@ -317,8 +319,8 @@ const GENERATORS = {
     'Z-Algorithm': { canvasType: 'array', generate: () => generateZAlgorithmSteps(), needsTarget: false },
     "Manacher's Algorithm": { canvasType: 'array', generate: () => generateManacherSteps(), needsTarget: false },
 
-    'N-Queens Problem': { canvasType: 'grid', generate: (data) => generateNQueensSteps(data && data[0]), needsTarget: false },
-    'Rat in a Maze': { canvasType: 'grid', generate: (data) => generateRatInMazeSteps(data && data[0]), needsTarget: false },
+    'N-Queens Problem': { canvasType: 'grid', generate: (data) => generateNQueensSteps((data && data[0] && data[0] <= 5 && data[0] >= 4) ? data[0] : 4), needsTarget: false },
+    'Rat in a Maze': { canvasType: 'grid', generate: (data) => generateRatInMazeSteps((data && data[0] && data[0] <= 5 && data[0] >= 3) ? data[0] : 4), needsTarget: false },
     'Subset Sum': { canvasType: 'dp', generate: (data, target) => generateSubsetSumSteps(data, target), needsTarget: true },
 
     'Sieve of Eratosthenes': { canvasType: 'array', generate: (data) => generateSieveSteps(data && data[0]), needsTarget: false },
@@ -327,20 +329,20 @@ const GENERATORS = {
     'Bit Manipulation Basics': { canvasType: 'array', generate: (data) => generateFallbackArraySteps({ categoryKey: 'math', name: 'Bit Manipulation Basics', array: data }), needsTarget: false },
 
     'Floyd-Warshall': {
-        canvasType: 'graph', graphData: defaultWeightedGraph,
-        generate: (_data, _target, params, graphData) => generateFloydWarshallSteps(graphData || defaultWeightedGraph, resolveGraphStartNode(graphData || defaultWeightedGraph, params))
+        canvasType: 'graph', graphData: comparisonWeightedGraph,
+        generate: (_data, _target, params, graphData) => generateFloydWarshallSteps(graphData || comparisonWeightedGraph, resolveGraphStartNode(graphData || comparisonWeightedGraph, params))
     },
     'Topological Sort': {
-        canvasType: 'graph', graphData: defaultGraph,
-        generate: (_data, _target, params, graphData) => generateTopologicalSortSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+        canvasType: 'graph', graphData: comparisonGraph,
+        generate: (_data, _target, params, graphData) => generateTopologicalSortSteps(graphData || comparisonGraph, resolveGraphStartNode(graphData || comparisonGraph, params))
     },
     "Cycle Detection (Floyd's)": {
-        canvasType: 'graph', graphData: defaultGraph,
-        generate: (_data, _target, params, graphData) => generateFloydCycleSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+        canvasType: 'graph', graphData: comparisonGraph,
+        generate: (_data, _target, params, graphData) => generateFloydCycleSteps(graphData || comparisonGraph, resolveGraphStartNode(graphData || comparisonGraph, params))
     },
     "Kosaraju's Algorithm": {
-        canvasType: 'graph', graphData: defaultGraph,
-        generate: (_data, _target, params, graphData) => generateKosarajuSteps(graphData || defaultGraph, resolveGraphStartNode(graphData || defaultGraph, params))
+        canvasType: 'graph', graphData: comparisonGraph,
+        generate: (_data, _target, params, graphData) => generateKosarajuSteps(graphData || comparisonGraph, resolveGraphStartNode(graphData || comparisonGraph, params))
     }
 };
 
@@ -389,10 +391,17 @@ const ALGORITHM_PARAM_RULES = {
         label: 'string A, string B',
         example: 'ABCDGH, AEDFHR'
     },
-    'Binary Search Tree': {
+    'N-Queens Problem': {
         count: 1,
-        label: 'value to insert',
-        example: '45'
+        label: 'Board size N (4 to 5)',
+        example: '4',
+        mode: 'nqueens-dimension'
+    },
+    'Rat in a Maze': {
+        count: 1,
+        label: 'Maze size N (3 to 5)',
+        example: '4',
+        mode: 'rat-dimension'
     }
 };
 
@@ -417,8 +426,11 @@ const clampParam = (value) => Math.max(1, Math.min(120, Math.round(value)));
 
 const buildRandomParams = (rule, array) => {
     if (!rule?.count) return [];
-    if (rule.mode === 'tree-traversal') {
-        return [Math.floor(Math.random() * 3) + 1];
+    if (rule.mode === 'nqueens-dimension') {
+        return [4];
+    }
+    if (rule.mode === 'rat-dimension') {
+        return [4];
     }
     if (rule.mode === 'astar-options') {
         return [Math.floor(Math.random() * 2) + 1, Math.floor(Math.random() * 3) + 1];
@@ -539,8 +551,11 @@ const normalizeParamValues = (values, rule, array) => {
     if (!Array.isArray(values)) return fallback;
     const next = values.slice(0, rule.count).map(Number);
     if (next.some((value) => !Number.isFinite(value)) || next.length < rule.count) return fallback;
-    if (rule.mode === 'tree-traversal') {
-        return [normalizeTraversalMode(next[0])];
+    if (rule.mode === 'nqueens-dimension') {
+        return [Math.max(4, Math.min(5, Math.round(next[0] || 4)))];
+    }
+    if (rule.mode === 'rat-dimension') {
+        return [Math.max(3, Math.min(5, Math.round(next[0] || 4)))];
     }
     if (rule.mode === 'astar-options') {
         const movement = Math.max(1, Math.min(2, Math.round(next[0])));
@@ -722,7 +737,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
         : (isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(240px, 1fr))');
     const laneGridColumns = isMobile
         ? '1fr'
-        : (isTablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(360px, 1fr))');
+        : (isTablet ? (entries.length === 1 ? '1fr' : 'repeat(2, minmax(0, 1fr))') : `repeat(${Math.min(entries.length || 1, 3)}, minmax(0, 1fr))`);
 
     const cardsRef = useRef(cards);
     const timersRef = useRef({});
@@ -1175,54 +1190,65 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
     };
 
     return (
-        <div className="glass-panel visualizer-ui theatre-mode" style={{ padding: isMobile ? '14px' : '24px', borderRadius: '20px', marginTop: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: isMobile ? '14px' : '20px' }}>
-                <div>
-                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.08rem' : '1.32rem', color: 'var(--text-primary)', fontWeight: 700 }}>Live Algorithm Race Arena</h3>
-                    <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontWeight: 500 }}>Start one lane or run all lanes to compare performance side-by-side.</p>
+        <div className="arena-container">
+            {/* Top Header & Global Controls Toolbar */}
+            <header className="arena-header-bar">
+                <div className="arena-title-group">
+                    <h3>⚡ Live Algorithm Comparison Arena</h3>
+                    <p>Execute algorithms side-by-side to observe comparative performance and step mechanics.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <button type="button" className="control-btn play-btn" onClick={randomRunAll} disabled={anyRunning || !supportedKeys.length} title="Randomize everything and run all algorithms">
-                        Random & Run
-                    </button>
-                    <button type="button" className="control-btn play-btn" onClick={runAll} disabled={anyRunning || !supportedKeys.length}>Run All</button>
-                    <button type="button" className="control-btn" onClick={stopAll} disabled={!anyRunning}>Stop All</button>
-                    <button type="button" className="control-btn" onClick={resetAll}>Reset All</button>
+                <div className="arena-global-toolbar">
+                    <div className="arena-toolbar-group">
+                        <button type="button" className="arena-btn arena-btn-accent" onClick={randomRunAll} disabled={anyRunning || !supportedKeys.length} title="Randomize input and run all algorithms">
+                            <FaRandom /> Random & Run
+                        </button>
+                        <button type="button" className="arena-btn arena-btn-primary" onClick={runAll} disabled={anyRunning || !supportedKeys.length}>
+                            <FaPlay /> Run All
+                        </button>
+                        <button type="button" className="arena-btn arena-btn-danger" onClick={stopAll} disabled={!anyRunning}>
+                            <FaStop /> Stop All
+                        </button>
+                        <button type="button" className="arena-btn arena-btn-outline" onClick={resetAll}>
+                            <FaRedo /> Reset All
+                        </button>
+                    </div>
+
+                    <div className="arena-speed-control">
+                        <span>Speed: {globalSpeed.toFixed(2)}x</span>
+                        <input type="range" min="0.5" max="3" step="0.05" value={globalSpeed} onChange={(e) => onGlobalSpeed(e.target.value)} />
+                    </div>
                 </div>
+            </header>
+
+            {/* Equal Progress Info Banner */}
+            <div className="arena-equal-banner">
+                <FaInfoCircle />
+                <span>Equal Progress Mode: All algorithms execute step-by-step for accurate side-by-side evaluation.</span>
             </div>
 
+            {/* Parameter Warning */}
             {pendingParamKeys.length > 0 && (
-                <div style={{
-                    marginBottom: '12px',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(251, 191, 36, 0.45)',
-                    background: 'rgba(251, 191, 36, 0.12)',
-                    display: 'flex',
-                    gap: '10px',
-                    flexWrap: 'wrap'
-                }}>
-                    <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                        Extra parameters required for {pendingParamKeys.length} lane{pendingParamKeys.length > 1 ? 's' : ''}. Enter parameters in each lane or use that lane's Random Params button.
-                    </span>
+                <div className="arena-equal-banner" style={{ background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)', color: '#fbbf24' }}>
+                    <FaInfoCircle />
+                    <span>Extra parameters required for {pendingParamKeys.length} lane{pendingParamKeys.length > 1 ? 's' : ''}. Enter parameters in each lane or click Random Params.</span>
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: globalGridColumns, gap: '14px', marginBottom: '14px' }}>
-                <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Global Speed ({globalSpeed.toFixed(2)}x)</label>
-                    <input type="range" min="0.5" max="3" step="0.05" value={globalSpeed} onChange={(e) => onGlobalSpeed(e.target.value)} style={{ width: '100%' }} />
-                </div>
-            </div>
+            {globalError && <div style={{ color: '#f87171', fontSize: '0.85rem', fontWeight: 600 }}>{globalError}</div>}
 
-            {globalError && <div style={{ marginTop: '10px', color: '#f87171', fontSize: '0.85rem' }}>{globalError}</div>}
+            {/* Winner Summary Banner */}
             {!anyRunning && winnerKey && cards[winnerKey] && (
-                <div style={{ marginTop: '10px', padding: '10px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.12)', border: '1px solid rgba(251, 191, 36, 0.45)' }}>
-                    Winner: <strong>{cards[winnerKey].algorithm?.name}</strong> ({formatTime(cards[winnerKey].elapsedMs)})
+                <div className="arena-winner-card">
+                    <FaTrophy style={{ fontSize: '1.8rem' }} />
+                    <div>
+                        <h4 className="arena-winner-title">Fastest Algorithm: {cards[winnerKey].algorithm?.name}</h4>
+                        <p className="arena-winner-desc">Completed in {formatTime(cards[winnerKey].elapsedMs)} across {cards[winnerKey].stepIndex} step(s).</p>
+                    </div>
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: laneGridColumns, gap: '18px', marginTop: '18px', alignItems: 'start' }}>
+            {/* Comparison Lanes Grid */}
+            <div className="arena-lanes-grid" style={{ gridTemplateColumns: laneGridColumns }}>
                 {entries.map(({ key, algorithm }, sectionIndex) => {
                     const card = cards[key];
                     if (!card) return null;
@@ -1242,7 +1268,7 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     const renderLaneCanvas = () => {
                         if (!card.isSupported) return null;
                         if (card.canvasType === 'tree') {
-                            return <TreeCanvas treeData={step?.treeData || null} nodeStates={step?.nodeStates || {}} />;
+                            return <TreeCanvas treeData={step?.treeData || step?.treeSnapshot || null} nodeStates={step?.nodeStates || {}} />;
                         }
                         if (card.canvasType === 'graph') {
                             const graphData = card.graphData || defaultGraph;
@@ -1253,13 +1279,6 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                     nodeStates={step?.nodeStates || {}}
                                     edgeStates={step?.edgeStates || {}}
                                     distanceTable={step?.distanceTable || null}
-                                />
-                            );
-                        }
-                        if (card.canvasType === 'tree') {
-                            return (
-                                <TreeCanvas
-                                    treeData={step?.treeSnapshot || step?.treeData || null}
                                 />
                             );
                         }
@@ -1323,98 +1342,97 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                     };
 
                     return (
+                        /* Mini Version Card Container — Scoped JS/CSS with Unique ID to prevent animation overlap */
                         <section
                             key={key}
-                            className="glass-panel visualizer-lane theatre-stage"
-                            style={{
-                                padding: isMobile ? '14px' : '18px',
-                                borderRadius: '16px',
-                                border: isWinner ? '1px solid rgba(251, 191, 36, 0.7)' : '1px solid rgba(255,255,255,0.12)',
-                                background: 'var(--viz-panel-bg, #1a1a1a)',
-                                boxShadow: '0 8px 20px rgba(0,0,0,0.28)'
-                            }}
+                            id={`mini-lane-${key}`}
+                            className={`arena-lane-card mini-version-card ${isWinner ? 'is-winner' : ''} ${laneIsRunning ? 'is-running' : ''}`}
                         >
-                            <div style={{
-                                marginBottom: '12px',
-                                paddingBottom: '10px',
-                                borderBottom: '1px solid rgba(255,255,255,0.08)',
-                                color: 'var(--text-secondary)',
-                                fontSize: '0.82rem',
-                                fontWeight: 600,
-                                letterSpacing: '0.04em',
-                                textTransform: 'uppercase'
-                            }}>
-                                Algorithm Section {sectionIndex + 1}
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <h4 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 700 }}>{algorithm?.name}</h4>
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    {card.isCustom && <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(56,189,248,0.2)' }}>Custom</span>}
-                                    <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(255,255,255,0.09)' }}>{card.status}</span>
+                            {/* Lane Header */}
+                            <header className="lane-header">
+                                <div>
+                                    <h4 className="lane-algo-name">{algorithm?.name}</h4>
+                                </div>
+                                <div className="lane-badges">
+                                    {card.isCustom && <span className="lane-badge">Custom</span>}
+                                    <span className={`lane-badge status-${card.status}`}>{card.status}</span>
                                     <button
                                         type="button"
-                                        className="control-btn"
+                                        className="arena-btn arena-btn-outline"
+                                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                                         onClick={() => algorithm?.path && navigate(algorithm.path)}
                                         disabled={!algorithm?.path}
                                         title="Open full-screen algorithm visualizer"
                                     >
-                                        Full Screen
+                                        <FaExpandAlt /> Full Screen
                                     </button>
                                 </div>
-                            </div>
+                            </header>
 
-                            <div
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                                    gap: '8px',
-                                    margin: '10px 0'
-                                }}
-                            >
-                                <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>Step: {card.stepIndex}/{Math.max(card.steps.length - 1, 0)}</div>
-                                <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>Time: {formatTime(card.elapsedMs)}</div>
-                                <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>{laneMetric.label}: {laneMetric.current}/{laneMetric.total}</div>
+                            {/* Grouped Metrics Grid */}
+                            <div className="lane-metrics-grid">
+                                <div className="metric-card">
+                                    <span className="metric-card-lbl">Step</span>
+                                    <span className="metric-card-val">{card.stepIndex}/{Math.max(card.steps.length - 1, 0)}</span>
+                                </div>
+                                <div className="metric-card">
+                                    <span className="metric-card-lbl">Time</span>
+                                    <span className="metric-card-val">{formatTime(card.elapsedMs)}</span>
+                                </div>
+                                <div className="metric-card">
+                                    <span className="metric-card-lbl">{laneMetric.label}</span>
+                                    <span className="metric-card-val">{laneMetric.current}/{laneMetric.total}</span>
+                                </div>
                                 {card.needsTarget && (
-                                    <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                        {targetMeta.label}: {displayTarget ?? '-'}
+                                    <div className="metric-card">
+                                        <span className="metric-card-lbl">{targetMeta.label}</span>
+                                        <span className="metric-card-val">{displayTarget ?? '-'}</span>
                                     </div>
                                 )}
                                 {card.paramRule && (
-                                    <div style={{ background: 'var(--viz-card-bg, #222222)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                        Params: {formatParamSummary(card)}
+                                    <div className="metric-card">
+                                        <span className="metric-card-lbl">Params</span>
+                                        <span className="metric-card-val" style={{ fontSize: '0.78rem' }}>{formatParamSummary(card)}</span>
                                     </div>
                                 )}
                             </div>
 
+                            {/* Canvas Stage */}
                             {card.isSupported ? (
                                 <>
-                                    <div style={{ minHeight: isPointerTechnique ? (isMobile ? '250px' : '300px') : undefined, height: isPointerTechnique ? 'auto' : (isMobile ? '220px' : '300px'), border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px', marginBottom: '10px', overflow: 'auto', background: 'var(--viz-input-bg, #1e1e1e)' }}>
-                                        {step?.arraySnapshot && (
+                                    <div className="lane-canvas-wrapper" style={{ minHeight: isPointerTechnique ? '260px' : '220px', height: isPointerTechnique ? 'auto' : '260px' }}>
+                                        {card.canvasType === 'array' && step?.arraySnapshot && (
                                             <InputArrayDisplay arraySnapshot={step.arraySnapshot} activeArrayIndex={step.activeArrayIndex} />
                                         )}
                                         {renderLaneCanvas()}
                                     </div>
-                                    <div style={{ minHeight: '38px', color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '10px', fontWeight: 500 }}>
+                                    <div className="lane-step-desc">
                                         {step?.description || 'Ready at Step 0.'}
                                     </div>
                                 </>
                             ) : (
-                                <div style={{ border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
-                                    <p style={{ margin: 0, fontWeight: 600 }}>Mini visual lane not available yet</p>
+                                <div style={{ border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '10px', padding: '16px', textOverflow: 'ellipsis' }}>
+                                    <p style={{ margin: 0, fontWeight: 700 }}>Mini visual lane not available yet</p>
                                     <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
-                                        {algorithm?.name} can still run stats and controls, and Full Screen opens the complete algorithm page.
+                                        {algorithm?.name} runs stats and step timing. Use Full Screen for complete visualization.
                                     </p>
                                 </div>
                             )}
 
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : (isTablet ? 'repeat(3, minmax(0, 1fr))' : 'repeat(5, minmax(0, 1fr))'), gap: '10px', marginBottom: '10px' }}>
-                                <button type="button" className="control-btn play-btn" onClick={() => runSingle(key)} disabled={laneIsRunning || !card.isSupported}>Run</button>
-                                <button type="button" className="control-btn" onClick={() => stopSingle(key)} disabled={!laneIsRunning}>Stop</button>
-                                <button type="button" className="control-btn" onClick={() => resetSingle(key)} disabled={laneIsRunning}>Reset</button>
+                            {/* Per-lane Action Buttons */}
+                            <div className="lane-controls-row">
+                                <button type="button" className="arena-btn arena-btn-primary" onClick={() => runSingle(key)} disabled={laneIsRunning || !card.isSupported}>
+                                    <FaPlay /> Run
+                                </button>
+                                <button type="button" className="arena-btn arena-btn-danger" onClick={() => stopSingle(key)} disabled={!laneIsRunning}>
+                                    <FaStop /> Stop
+                                </button>
+                                <button type="button" className="arena-btn arena-btn-outline" onClick={() => resetSingle(key)} disabled={laneIsRunning}>
+                                    <FaRedo /> Reset
+                                </button>
                                 <button
                                     type="button"
-                                    className="control-btn"
+                                    className="arena-btn arena-btn-outline"
                                     onClick={() => {
                                         if (laneIsRunning) return;
                                         if (card.canvasType === 'graph') {
@@ -1446,297 +1464,42 @@ const MultiAlgoVisualizer = ({ algorithms = [] }) => {
                                 >
                                     {card.canvasType === 'graph' ? 'Configure' : 'Random'}
                                 </button>
-                                <button
-                                    type="button"
-                                    className="control-btn"
-                                    onClick={() => {
-                                        if (laneIsRunning) return;
-                                        setCards((prev) => ({
-                                            ...prev,
-                                            [key]: (() => {
-                                                const resetTarget = resolveAlgorithmTargetDefault(prev[key].algorithm?.name, globalData);
-                                                return makeCard(prev[key].algorithm, globalData, {
-                                                    searchTarget: prev[key].isCustom ? prev[key].searchTarget : resetTarget,
-                                                    targetInput: prev[key].isCustom ? prev[key].targetInput : String(resetTarget),
-                                                    paramValues: prev[key].paramValues,
-                                                    paramInput: prev[key].paramInput,
-                                                    paramsReady: prev[key].paramsReady,
-                                                    graphData: prev[key].graphData,
-                                                    startNode: prev[key].startNode,
-                                                    speed: prev[key].speed
-                                                });
-                                            })()
-                                        }));
-                                    }}
-                                    disabled={laneIsRunning || (card.canvasType !== 'graph' && !card.isCustom)}
-                                >
-                                    {card.canvasType === 'graph' ? 'Keep Graph' : 'Global'}
-                                </button>
                             </div>
 
+                            {/* Per-lane Parameter Controls */}
                             {card.paramRule && (
-                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto auto', gap: '10px', marginBottom: '10px' }}>
+                                <div className="lane-input-group">
                                     <input
+                                        className="lane-input-field"
                                         value={card.paramInput}
                                         disabled={laneIsRunning}
                                         onChange={(e) => updateCard(key, (current) => ({ ...current, paramInput: e.target.value }))}
                                         placeholder={buildParamPlaceholder(card.paramRule)}
-                                        style={INPUT_STYLE}
                                     />
                                     <button
                                         type="button"
-                                        className="control-btn"
+                                        className="arena-btn arena-btn-outline"
                                         disabled={laneIsRunning}
                                         onClick={() => applyLaneParams(key)}
                                     >
-                                        Apply Params
+                                        Apply
                                     </button>
                                     <button
                                         type="button"
-                                        className="control-btn"
+                                        className="arena-btn arena-btn-outline"
                                         disabled={laneIsRunning}
                                         onClick={() => randomizeLaneParams(key)}
                                     >
-                                        Random Params
+                                        Random
                                     </button>
                                 </div>
-                            )}
-
-                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Lane Speed ({card.speed.toFixed(2)}x)</label>
-                            <input
-                                type="range"
-                                min="0.5"
-                                max="3"
-                                step="0.05"
-                                value={card.speed}
-                                disabled={runMode === 'all'}
-                                onChange={(e) => {
-                                    const speed = Number(e.target.value);
-                                    setCards((prev) => ({ ...prev, [key]: { ...prev[key], speed } }));
-                                    if (runModeRef.current !== 'all' && cardsRef.current[key]?.status === 'running') tick(key);
-                                }}
-                                style={{ width: '100%', marginBottom: '8px' }}
-                            />
-
-                            {card.canvasType === 'graph' ? (
-                                <>
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr auto auto', gap: '6px', marginBottom: '6px' }}>
-                                        <select
-                                            value={card.startNode || ''}
-                                            disabled={laneIsRunning}
-                                            onChange={(e) => {
-                                                const nextStartNode = e.target.value;
-                                                setCards((prev) => ({
-                                                    ...prev,
-                                                    [key]: makeCard(prev[key].algorithm, prev[key].data, {
-                                                        isCustom: prev[key].isCustom,
-                                                        customInput: prev[key].customInput,
-                                                        searchTarget: prev[key].searchTarget,
-                                                        targetInput: prev[key].targetInput,
-                                                        paramValues: prev[key].paramValues,
-                                                        paramInput: prev[key].paramInput,
-                                                        paramsReady: prev[key].paramsReady,
-                                                        graphData: prev[key].graphData,
-                                                        startNode: nextStartNode,
-                                                        speed: prev[key].speed
-                                                    })
-                                                }));
-                                            }}
-                                            style={INPUT_STYLE}
-                                        >
-                                            {(card.graphData?.nodes || []).map((node) => (
-                                                <option key={node.id} value={node.id}>
-                                                    Start Node {node.id}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <button
-                                            type="button"
-                                            className="control-btn"
-                                            disabled={laneIsRunning}
-                                            onClick={() => setGraphModalLaneKey(key)}
-                                        >
-                                            Graph Input
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="control-btn"
-                                            disabled={laneIsRunning}
-                                            onClick={() => {
-                                                const laneConfig = getLaneConfig(card.algorithm);
-                                                const resetGraph = laneConfig?.graphData || defaultGraph;
-                                                const resetStart = resolveGraphStartNode(resetGraph, [card.startNode]);
-                                                setCards((prev) => ({
-                                                    ...prev,
-                                                    [key]: makeCard(prev[key].algorithm, prev[key].data, {
-                                                        isCustom: false,
-                                                        customInput: '',
-                                                        searchTarget: prev[key].searchTarget,
-                                                        targetInput: prev[key].targetInput,
-                                                        paramValues: prev[key].paramValues,
-                                                        paramInput: prev[key].paramInput,
-                                                        paramsReady: prev[key].paramsReady,
-                                                        graphData: resetGraph,
-                                                        startNode: resetStart,
-                                                        speed: prev[key].speed
-                                                    })
-                                                }));
-                                            }}
-                                        >
-                                            Default Graph
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                        Graph algorithms use the same custom graph input flow as full visualizer.
-                                    </div>
-                                </>
-                            ) : card.canvasType === 'tree' ? (
-                                <>
-                                    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-                                        <button
-                                            type="button"
-                                            className="control-btn"
-                                            disabled={laneIsRunning}
-                                            onClick={() => setTreeModalLaneKey(key)}
-                                            style={{ flex: 1 }}
-                                        >
-                                            Configure Tree
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="control-btn"
-                                            disabled={laneIsRunning}
-                                            onClick={() => {
-                                                setCards((prev) => ({
-                                                    ...prev,
-                                                    [key]: makeCard(prev[key].algorithm, prev[key].data, {
-                                                        isCustom: false,
-                                                        customInput: '',
-                                                        searchTarget: prev[key].searchTarget,
-                                                        targetInput: prev[key].targetInput,
-                                                        paramValues: prev[key].paramValues,
-                                                        paramInput: prev[key].paramInput,
-                                                        paramsReady: prev[key].paramsReady,
-                                                        graphData: prev[key].graphData,
-                                                        treeData: null,
-                                                        startNode: prev[key].startNode,
-                                                        speed: prev[key].speed
-                                                    })
-                                                }));
-                                            }}
-                                        >
-                                            Reset Tree
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                        Configure an Edge List Tree or use default values.
-                                    </div>
-                                </>
-                            ) : card.canvasType === 'tree' && card.algorithm?.name !== 'Huffman Coding' ? (
-                                <>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            className="control-btn"
-                                            style={{ flex: 1, padding: '10px' }}
-                                            onClick={() => setTreeModalLaneKey(key)}
-                                        >
-                                            Configure Tree
-                                        </button>
-                                        <button
-                                            className="control-btn"
-                                            onClick={() => {
-                                                setCards((prev) => ({
-                                                    ...prev,
-                                                    [key]: makeCard(prev[key].algorithm, defaultTreeValues, {
-                                                        isCustom: false,
-                                                        customInput: '',
-                                                        searchTarget: prev[key].searchTarget,
-                                                        targetInput: prev[key].targetInput,
-                                                        paramValues: prev[key].paramValues,
-                                                        paramInput: prev[key].paramInput,
-                                                        paramsReady: prev[key].paramsReady,
-                                                        graphData: prev[key].graphData,
-                                                        treeData: null,
-                                                        startNode: prev[key].startNode,
-                                                        speed: prev[key].speed
-                                                    })
-                                                }));
-                                            }}
-                                        >
-                                            Reset Tree
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                        Configure an Edge List N-ary Tree or use default values.
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                                        <input
-                                            value={card.customInput}
-                                            disabled={laneIsRunning}
-                                            onChange={(e) => updateCard(key, (current) => ({ ...current, customInput: e.target.value }))}
-                                            placeholder={card.canvasType === 'string' ? "Text string" : "e.g. 50, 10, 20 (max 10)"}
-                                            style={{ ...INPUT_STYLE, flex: '1 1 180px' }}
-                                        />
-                                        {card.needsTarget && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: isMobile ? '1 1 100%' : '0 0 124px' }}>
-                                                <label style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
-                                                    {targetMeta.label}
-                                                </label>
-                                                <input
-                                                    value={card.targetInput}
-                                                    disabled={laneIsRunning}
-                                                    onChange={(e) => updateCard(key, (current) => ({ ...current, targetInput: e.target.value }))}
-                                                    placeholder={targetMeta.placeholder}
-                                                    style={{ ...INPUT_STYLE, width: '100%' }}
-                                                />
-                                            </div>
-                                        )}
-                                        <button
-                                            type="button"
-                                            className="control-btn"
-                                            disabled={laneIsRunning || !card.customInput.trim()}
-                                            onClick={() => {
-                                                if (laneIsRunning) return;
-                                                const isStr = card.canvasType === 'string';
-                                                const parsed = parseData(card.customInput, isStr);
-                                                if (parsed.error) return setGlobalError(`${card.algorithm?.name}: ${parsed.error}`);
-                                                setGlobalError('');
-                                                const laneTarget = (!isStr && Number.isFinite(Number(card.targetInput)))
-                                                    ? clampAlgorithmTarget(card.algorithm?.name, parsed.values, Number(card.targetInput))
-                                                    : (isStr ? card.targetInput : resolveAlgorithmTargetDefault(card.algorithm?.name, parsed.values));
-                                                setCards((prev) => ({
-                                                    ...prev,
-                                                    [key]: makeCard(prev[key].algorithm, parsed.values, {
-                                                        isCustom: true,
-                                                        customInput: isStr ? parsed.values.join('') : parsed.values.join(', '),
-                                                        searchTarget: laneTarget,
-                                                        targetInput: String(laneTarget),
-                                                        paramValues: prev[key].paramValues,
-                                                        paramInput: prev[key].paramInput,
-                                                        paramsReady: prev[key].paramsReady,
-                                                        graphData: prev[key].graphData,
-                                                        treeData: prev[key].treeData,
-                                                        startNode: prev[key].startNode,
-                                                        speed: prev[key].speed
-                                                    })
-                                                }));
-                                            }}
-                                        >
-                                            Set
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                        {card.canvasType === 'string' ? 'Enter custom text and pattern to search.' : 'Enter up to 10 numbers separated by commas or spaces.'}
-                                    </div>
-                                </>
                             )}
                         </section>
                     );
                 })}
             </div>
+
+            {/* Modals */}
             {Boolean(graphModalLaneKey) && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setGraphModalLaneKey(null)}>
                     <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', minWidth: '400px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>

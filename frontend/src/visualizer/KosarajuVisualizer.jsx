@@ -7,7 +7,7 @@ import AnimationControls from '../components/animation-controls/AnimationControl
 import DualView from './DualView';
 import { algorithmCodes } from '../data/algorithmCodes';
 import GraphInput from '../components/GraphInput/GraphInput';
-import { FaProjectDiagram, FaTrashAlt, FaRandom, FaUndo } from 'react-icons/fa';
+import { FaProjectDiagram, FaTrashAlt, FaRandom, FaPlay, FaEdit } from 'react-icons/fa';
 import './KosarajuVisualizer.css';
 
 const INITIAL_NODES = [
@@ -37,7 +37,6 @@ const KosarajuVisualizer = () => {
     const [activeLanguage, setActiveLanguage] = useState('javascript');
     const [history, setHistory] = useState([]);
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-    const [customInput, setCustomInput] = useState("");
     const canvasRef = useRef(null);
 
     const saveHistory = useCallback((currentNodes = nodes, currentEdges = edges) => {
@@ -80,7 +79,6 @@ const KosarajuVisualizer = () => {
 
         if (edgeStartNode) {
             if (edgeStartNode !== nodeId) {
-                // Check if edge already exists
                 if (!edges.find(edge => edge.from === edgeStartNode && edge.to === nodeId)) {
                     saveHistory();
                     setEdges([...edges, { from: edgeStartNode, to: nodeId }]);
@@ -127,11 +125,11 @@ const KosarajuVisualizer = () => {
 
     const generateRandomGraph = () => {
         saveHistory();
-        const nodeCount = 5 + Math.floor(Math.random() * 4); // 5 to 8 nodes
+        const nodeCount = 5 + Math.floor(Math.random() * 3); // 5 to 7 nodes
         const newNodes = [];
         const centerX = 350;
         const centerY = 200;
-        const R = 150;
+        const R = 140;
 
         for (let i = 0; i < nodeCount; i++) {
             const angle = (i * 2 * Math.PI) / nodeCount - Math.PI / 2;
@@ -162,14 +160,6 @@ const KosarajuVisualizer = () => {
                 const to = currentIdx + ((j + 1) % size);
                 newEdges.push({ from: newNodes[from].id, to: newNodes[to].id });
             }
-
-            if (size >= 3) {
-                const u = currentIdx + Math.floor(Math.random() * size);
-                const v = currentIdx + Math.floor(Math.random() * size);
-                if (u !== v && Math.abs(u - v) !== 1 && Math.abs(u - v) !== size - 1) {
-                    newEdges.push({ from: newNodes[u].id, to: newNodes[v].id });
-                }
-            }
             currentIdx += size;
         }
 
@@ -177,58 +167,14 @@ const KosarajuVisualizer = () => {
             const fromSCC = sccStarts[i];
             const toSCC = sccStarts[i + 1];
             newEdges.push({
-                from: newNodes[fromSCC + Math.floor(Math.random() * sccSizes[i])].id,
-                to: newNodes[toSCC + Math.floor(Math.random() * sccSizes[i + 1])].id
+                from: newNodes[fromSCC].id,
+                to: newNodes[toSCC].id
             });
         }
 
         setNodes(newNodes);
         setEdges(newEdges.map((e, idx) => ({ ...e, id: `re-${idx}-${Date.now()}` })));
-        toast.success("Arranged connected graph generated!");
-    };
-
-    const parseCustomInput = () => {
-        if (!customInput.trim()) return;
-        saveHistory();
-
-        const edgeStrings = customInput.split(/[,;\n]+/).map(s => s.trim()).filter(s => s.length > 0);
-        const parsedEdges = [];
-        const uniqueNodeIds = new Set();
-
-        edgeStrings.forEach(s => {
-            const parts = s.split(/->|-| /).filter(p => p.trim());
-            if (parts.length >= 2) {
-                const u = parts[0].trim().toUpperCase().substring(0, 2);
-                const v = parts[1].trim().toUpperCase().substring(0, 2);
-                uniqueNodeIds.add(u);
-                uniqueNodeIds.add(v);
-                parsedEdges.push({ from: u, to: v });
-            } else if (parts.length === 1) {
-                uniqueNodeIds.add(parts[0].trim().toUpperCase().substring(0, 2));
-            }
-        });
-
-        const newNodes = [];
-        const centerX = 350;
-        const centerY = 200;
-        const R = 150;
-        const nodeArr = Array.from(uniqueNodeIds);
-
-        nodeArr.forEach((id, i) => {
-            const angle = (i * 2 * Math.PI) / nodeArr.length - Math.PI / 2;
-            newNodes.push({
-                id: id,
-                x: nodeArr.length === 1 ? centerX : centerX + R * Math.cos(angle),
-                y: nodeArr.length === 1 ? centerY : centerY + R * Math.sin(angle)
-            });
-        });
-
-        const finalEdges = parsedEdges.filter((v, i, a) => a.findIndex(t => (t.from === v.from && t.to === v.to)) === i);
-
-        setNodes(newNodes);
-        setEdges(finalEdges);
-        setCustomInput("");
-        toast.success("Graph built from custom input!");
+        toast.success("Random graph generated!");
     };
 
     const currentData = (currentStep && currentStep.nodes) ? currentStep : {
@@ -258,22 +204,66 @@ const KosarajuVisualizer = () => {
 
     return (
         <DualView
-            algorithmName="Kosaraju's Algorithm"
+            algorithmName="Kosaraju's Algorithm (SCC Search)"
             code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentData.description}
+            codeSnippetCategory="graphs"
+            description={
+                <div className="ksj-desc-wrapper">
+                    <span className="ksj-badge">2-Pass DFS O(V + E)</span>
+                    <span className="ksj-desc-text">
+                        {currentData.description}
+                    </span>
+                </div>
+            }
         >
-            <div className="kosaraju-visualizer-container">
-                <div className="kosaraju-layout">
-                    <div className="graph-section">
+            <div className="ksj-visualizer-wrapper">
+
+                {/* Top Input Control Bar */}
+                <div className="ksj-input-panel">
+                    <div className="ksj-btn-group">
+                        {isEditing ? (
+                            <>
+                                <button className="ksj-btn ksj-btn-primary" onClick={startVisualization}>
+                                    <FaPlay /> Start Algorithm
+                                </button>
+                                <button className="ksj-btn ksj-btn-secondary" onClick={() => setIsConfigModalOpen(true)}>
+                                    <FaProjectDiagram /> Graph Config
+                                </button>
+                                <button className="ksj-btn ksj-btn-secondary" onClick={generateRandomGraph}>
+                                    <FaRandom /> Random
+                                </button>
+                                <button className="ksj-btn ksj-btn-outline" onClick={() => { saveHistory(); setNodes([]); setEdges([]); }}>
+                                    <FaTrashAlt /> Clear
+                                </button>
+                            </>
+                        ) : (
+                            <button className="ksj-btn ksj-btn-secondary" onClick={resetEditor}>
+                                <FaEdit /> Edit Graph
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="ksj-legend">
+                        <div className="ksj-leg-item"><span className="ksj-dot blue"></span> DFS Visit</div>
+                        <div className="ksj-leg-item"><span className="ksj-dot orange"></span> Reversed Edge</div>
+                        <div className="ksj-leg-item"><span className="ksj-dot green"></span> SCC Found</div>
+                    </div>
+                </div>
+
+                {/* Main Canvas Stage & Side Panels */}
+                <div className="ksj-canvas-wrapper">
+                    
+                    {/* Graph Canvas */}
+                    <div className="ksj-graph-card">
                         <div
-                            className="canvas-container"
+                            className="ksj-canvas-box"
                             ref={canvasRef}
                             onClick={handleCanvasClick}
                         >
-                            <svg className="edges-svg" width="100%" height="100%">
+                            <svg className="ksj-edges-svg" width="100%" height="100%">
                                 <defs>
                                     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
                                         <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
@@ -282,7 +272,7 @@ const KosarajuVisualizer = () => {
                                         <polygon points="10 0, 10 7, 0 3.5" fill="#f97316" />
                                     </marker>
                                 </defs>
-                                {currentData.edges.map((edge, idx) => {
+                                {currentData.edges.map((edge) => {
                                     const fromNode = nodes.find(n => n.id === edge.from);
                                     const toNode = nodes.find(n => n.id === edge.to);
                                     if (!fromNode || !toNode) return null;
@@ -332,111 +322,86 @@ const KosarajuVisualizer = () => {
                         </div>
 
                         {isEditing && (
-                            <div className="editor-controls-row" style={{ padding: '10px 20px', background: 'rgba(15, 23, 42, 0.4)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'center' }}>
-                                <div className="info-banner" style={{ margin: 0 }}>
-                                    💡 Click canvas to ADD node | Click node to ADD edge | <span style={{ color: '#38bdf8', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setIsConfigModalOpen(true)}>Advanced Input (Matrix / Bulk List)</span>
-                                </div>
+                            <div className="ksj-edit-hint">
+                                💡 Click canvas to ADD node | Click node to connect EDGES | Max 15 nodes
                             </div>
                         )}
                     </div>
 
-                    <div className="sidebar-section">
-                        <div className="stack-container">
-                            <h3 className="stack-title">
-                                📚 Finishing Order (Stack)
-                            </h3>
-                            <div className="stack-view">
+                    {/* Sidebar Panels: Finishing Stack & SCC Tags */}
+                    <div className="ksj-sidebar">
+                        <div className="ksj-side-card">
+                            <h4 className="side-title">📚 Finishing Stack</h4>
+                            <div className="ksj-stack-view">
                                 <AnimatePresence initial={false}>
                                     {currentData.stack.map((id, idx) => (
                                         <motion.div
                                             key={`${id}-${idx}`}
-                                            initial={{ x: 50, opacity: 0 }}
+                                            initial={{ x: 30, opacity: 0 }}
                                             animate={{ x: 0, opacity: 1 }}
-                                            exit={{ x: -50, opacity: 0 }}
-                                            className={`stack-item ${currentData.highlightPop === id ? 'pop-highlight' : ''}`}
+                                            exit={{ x: -30, opacity: 0 }}
+                                            className={`stack-chip ${currentData.highlightPop === id ? 'pop' : ''}`}
                                         >
                                             {id}
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
                                 {currentData.stack.length === 0 && (
-                                    <div className="empty-state">Empty</div>
+                                    <div className="empty-text">Stack Empty</div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="scc-list-container">
-                            <h3 className="scc-title">
-                                💎 SCCs Found
-                            </h3>
-                            <div className="scc-items">
+                        <div className="ksj-side-card">
+                            <h4 className="side-title">💎 SCCs Discovered</h4>
+                            <div className="ksj-scc-list">
                                 {currentData.sccs.map((scc, idx) => (
                                     <div
                                         key={idx}
-                                        className="scc-tag"
+                                        className="scc-chip"
                                         style={{ '--scc-color': currentData.nodes.find(n => n.id === scc[0])?.sccColor }}
                                     >
-                                        <span>SCC {idx + 1}</span>
-                                        <span className="scc-values">{'{'}{scc.join(',')}{'}'}</span>
+                                        <span className="scc-tag">SCC {idx + 1}</span>
+                                        <span className="scc-body">{'{'}{scc.join(', ')}{'}'}</span>
                                     </div>
                                 ))}
                                 {currentData.sccs.length === 0 && (
-                                    <div className="empty-state">None</div>
+                                    <div className="empty-text">None</div>
                                 )}
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-                <div className="controls-card">
-                    <div className="main-actions">
-                        {isEditing ? (
-                            <>
-                                <button className="action-btn primary" onClick={startVisualization}>
-                                    ▶ Start Algorithm
-                                </button>
-                                <button className="action-btn" onClick={undo} disabled={history.length === 0}>
-                                    ↩️ Undo
-                                </button>
-                                <button className="action-btn" onClick={generateRandomGraph}>
-                                    🎲 Random Graph
-                                </button>
-                                <button className="action-btn" onClick={() => { saveHistory(); setNodes([]); setEdges([]); }}>
-                                    🗑️ Clear
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button className="action-btn" onClick={resetEditor}>
-                                    ✏️ Editor
-                                </button>
-                                <AnimationControls
-                                    isPlaying={isPlaying}
-                                    onPlay={play}
-                                    onPause={pause}
-                                    onReset={reset}
-                                    onStepForward={stepForward}
-                                    onStepBackward={stepBackward}
-                                    currentStep={currentStepIndex}
-                                    totalSteps={steps.length}
-                                    speed={speed}
-                                    onSpeedChange={setSpeed}
-                                    onScrub={setIndex}
-                                    inputType="none"
-                                />
-                            </>
-                        )}
+                {/* YouTube Video Player Controls */}
+                {!isEditing && (
+                    <div className="ksj-controls-wrapper">
+                        <AnimationControls
+                            isPlaying={isPlaying}
+                            onPlay={play}
+                            onPause={pause}
+                            onReset={reset}
+                            onNext={stepForward}
+                            onPrev={stepBackward}
+                            currentStep={currentStepIndex}
+                            totalSteps={steps.length}
+                            speed={speed}
+                            onSpeedChange={setSpeed}
+                            onScrub={setIndex}
+                            inputType="none"
+                        />
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Advanced Config Modal */}
+            {/* Graph Input Modal */}
             {isConfigModalOpen && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setIsConfigModalOpen(false)}>
-                    <div style={{ background: '#1e293b', padding: '24px', borderRadius: '16px', minWidth: '450px', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ background: 'var(--surface-bg-raised)', padding: '24px', borderRadius: '16px', minWidth: '450px', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--surface-border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ margin: 0, color: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}><FaProjectDiagram style={{ color: '#38bdf8' }} /> Advanced Graph Configuration</h3>
-                            <button onClick={() => setIsConfigModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                            <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}><FaProjectDiagram style={{ color: '#38bdf8' }} /> Graph Configuration</h3>
+                            <button onClick={() => setIsConfigModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
                         </div>
 
                         <GraphInput
@@ -452,11 +417,11 @@ const KosarajuVisualizer = () => {
                         />
 
                         <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                            <button className="action-btn" style={{ flex: 1 }} onClick={() => { setIsConfigModalOpen(false); generateRandomGraph(); }}>
-                                <FaRandom /> Random Connected
+                            <button className="ksj-btn ksj-btn-secondary" style={{ flex: 1 }} onClick={() => { setIsConfigModalOpen(false); generateRandomGraph(); }}>
+                                <FaRandom /> Random Graph
                             </button>
-                            <button className="action-btn" style={{ flex: 1, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }} onClick={() => { saveHistory(); setNodes([]); setEdges([]); setIsConfigModalOpen(false); }}>
-                                <FaTrashAlt /> Reset Grid
+                            <button className="ksj-btn ksj-btn-outline" style={{ flex: 1, color: '#ef4444' }} onClick={() => { saveHistory(); setNodes([]); setEdges([]); setIsConfigModalOpen(false); }}>
+                                <FaTrashAlt /> Reset
                             </button>
                         </div>
                     </div>

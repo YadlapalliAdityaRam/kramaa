@@ -65,121 +65,148 @@ const SubmissionResultModal = ({ isOpen, onClose, result, problemParameters = []
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}>
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+                        style={{
+                            background: 'var(--ws-panel)',
+                            border: '1px solid var(--ws-border)',
+                            borderRadius: '16px',
+                            color: 'var(--ws-text)',
+                            width: '100%',
+                            maxWidth: '56rem',
+                            maxHeight: '90vh',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                        }}
                     >
                         {/* Header */}
-                        <div className={`p-6 border-b border-gray-800 flex items-center justify-between ${isSuccess ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-full ${isSuccess ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                                    {isSuccess ? <FaCheckCircle className="text-2xl" /> : <FaTimesCircle className="text-2xl" />}
+                        <div style={{
+                            padding: '20px 24px',
+                            borderBottom: '1px solid var(--ws-border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: isSuccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{
+                                    padding: '12px',
+                                    borderRadius: '999px',
+                                    background: isSuccess ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                    color: isSuccess ? '#22c55e' : '#ef4444'
+                                }}>
+                                    {isSuccess ? <FaCheckCircle style={{ fontSize: '24px' }} /> : <FaTimesCircle style={{ fontSize: '24px' }} />}
                                 </div>
                                 <div>
-                                    <h2 className={`text-2xl font-bold ${isSuccess ? 'text-green-500' : 'text-red-500'}`}>
+                                    <h2 style={{
+                                        fontSize: '22px',
+                                        fontWeight: 'bold',
+                                        margin: 0,
+                                        color: isSuccess ? '#22c55e' : '#ef4444'
+                                    }}>
                                         {isSuccess ? 'Submission Accepted!' : 'Submission Failed'}
                                     </h2>
-                                    <p className="text-gray-400 text-sm">
-                                        {isSuccess ? 'Great job! Your solution passed all test cases.' : 'Don\'t worry, check the error details below and try again.'}
+                                    <p style={{ margin: '4px 0 0', color: 'var(--ws-text-muted)', fontSize: '13px' }}>
+                                        {isSuccess ? 'Great job! Your solution passed all test cases.' : "Don't worry, check the error details below and try again."}
                                     </p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl">&times;</button>
+                            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '24px' }}>&times;</button>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className="custom-scrollbar">
                             {isSuccess ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                                     {/* Time Complexity */}
-                                    <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-bold text-gray-200 flex items-center gap-2">
-                                                <FaClock className="text-green-500" /> Runtime
+                                    <div style={{ background: 'var(--ws-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--ws-border)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--ws-text)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                                <FaClock style={{ color: '#22c55e' }} /> Runtime
                                             </h3>
-                                            <div className="text-right">
-                                                <span className="text-2xl font-bold text-white block">{formatRuntime(runtimeMs)}</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--ws-text)' }}>{formatRuntime(runtimeMs)}</span>
                                             </div>
                                         </div>
-                                        <div className="mb-4">
-                                            <p className="text-gray-400 text-sm mb-1">Beats <span className="text-green-400 font-bold">{parseFloat(runtimePercentile).toFixed(1)}%</span> of users</p>
-                                            <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <p style={{ color: 'var(--ws-text-muted)', fontSize: '13px', margin: '0 0 4px' }}>Beats <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{parseFloat(runtimePercentile).toFixed(1)}%</span> of users</p>
+                                            <div style={{ width: '100%', background: 'var(--ws-border)', height: '8px', borderRadius: '999px', overflow: 'hidden' }}>
                                                 <div
-                                                    className="bg-green-500 h-full rounded-full transition-all duration-1000 ease-out"
-                                                    style={{ width: `${runtimePercentile}%` }}
+                                                    style={{ width: `${runtimePercentile}%`, background: '#22c55e', height: '100%', borderRadius: '999px', transition: 'width 1s ease-out' }}
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Space Complexity */}
-                                    <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-bold text-gray-200 flex items-center gap-2">
-                                                <FaMemory className="text-blue-500" /> Memory
+                                    <div style={{ background: 'var(--ws-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--ws-border)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--ws-text)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                                <FaMemory style={{ color: '#3b82f6' }} /> Memory
                                             </h3>
-                                            <div className="text-right">
-                                                <span className="text-2xl font-bold text-white block">{formatMemory(memoryMb)}</span>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--ws-text)' }}>{formatMemory(memoryMb)}</span>
                                             </div>
                                         </div>
-                                        <div className="mb-4">
-                                            <p className="text-gray-400 text-sm mb-1">Beats <span className="text-blue-400 font-bold">{parseFloat(memoryPercentile).toFixed(1)}%</span> of users</p>
-                                            <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <p style={{ color: 'var(--ws-text-muted)', fontSize: '13px', margin: '0 0 4px' }}>Beats <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>{parseFloat(memoryPercentile).toFixed(1)}%</span> of users</p>
+                                            <div style={{ width: '100%', background: 'var(--ws-border)', height: '8px', borderRadius: '999px', overflow: 'hidden' }}>
                                                 <div
-                                                    className="bg-blue-500 h-full rounded-full transition-all duration-1000 ease-out"
-                                                    style={{ width: `${memoryPercentile}%` }}
+                                                    style={{ width: `${memoryPercentile}%`, background: '#3b82f6', height: '100%', borderRadius: '999px', transition: 'width 1s ease-out' }}
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     {hasGlobalError ? (
-                                        <div className="bg-red-900/20 border border-red-900/50 rounded-xl p-6">
-                                            <h3 className="text-lg font-bold text-red-400 flex items-center gap-2 mb-4">
+                                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '12px', padding: '20px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 12px' }}>
                                                 <FaExclamationTriangle /> Execution Error
                                             </h3>
-                                            <div className="bg-black/40 p-4 rounded-lg border border-red-900/30 font-mono text-sm text-red-300 whitespace-pre-wrap overflow-auto max-h-60 custom-scrollbar">
+                                            <div style={{ background: 'var(--ws-card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--ws-border)', fontFamily: 'monospace', fontSize: '13px', color: '#f87171', whiteSpace: 'pre-wrap', overflow: 'auto', maxHeight: '240px' }} className="custom-scrollbar">
                                                 {result.error}
                                             </div>
                                         </div>
                                     ) : failedTest ? (
-                                        <div className="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden">
-                                            <div className="p-4 bg-gray-800 border-b border-gray-700 flex items-center justify-between">
-                                                <span className="font-bold text-red-400 flex items-center gap-2">
+                                        <div style={{ background: 'var(--ws-card)', borderRadius: '12px', border: '1px solid var(--ws-border)', overflow: 'hidden' }}>
+                                            <div style={{ padding: '14px 20px', background: 'var(--ws-panel)', borderBottom: '1px solid var(--ws-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{ fontWeight: 'bold', color: '#f87171', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <FaExclamationTriangle /> Test Case Failed
                                                 </span>
-                                                {failedTest.isHidden && <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Hidden Test Case</span>}
+                                                {failedTest.isHidden && <span style={{ fontSize: '11px', background: 'var(--ws-tag-bg)', color: 'var(--ws-text-muted)', padding: '2px 8px', borderRadius: '4px' }}>Hidden Test Case</span>}
                                             </div>
-                                            <div className="p-6 space-y-4">
+                                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                 <div>
-                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Input</label>
-                                                    <div className="bg-black/40 p-3 rounded-lg border border-gray-700 font-mono text-sm text-gray-300 overflow-x-auto">
+                                                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>Input</label>
+                                                    <div style={{ background: 'var(--ws-input-bg)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--ws-border)', fontFamily: 'monospace', fontSize: '13px', color: 'var(--ws-text-secondary)', overflowX: 'auto' }}>
                                                         {formatTestCaseInput(failedTest.input, problemParameters)}
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                                                     <div>
-                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Expected Output</label>
-                                                        <div className="bg-green-900/20 p-3 rounded-lg border border-green-900/40 font-mono text-sm text-green-400 overflow-x-auto">
+                                                        <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>Expected Output</label>
+                                                        <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.25)', fontFamily: 'monospace', fontSize: '13px', color: '#22c55e', overflowX: 'auto' }}>
                                                             {formatTestCaseOutput(failedTest.expectedOutput)}
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Your Output</label>
-                                                        <div className="bg-red-900/20 p-3 rounded-lg border border-red-900/40 font-mono text-sm text-red-400 overflow-x-auto">
+                                                        <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>Your Output</label>
+                                                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.25)', fontFamily: 'monospace', fontSize: '13px', color: '#f87171', overflowX: 'auto' }}>
                                                             {failedActualOutput}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 {failedTest.error && !failedTest.actualOutput && (
                                                     <div>
-                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Error Details</label>
-                                                        <div className="bg-red-900/20 p-3 rounded-lg border border-red-900/40 font-mono text-sm text-red-300 whitespace-pre-wrap">
+                                                        <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'block' }}>Error Details</label>
+                                                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.25)', fontFamily: 'monospace', fontSize: '13px', color: '#f87171', whiteSpace: 'pre-wrap' }}>
                                                             {failedTest.error}
                                                         </div>
                                                     </div>

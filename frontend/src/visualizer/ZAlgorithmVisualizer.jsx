@@ -33,7 +33,8 @@ const ZAlgorithmVisualizer = () => {
         stepBackward,
         setIndex,
         speed,
-        setSpeed
+        setSpeed,
+        playFromStart
     } = useGenericAnimation(steps);
 
     const handleApply = () => {
@@ -49,8 +50,8 @@ const ZAlgorithmVisualizer = () => {
         }
         setText(t);
         setPattern(p);
-        reset();
-        toast.success('Z-Algorithm initialized!');
+        playFromStart();
+        toast.success('Z-Algorithm running...');
     };
 
     const getActiveLine = (step) => {

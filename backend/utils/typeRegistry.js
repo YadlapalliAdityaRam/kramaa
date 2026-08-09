@@ -25,6 +25,7 @@ const getTypeValidator = (typeName) => {
     return registry[key] || null;
 };
 
+
 const listRegisteredTypes = () => Object.keys(registry);
 
 const resolveTypeSpec = (rawType = 'void') => {

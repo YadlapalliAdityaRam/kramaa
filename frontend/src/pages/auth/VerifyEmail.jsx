@@ -41,8 +41,8 @@ const VerifyEmail = () => {
     }, [token]);
 
     return (
-        <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-            <div className="glass-panel" style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '460px', textAlign: 'center' }}>
+        <div className="main-content auth-page">
+            <div className="glass-panel auth-card" style={{ textAlign: 'center' }}>
                 <h2 className="gradient-text" style={{ fontSize: '1.8rem', marginBottom: '16px' }}>
                     Email Verification
                 </h2>

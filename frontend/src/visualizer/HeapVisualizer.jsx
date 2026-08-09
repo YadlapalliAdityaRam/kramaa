@@ -6,13 +6,34 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateHeapSteps } from '../algorithms/trees/heap';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { FaPlus, FaMinus, FaRandom, FaExchangeAlt } from 'react-icons/fa';
+import { FaPlus, FaRandom, FaExchangeAlt, FaRedo } from 'react-icons/fa';
 import './HeapVisualizer.css';
 
+const DEFAULT_ARRAY = [10, 5, 20, 3, 8, 15, 2];
+
+const buildTreeFromArray = (arr) => {
+    if (!arr || arr.length === 0) return null;
+    const nodes = arr.map((val, i) => ({
+        id: `hp_${i}`,
+        value: val,
+        label: `${val}`,
+        arrayIndex: i,
+        left: null,
+        right: null
+    }));
+    for (let i = 0; i < nodes.length; i++) {
+        const li = 2 * i + 1;
+        const ri = 2 * i + 2;
+        if (li < nodes.length) nodes[i].left = nodes[li];
+        if (ri < nodes.length) nodes[i].right = nodes[ri];
+    }
+    return nodes[0];
+};
+
 const HeapVisualizer = () => {
-    const [mode, setMode] = useState('min');
-    const [inputVal, setInputVal] = useState('');
-    const [heapData, setHeapData] = useState([10, 5, 20, 3, 8, 15, 2]);
+    const [mode, setMode]                 = useState('min');
+    const [inputVal, setInputVal]         = useState('');
+    const [heapData, setHeapData]         = useState(DEFAULT_ARRAY);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const steps = useMemo(
@@ -39,28 +60,27 @@ const HeapVisualizer = () => {
     }, [mode, heapData]);
 
     const handleApplyArray = () => {
-        const parsed = inputVal.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        const parsed = inputVal.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
         if (parsed.length === 0) {
-            toast.error("Please enter valid numbers");
+            toast.error("Please enter valid numbers.");
             return;
         }
         if (parsed.length > 15) {
-            toast.error("Maximum 15 elements for visualization");
+            toast.error("Maximum 15 elements for visualization.");
             return;
         }
         setHeapData(parsed);
-        // setInputVal(''); Don't clear if they applied an array
-        toast.success(`Applied new array`);
+        toast.success("Applied new heap array!");
     };
 
     const handleInsert = () => {
-        const parsed = inputVal.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        const parsed = inputVal.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
         if (parsed.length === 0) {
-            toast.error("Please enter valid numbers");
+            toast.error("Please enter valid numbers to insert.");
             return;
         }
         if (heapData.length + parsed.length > 15) {
-            toast.error("Maximum 15 elements for visualization");
+            toast.error("Maximum 15 elements for visualization.");
             return;
         }
         setHeapData([...heapData, ...parsed]);
@@ -68,22 +88,10 @@ const HeapVisualizer = () => {
         toast.success(`Inserted ${parsed.join(', ')}`);
     };
 
-    const handleExtract = () => {
-        if (heapData.length === 0) {
-            toast.error("Heap is empty");
-            return;
-        }
-        // Extraction logic is handled by the step generator
-        // We just need to trigger the animation
-        // However, to make it interactive, we might want to update the actual heapData
-        // after the animation finishes. For now, we'll let the user see the process.
-        toast.success(`Extracting ${mode === 'min' ? 'Minimum' : 'Maximum'}`);
-    };
-
     const handleRandomize = () => {
         const randomArr = Array.from({ length: 7 }, () => Math.floor(Math.random() * 99) + 1);
         setHeapData(randomArr);
-        toast.success("Heap randomized");
+        toast.success("Heap randomized!");
     };
 
     const codeSnippet = algorithmCodes.heap?.[activeLanguage] || '';
@@ -91,115 +99,117 @@ const HeapVisualizer = () => {
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'insert': return 3;
-            case 'compare': return 9;
-            case 'swap': return 11;
-            case 'extract-start': return 18;
+            case 'insert':       return 3;
+            case 'compare':      return 10;
+            case 'swap':         return 11;
+            case 'extract-start':return 16;
             case 'extract-move': return 21;
-            case 'check': return 31;
-            default: return 0;
+            case 'check':        return 30;
+            default:             return 0;
         }
     };
 
+    const stepData = currentStep || {};
+
+    const treeData = useMemo(() => {
+        if (stepData.treeData) return stepData.treeData;
+        if (stepData.arraySnapshot && stepData.arraySnapshot.length > 0) {
+            return buildTreeFromArray(stepData.arraySnapshot);
+        }
+        return buildTreeFromArray(heapData);
+    }, [stepData, heapData]);
+
     return (
         <DualView
-            algorithmName={`Heap (${mode === 'min' ? 'Min' : 'Max'}) — Priority Queue`}
+            algorithmName={`Heap (${mode === 'min' ? 'Min-Heap' : 'Max-Heap'}) — Priority Queue`}
             code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "A Heap is an efficient way to manage priorities."}
+            codeSnippetCategory="trees"
+            description={
+                <div className="hp-desc-wrapper">
+                    <span className="hp-badge">{mode === 'min' ? 'Min Priority Queue' : 'Max Priority Queue'} O(log N)</span>
+                    <span className="hp-desc-text">
+                        {currentStep?.description || "Press Play to observe heapify sift-up and sift-down operations."}
+                    </span>
+                </div>
+            }
         >
-            <div className="heap-container">
-                <div className="heap-input-bar">
-                    <div className="heap-controls-left">
-                        <div className="heap-input-group" style={{ flexWrap: 'wrap' }}>
-                            <label>Values:</label>
-                            <input
-                                type="text"
-                                className="heap-value-input"
-                                value={inputVal}
-                                onChange={(e) => setInputVal(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleApplyArray()}
-                                placeholder="e.g. 10, 5, 20"
-                                style={{ width: '220px' }}
-                            />
-                        </div>
-                        <button className="heap-btn btn-primary" onClick={handleApplyArray}>
-                            Apply Array
-                        </button>
-                        <button className="heap-btn btn-secondary" onClick={handleInsert}>
+            <div className="hp-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="hp-input-panel">
+                    <div className="hp-input-group">
+                        <label className="hp-input-label">Numbers:</label>
+                        <input
+                            type="text"
+                            value={inputVal}
+                            onChange={(e) => setInputVal(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
+                            placeholder="10, 5, 20..."
+                            className="hp-text-input"
+                        />
+                        <button onClick={handleInsert} className="hp-btn hp-btn-primary">
                             <FaPlus /> Insert
                         </button>
                     </div>
 
-                    <div className="heap-mode-toggle">
-                        <button
-                            className={`mode-btn ${mode === 'min' ? 'active' : ''}`}
-                            onClick={() => setMode('min')}
-                        >
-                            Min Heap
+                    <div className="hp-btn-group">
+                        <button onClick={() => setMode(mode === 'min' ? 'max' : 'min')} className="hp-btn hp-btn-secondary">
+                            <FaExchangeAlt /> {mode === 'min' ? 'Switch to Max-Heap' : 'Switch to Min-Heap'}
                         </button>
-                        <button
-                            className={`mode-btn ${mode === 'max' ? 'active' : ''}`}
-                            onClick={() => setMode('max')}
-                        >
-                            Max Heap
+                        <button onClick={handleRandomize} className="hp-btn hp-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => { setHeapData(DEFAULT_ARRAY); setInputVal(''); reset(); }} className="hp-btn hp-btn-outline">
+                            <FaRedo /> Reset
                         </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button className="heap-btn btn-secondary" onClick={handleRandomize}>
-                            <FaRandom /> Random
-                        </button>
-                        <button className="heap-btn btn-ghost" onClick={handleExtract}>
-                            <FaMinus /> Extract {mode === 'min' ? 'Min' : 'Max'}
-                        </button>
+                    <div className="hp-legend">
+                        <div className="hp-leg-item"><span className="hp-dot yellow"></span> Comparing</div>
+                        <div className="hp-leg-item"><span className="hp-dot green"></span> Root Priority</div>
+                        <div className="hp-leg-item"><span className="hp-dot purple"></span> Swapping</div>
                     </div>
                 </div>
 
-                <div className="heap-visual-grid">
-                    <div className="heap-tree-area">
-                        <TreeCanvas
-                            treeData={currentStep?.treeData}
-                            nodeStates={currentStep?.nodeStates}
-                        />
+                {/* ── Main Canvas Stage: Binary Tree & Array Chips ────────── */}
+                <div className="hp-canvas-wrapper">
+                    
+                    {/* Binary Max/Min Heap Tree */}
+                    <div className="hp-tree-panel">
+                        <div className="hp-card-title">Binary Heap Tree</div>
+                        <div className="hp-canvas-box">
+                            <TreeCanvas
+                                treeData={treeData}
+                                nodeStates={stepData.nodeStates || {}}
+                            />
+                        </div>
                     </div>
 
-                    <div className="heap-array-panel">
-                        <div className="panel-label">
-                            <FaExchangeAlt /> Array Representation [A[i]]
-                        </div>
-                        <div className="heap-array-display">
-                            {(currentStep?.arraySnapshot || heapData).map((val, idx) => {
-                                const isHighlighted = currentStep?.highlightIndices?.includes(idx);
-                                const isRoot = idx === 0;
+                    {/* Heap Array State Chips */}
+                    <div className="hp-array-panel">
+                        <div className="hp-card-title">Array Representation <code>heap[i]</code></div>
+                        <div className="hp-array-grid">
+                            {(stepData.arraySnapshot || stepData.array || heapData).map((val, idx) => {
+                                const state = stepData.nodeStates?.[`hp_${idx}`] || 'default';
                                 return (
-                                    <div key={idx} className="array-item">
-                                        <div className={`array-box ${isHighlighted ? 'highlight' : ''} ${isRoot ? 'root-box' : ''}`}>
-                                            {val}
+                                    <div key={idx} className="hp-chip-wrapper">
+                                        <div className={`hp-chip state-${state}`}>
+                                            <span className="hp-val">{val}</span>
                                         </div>
-                                        <div className="array-idx">{idx}</div>
+                                        <span className="hp-idx">idx {idx}</span>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
+
                 </div>
 
-                <div className="heap-footer">
-                    <div className="heap-legend">
-                        <div className="leg-item"><span className="dot yellow"></span> Comparing</div>
-                        <div className="leg-item"><span className="dot orange"></span> Swapping</div>
-                        <div className="leg-item"><span className="dot green"></span> Satisfied</div>
-                        <div className="leg-item"><span className="dot blue"></span> Root</div>
-                    </div>
-                    <div className="leg-item" style={{ color: '#64748b' }}>
-                        * Left: 2i+1 | Right: 2i+2
-                    </div>
-                </div>
-
-                <div className="heap-controls-wrapper">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="hp-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -215,6 +225,7 @@ const HeapVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

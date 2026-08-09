@@ -1,133 +1,56 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-    FaEye, FaCode, FaRobot, FaTrophy, FaRoute, FaMedal,
-    FaStar, FaArrowRight, FaChevronRight,
-    FaCheckCircle, FaLightbulb, FaFire,
-    FaBolt, FaCrown, FaGem, FaShieldAlt, FaAward, FaRocket,
-    FaTerminal, FaLayerGroup, FaNetworkWired, FaBrain
+    FaArrowRight,
+    FaCheck,
+    FaChevronRight,
+    FaCode,
+    FaLayerGroup,
+    FaRoute,
+    FaTrophy
 } from 'react-icons/fa';
 import { algorithmList } from '../data/algorithmsData';
-import AnimatedBackground from '../components/common/AnimatedBackground';
 import api from '../utils/api';
 import FollowButton from '../components/social/FollowButton';
 import './Home.css';
 
-const useReveal = () => {
-    const ref = useRef(null);
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) el.classList.add('visible'); },
-            { threshold: 0.12 }
-        );
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
-    return ref;
-};
-
-const Reveal = ({ children, className = '', delay = 0 }) => {
-    const ref = useReveal();
-    return (
-        <div ref={ref} className={`reveal ${delay ? `reveal-delay-${delay}` : ''} ${className}`}>
-            {children}
-        </div>
-    );
-};
-
-/* ——————————————————————————————————————————————————————————————————————————
-   Animated Counter
-   —————————————————————————————————————————————————————————————————————————— */
-const AnimatedCounter = ({ target, suffix = '' }) => {
-    const [count, setCount] = useState(0);
-    const ref = useRef(null);
-    const started = useRef(false);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting && !started.current) {
-                started.current = true;
-                const num = parseInt(target.replace(/[^0-9]/g, ''));
-                const duration = 2200;
-                const steps = 70;
-                const increment = num / steps;
-                let current = 0;
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= num) { setCount(num); clearInterval(timer); }
-                    else setCount(Math.floor(current));
-                }, duration / steps);
-            }
-        }, { threshold: 0.5 });
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [target]);
-
-    return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
-};
-
-/* ——————————————————————————————————————————————————————————————————————————
-   Feature code previews
-   —————————————————————————————————————————————————————————————————————————— */
-const CODE_PREVIEWS = {
-    'Interactive Algorithm Visualizer': 'bubbleSort(arr) → compare → swap',
-    'Built-in Online IDE': 'const solve = (n) => { ... }',
-    'AI Code Reviewer': 'AI: "Consider edge case n=0"',
-    'Contest Arena': 'timeLeft: 01:45:32 | Rank: #4',
-    'Personalized Learning Path': 'progress: █████████░░ 80%'
-};
 const relativeTime = (value) => {
-    const time = new Date(value).getTime();
-    if (!Number.isFinite(time)) return '';
-    const diffMs = Date.now() - time;
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-    const diffHour = Math.floor(diffMin / 60);
-    if (diffHour < 24) return `${diffHour}h ago`;
-    const diffDay = Math.floor(diffHour / 24);
-    return `${diffDay}d ago`;
+    const timestamp = new Date(value).getTime();
+    if (!Number.isFinite(timestamp)) return '';
+
+    const minutes = Math.floor((Date.now() - timestamp) / 60000);
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
 };
 
 const describeActivity = (item) => {
-    const username = item?.user?.username || 'Someone';
+    const username = item?.user?.username || 'A learner';
+
     switch (item?.activityType) {
         case 'problem_solved':
-            return `${username} solved ${item?.problem?.title ? `"${item.problem.title}"` : 'a problem'}`;
+            return `${username} solved ${item?.problem?.title ? `“${item.problem.title}”` : 'a problem'}`;
         case 'daily_challenge_completed':
-            return `${username} completed today's daily challenge`;
+            return `${username} completed today’s challenge`;
         case 'solution_posted':
             return `${username} posted a solution`;
         case 'discussion_created':
             return `${username} started a discussion`;
         case 'contest_joined':
             return `${username} joined a contest`;
-        case 'contest_ranked':
-            return `${username} received a contest rank update`;
-        case 'contest_finished':
-            return `${username} finished a contest`;
-        case 'contest_exited':
-            return `${username} exited a contest`;
         default:
-            return `${username} has a new activity`;
+            return `${username} has new activity`;
     }
 };
 
-/* ——————————————————————————————————————————————————————————————————————————
-   Home Page
-   —————————————————————————————————————————————————————————————————————————— */
 const Home = () => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
-    const [liveStats, setLiveStats] = useState({
-        algorithmsCount: null,
-        updatedAt: null
-    });
+    const [algorithmCount, setAlgorithmCount] = useState(null);
+    const [socialLoading, setSocialLoading] = useState(false);
     const [socialWidgets, setSocialWidgets] = useState({
         activity: [],
         suggested: [],
@@ -135,9 +58,7 @@ const Home = () => {
         dailyChallenge: null,
         dailyChallengeUsers: []
     });
-    const [socialLoading, setSocialLoading] = useState(false);
     const [suggestedFollowState, setSuggestedFollowState] = useState({});
-    const minimumAlgorithmDisplayCount = 70;
 
     useEffect(() => {
         let cancelled = false;
@@ -145,27 +66,16 @@ const Home = () => {
         const loadHomeStats = async () => {
             try {
                 const { data } = await api.get('/home/stats');
-                if (cancelled) return;
-
-                const algorithmsCount = Number(data?.data?.algorithmsCount);
-
-                setLiveStats({
-                    algorithmsCount: Number.isFinite(algorithmsCount) ? algorithmsCount : null,
-                    updatedAt: data?.data?.updatedAt || null
-                });
-            } catch (error) {
-                if (!cancelled) {
-                    console.error('Failed to load home stats:', error?.response?.data?.message || error?.message);
-                }
+                const count = Number(data?.data?.algorithmsCount);
+                if (!cancelled && Number.isFinite(count)) setAlgorithmCount(count);
+            } catch {
+                if (!cancelled) setAlgorithmCount(null);
             }
         };
 
         loadHomeStats();
-        const intervalId = setInterval(loadHomeStats, 30000);
-
         return () => {
             cancelled = true;
-            clearInterval(intervalId);
         };
     }, []);
 
@@ -179,7 +89,7 @@ const Home = () => {
                 dailyChallengeUsers: []
             });
             setSuggestedFollowState({});
-            return;
+            return undefined;
         }
 
         let cancelled = false;
@@ -188,33 +98,31 @@ const Home = () => {
         const loadSocialWidgets = async () => {
             try {
                 const [activityRes, suggestedRes, friendsRes, dailyRes] = await Promise.all([
-                    api.get('/activity/feed', { params: { limit: 10 } }),
-                    api.get('/suggested-users', { params: { limit: 6 } }),
-                    api.get('/social/friends-leaderboard', { params: { limit: 8 } }),
-                    api.get('/social/daily-challenge-activity', { params: { limit: 8 } })
+                    api.get('/activity/feed', { params: { limit: 8 } }),
+                    api.get('/suggested-users', { params: { limit: 5 } }),
+                    api.get('/social/friends-leaderboard', { params: { limit: 5 } }),
+                    api.get('/social/daily-challenge-activity', { params: { limit: 5 } })
                 ]);
 
                 if (cancelled) return;
 
-                const suggestedUsers = Array.isArray(suggestedRes.data?.users) ? suggestedRes.data.users : [];
+                const suggested = Array.isArray(suggestedRes.data?.users) ? suggestedRes.data.users : [];
                 setSocialWidgets({
                     activity: Array.isArray(activityRes.data?.items) ? activityRes.data.items : [],
-                    suggested: suggestedUsers,
+                    suggested,
                     friendsLeaderboard: Array.isArray(friendsRes.data?.users) ? friendsRes.data.users : [],
                     dailyChallenge: dailyRes.data?.challenge || null,
                     dailyChallengeUsers: Array.isArray(dailyRes.data?.users) ? dailyRes.data.users : []
                 });
-                setSuggestedFollowState((prev) => {
-                    const next = { ...(prev || {}) };
-                    suggestedUsers.forEach((entry) => {
-                        const uid = String(entry?._id || '');
-                        if (uid && !Object.prototype.hasOwnProperty.call(next, uid)) {
-                            next[uid] = Boolean(entry?.isFollowing);
-                        }
+                setSuggestedFollowState((previous) => {
+                    const next = { ...previous };
+                    suggested.forEach((entry) => {
+                        const id = String(entry?._id || '');
+                        if (id && !Object.hasOwn(next, id)) next[id] = Boolean(entry?.isFollowing);
                     });
                     return next;
                 });
-            } catch (error) {
+            } catch {
                 if (!cancelled) {
                     setSocialWidgets({
                         activity: [],
@@ -223,7 +131,6 @@ const Home = () => {
                         dailyChallenge: null,
                         dailyChallengeUsers: []
                     });
-                    setSuggestedFollowState({});
                 }
             } finally {
                 if (!cancelled) setSocialLoading(false);
@@ -231,309 +138,243 @@ const Home = () => {
         };
 
         loadSocialWidgets();
-
         return () => {
             cancelled = true;
         };
     }, [isAuthenticated, user?._id]);
 
-    const visibleAlgorithmCount = Math.max(
-        Number.isFinite(liveStats.algorithmsCount) ? liveStats.algorithmsCount : algorithmList.length,
-        minimumAlgorithmDisplayCount
-    );
+    const libraryCount = Math.max(algorithmCount || algorithmList.length, algorithmList.length);
+    const featuredAlgorithms = algorithmList.slice(0, 4);
+    const activity = Array.isArray(socialWidgets.activity) ? socialWidgets.activity : [];
+    const suggested = Array.isArray(socialWidgets.suggested) ? socialWidgets.suggested : [];
+    const friends = Array.isArray(socialWidgets.friendsLeaderboard) ? socialWidgets.friendsLeaderboard : [];
+    const dailyUsers = Array.isArray(socialWidgets.dailyChallengeUsers) ? socialWidgets.dailyChallengeUsers : [];
 
-    const statsCards = [
-        {
-            label: 'Algorithms',
-            value: visibleAlgorithmCount,
-            suffix: '+',
-            icon: <FaEye />,
-            color: '#6366f1'
-        }
-    ];
-
-    const safeActivity = Array.isArray(socialWidgets.activity) ? socialWidgets.activity : [];
-    const safeSuggested = Array.isArray(socialWidgets.suggested) ? socialWidgets.suggested : [];
-    const safeFriends = Array.isArray(socialWidgets.friendsLeaderboard) ? socialWidgets.friendsLeaderboard : [];
-    const safeDailyUsers = Array.isArray(socialWidgets.dailyChallengeUsers) ? socialWidgets.dailyChallengeUsers : [];
-
-    const handleSuggestedFollowStateChange = (targetUserId, nextState) => {
-        const normalizedId = String(targetUserId || '');
-        if (!normalizedId) return;
-        setSuggestedFollowState((prev) => ({ ...prev, [normalizedId]: Boolean(nextState) }));
+    const handleFollowStateChange = (targetUserId, nextState) => {
+        const id = String(targetUserId || '');
+        if (id) setSuggestedFollowState((previous) => ({ ...previous, [id]: Boolean(nextState) }));
     };
 
     return (
-        <div className="krama-home">
-            <AnimatedBackground />
-
-            {/* ———————————————— HERO ———————————————— */}
-            <section className="hero-section">
-                <div className="hero-bg-orb orb-1" />
-                <div className="hero-bg-orb orb-2" />
-                <div className="hero-bg-orb orb-3" />
-
-                <div className="floating-elements">
-                    <span className="float-el">&lt;/&gt;</span>
-                    <span className="float-el">{'{ }'}</span>
-                    <span className="float-el">O(n)</span>
-                    <span className="float-el">→</span>
-                    <span className="float-el">if()</span>
-                    <span className="float-el">[ ]</span>
-                    <div className="glow-node" />
-                    <div className="glow-node" />
-                    <div className="glow-node" />
-                    <div className="glow-node" />
-                </div>
-
-                <motion.div
-                    className="hero-content"
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                >
-                    <div className="hero-badge">🚀 Revolutionizing Computer Science Education</div>
-
-                    <h1 className="hero-title">
-                        Master Algorithms<br />
-                        <span className="gradient-highlight" data-text="The Visual Way">The Visual Way</span>
-                    </h1>
-
-                    <p className="hero-subtitle">
-                        Kramaa is the ultimate platform where code meets clarity. Visualize complex algorithms,
-                        practice in a real IDE, compete in contests, and prepare for your dream company.
-                        <br /><span style={{ color: 'var(--primary-teal)', fontWeight: '600', fontSize: '0.9rem', marginTop: '10px', display: 'block' }}>Created by Aditya Ram</span>
+        <div className="home-page">
+            <section className="home-intro" aria-labelledby="home-title">
+                <div className="home-intro-copy">
+                    <p className="home-eyebrow"><span>Kramaa</span> / a practical way to learn algorithms</p>
+                    <h1 id="home-title">See every move.<br />Build better instincts.</h1>
+                    <p className="home-lede">
+                        A focused workspace for understanding the decisions inside an algorithm, then applying them under real constraints.
                     </p>
-
-
-                    <div className="hero-buttons">
-                        <Link to="/algorithms" className="btn-primary">
-                            Start Visualizing <FaArrowRight size={14} />
+                    <div className="home-actions">
+                        <Link to="/algorithms" className="home-button home-button-primary">
+                            Explore visualizers <FaArrowRight aria-hidden="true" />
                         </Link>
-                        <Link to="/contests" className="btn-gold">
-                            Join Contest <FaTrophy size={14} />
-                        </Link>
-                        <Link to="/coding-platform" className="btn-glass">
-                            Practice IDE <FaCode size={14} />
+                        <Link to="/coding-platform" className="home-button home-button-quiet">
+                            Practice problems
                         </Link>
                     </div>
-                </motion.div>
+                    <dl className="home-proof-points" aria-label="Platform highlights">
+                        <div>
+                            <dt>{libraryCount}+</dt>
+                            <dd>interactive algorithms</dd>
+                        </div>
+                        <div>
+                            <dt>Step by step</dt>
+                            <dd>not just the final output</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <article className="study-preview" aria-label="Bubble sort learning preview">
+                    <div className="study-preview-header">
+                        <div>
+                            <p>Currently exploring</p>
+                            <h2>Bubble sort</h2>
+                        </div>
+                        <span className="study-preview-state"><span /> Live trace</span>
+                    </div>
+                    <div className="study-sequence" aria-label="Array values 5, 1, 4, 2, 8">
+                        {[5, 1, 4, 2, 8].map((value, index) => (
+                            <div key={`${value}-${index}`} className={`study-bar study-bar-${index + 1}`}>
+                                <span>{value}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="study-note">
+                        <span className="study-note-marker">02</span>
+                        <p><strong>Compare adjacent values</strong> and move the larger one to the right.</p>
+                    </div>
+                    <div className="study-preview-footer">
+                        <span>Time: <strong>O(n²)</strong></span>
+                        <Link to="/algorithms/sorting/bubble">Open lesson <FaChevronRight aria-hidden="true" /></Link>
+                    </div>
+                </article>
             </section>
 
-            {/* ———————————————— FEATURED ALGORITHMS ———————————————— */}
-            <section className="home-section">
-                <Reveal>
-                    <div className="section-header">
-                        <div className="section-label">📚 Interactive Library</div>
-                        <h2 className="section-title">Featured Algorithms</h2>
-                        <p className="section-subtitle">Deep dive into the core concepts with our premium visualizers.</p>
+            <section className="home-paths" aria-labelledby="paths-heading">
+                <div className="home-section-heading home-section-heading-inline">
+                    <div>
+                        <p className="home-kicker">Choose your starting point</p>
+                        <h2 id="paths-heading">Make the next session count.</h2>
                     </div>
-                </Reveal>
+                    <p>Each part of Kramaa has a distinct job: learn the model, test the implementation, then measure your growth.</p>
+                </div>
+                <div className="path-list">
+                    <Link to="/algorithms" className="path-row">
+                        <span className="path-index">01</span>
+                        <span className="path-icon"><FaLayerGroup aria-hidden="true" /></span>
+                        <span className="path-copy"><strong>Build the mental model</strong><small>Walk through every comparison, branch, and state change.</small></span>
+                        <FaArrowRight className="path-arrow" aria-hidden="true" />
+                    </Link>
+                    <Link to="/coding-platform" className="path-row">
+                        <span className="path-index">02</span>
+                        <span className="path-icon"><FaCode aria-hidden="true" /></span>
+                        <span className="path-copy"><strong>Put it into practice</strong><small>Work through curated problems in an uncluttered coding workspace.</small></span>
+                        <FaArrowRight className="path-arrow" aria-hidden="true" />
+                    </Link>
+                    <Link to="/contests" className="path-row">
+                        <span className="path-index">03</span>
+                        <span className="path-icon"><FaTrophy aria-hidden="true" /></span>
+                        <span className="path-copy"><strong>Work under pressure</strong><small>Join timed rounds and calibrate your decision-making.</small></span>
+                        <FaArrowRight className="path-arrow" aria-hidden="true" />
+                    </Link>
+                </div>
+            </section>
 
-                <div className="features-grid">
-                    {algorithmList.slice(0, 4).map((algo, i) => (
-                        <Reveal key={algo.id} delay={i + 1}>
-                            <Link to={algo.path} className="feature-card" style={{ textDecoration: 'none' }}>
-                                <div className="feature-icon" style={{ 
-                                    background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.1))',
-                                    color: '#3b82f6'
-                                }}>
-                                    {i % 4 === 0 ? <FaTerminal /> : i % 4 === 1 ? <FaLayerGroup /> : i % 4 === 2 ? <FaNetworkWired /> : <FaBrain />}
-                                </div>
-                                <h3 className="feature-title">{algo.name}</h3>
-                                <p className="feature-desc">{algo.description}</p>
-                                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{algo.difficulty}</span>
-                                    <span className="learn-more">Learn More <FaChevronRight size={10} /></span>
-                                </div>
-                            </Link>
-                        </Reveal>
+            <section className="home-library" aria-labelledby="library-heading">
+                <div className="home-section-heading">
+                    <p className="home-kicker">A library with purpose</p>
+                    <h2 id="library-heading">Good places to begin.</h2>
+                    <p>Short, visual lessons for the concepts that form the rest of your algorithmic vocabulary.</p>
+                </div>
+                <div className="algorithm-shelf">
+                    {featuredAlgorithms.map((algorithm, index) => (
+                        <Link to={algorithm.path} className="algorithm-shelf-item" key={algorithm.id}>
+                            <span className="algorithm-shelf-number">0{index + 1}</span>
+                            <span className="algorithm-shelf-meta">{algorithm.category} · {algorithm.difficulty}</span>
+                            <h3>{algorithm.name}</h3>
+                            <p>{algorithm.description}</p>
+                            <span className="algorithm-shelf-link">Open visualizer <FaChevronRight aria-hidden="true" /></span>
+                        </Link>
                     ))}
                 </div>
-                
-                <Reveal delay={5}>
-                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                        <Link to="/algorithms" className="btn-glass">
-                            Explore All Algorithms <FaArrowRight size={14} />
-                        </Link>
-                    </div>
-                </Reveal>
+                <Link to="/algorithms" className="home-inline-link">View the full library <FaArrowRight aria-hidden="true" /></Link>
             </section>
-            <section className="stats-section">
-                <div className="stats-grid">
-                    {statsCards.map((s, i) => (
-                        <Reveal key={i} delay={i + 1}>
-                            <div className="stat-item">
-                                <div className="stat-icon" style={{ color: s.color }}>
-                                    {s.icon}
-                                </div>
-                                <div className="stat-number">
-                                    {Number.isFinite(s.value) ? `${s.value.toLocaleString()}${s.suffix || ''}` : '—'}
-                                </div>
-                                <div className="stat-label">{s.label}</div>
-                            </div>
-                        </Reveal>
-                    ))}
+
+            <section className="home-practice" aria-labelledby="practice-heading">
+                <div className="home-practice-copy">
+                    <p className="home-kicker">For the work after the lesson</p>
+                    <h2 id="practice-heading">Turn understanding into reliable execution.</h2>
+                    <p>Move from an animated concept into a deliberate problem-solving loop—with filters, saved problems, daily challenges, and a full coding workspace.</p>
+                    <Link to="/coding-platform" className="home-button home-button-dark">
+                        Enter the practice arena <FaArrowRight aria-hidden="true" />
+                    </Link>
+                </div>
+                <div className="practice-checklist" aria-label="Practice workspace features">
+                    <div><span><FaCheck aria-hidden="true" /></span><p><strong>Curated problem sets</strong><small>Find the right difficulty and topic without extra noise.</small></p></div>
+                    <div><span><FaCheck aria-hidden="true" /></span><p><strong>Useful progress signals</strong><small>See what you solve, revisit, and improve over time.</small></p></div>
+                    <div><span><FaCheck aria-hidden="true" /></span><p><strong>One workspace per problem</strong><small>Read, write, run, and learn in the same place.</small></p></div>
                 </div>
             </section>
 
             {isAuthenticated && (
-                <section className="home-section">
-                    <Reveal>
-                        <div className="section-header">
-                            <div className="section-label">👥 Social Coding</div>
-                            <h2 className="section-title">Following Activity & Friend Insights</h2>
-                            <p className="section-subtitle">Track coders you follow and discover people to learn from.</p>
+                <section className="home-community" aria-labelledby="community-heading">
+                    <div className="home-section-heading home-section-heading-inline">
+                        <div>
+                            <p className="home-kicker">Your learning circle</p>
+                            <h2 id="community-heading">Stay connected to the work.</h2>
                         </div>
-                    </Reveal>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-                        <div className="feature-card" style={{ padding: '18px' }}>
-                            <h3 className="feature-title" style={{ marginBottom: '12px' }}>Following Activity</h3>
-                            {socialLoading && safeActivity.length === 0 ? (
-                                <p className="feature-desc">Loading activity...</p>
-                            ) : safeActivity.length === 0 ? (
-                                <p className="feature-desc">No recent activity from followed users.</p>
+                        <Link to="/community" className="home-inline-link">Open community <FaArrowRight aria-hidden="true" /></Link>
+                    </div>
+                    <div className="community-grid">
+                        <article className="community-panel community-activity">
+                            <div className="community-panel-heading"><h3>Following</h3><span>{activity.length} updates</span></div>
+                            {socialLoading && activity.length === 0 ? (
+                                <p className="community-empty">Loading activity…</p>
+                            ) : activity.length === 0 ? (
+                                <p className="community-empty">Follow a few learners to see their recent work here.</p>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {safeActivity.slice(0, 5).map((item) => (
-                                        <Link
-                                            key={item?._id || `${item?.activityType}-${item?.createdAt}`}
-                                            to={item?.problem?.slug ? `/coding-platform/${item.problem.slug}` : (item?.metadata?.threadLink || '/community')}
-                                            style={{ textDecoration: 'none', color: 'inherit' }}
-                                        >
-                                            <div style={{ padding: '10px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                                <div style={{ fontSize: '0.84rem', color: 'var(--text-primary, #f8fafc)', fontWeight: 600 }}>
-                                                    {describeActivity(item)}
-                                                </div>
-                                                <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #94a3b8)', marginTop: '4px' }}>
-                                                    {relativeTime(item?.createdAt)}
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="feature-card" style={{ padding: '18px' }}>
-                            <h3 className="feature-title" style={{ marginBottom: '12px' }}>Suggested Coders</h3>
-                            {socialLoading && safeSuggested.length === 0 ? (
-                                <p className="feature-desc">Loading suggestions...</p>
-                            ) : safeSuggested.length === 0 ? (
-                                <p className="feature-desc">No suggestions right now.</p>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {safeSuggested.slice(0, 5).map((entry) => {
-                                        const userId = String(entry?._id || '');
-                                        const isSelf = userId === String(user?._id || user?.id || '');
-                                        return (
-                                            <div key={entry?._id || entry?.username} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                                <Link to={`/profile/${entry?.username || ''}`} style={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
-                                                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-primary, #f8fafc)' }}>
-                                                        {entry?.username || 'Unknown'}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                                                        {Number(entry?.problemsSolved || 0)} solved
-                                                    </div>
-                                                </Link>
-                                                <FollowButton
-                                                    targetUserId={userId}
-                                                    isSelf={isSelf}
-                                                    size="sm"
-                                                    initialFollowing={Boolean(suggestedFollowState[userId])}
-                                                    onStateChange={(nextState) => handleSuggestedFollowStateChange(userId, nextState)}
-                                                />
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="feature-card" style={{ padding: '18px' }}>
-                            <h3 className="feature-title" style={{ marginBottom: '12px' }}>Friends Leaderboard</h3>
-                            {socialLoading && safeFriends.length === 0 ? (
-                                <p className="feature-desc">Loading leaderboard...</p>
-                            ) : safeFriends.length === 0 ? (
-                                <p className="feature-desc">Follow users to build your friends leaderboard.</p>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {safeFriends.slice(0, 5).map((entry) => (
-                                        <div key={entry?._id || entry?.rank} style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', gap: '8px', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 700 }}>#{entry?.rank || '-'}</span>
-                                            <Link to={`/profile/${entry?.username || ''}`} style={{ textDecoration: 'none', color: 'var(--text-primary, #f8fafc)', fontSize: '0.84rem', fontWeight: 600 }}>
-                                                {entry?.username || 'Unknown'} {entry?.isCurrentUser ? '(You)' : ''}
+                                <ul className="activity-list">
+                                    {activity.slice(0, 5).map((item) => (
+                                        <li key={item?._id || `${item?.activityType}-${item?.createdAt}`}>
+                                            <Link to={item?.problem?.slug ? `/coding-platform/${item.problem.slug}` : item?.metadata?.threadLink || '/community'}>
+                                                <span className="activity-dot" />
+                                                <span><strong>{describeActivity(item)}</strong><small>{relativeTime(item?.createdAt)}</small></span>
                                             </Link>
-                                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                                                {Number(entry?.problemsSolved || 0)}
-                                            </span>
-                                        </div>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
                             )}
-                        </div>
+                        </article>
 
-                        <div className="feature-card" style={{ padding: '18px' }}>
-                            <h3 className="feature-title" style={{ marginBottom: '12px' }}>Daily Challenge Activity</h3>
+                        <article className="community-panel community-daily">
+                            <div className="community-panel-heading"><h3>Today’s challenge</h3><FaRoute aria-hidden="true" /></div>
                             {socialWidgets.dailyChallenge ? (
-                                <div style={{ marginBottom: '10px' }}>
-                                    <Link to={socialWidgets.dailyChallenge.slug ? `/coding-platform/${socialWidgets.dailyChallenge.slug}` : '/coding-platform'} style={{ color: '#93c5fd', fontSize: '0.84rem', textDecoration: 'none', fontWeight: 600 }}>
+                                <>
+                                    <Link to={socialWidgets.dailyChallenge.slug ? `/coding-platform/${socialWidgets.dailyChallenge.slug}` : '/coding-platform'} className="daily-challenge-title">
                                         {socialWidgets.dailyChallenge.title}
                                     </Link>
-                                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #94a3b8)' }}>
-                                        {socialWidgets.dailyChallenge.difficulty || 'Unknown'} difficulty
+                                    <p className="daily-challenge-meta">{socialWidgets.dailyChallenge.difficulty || 'Practice'} · {dailyUsers.filter((entry) => entry?.solved).length} completed</p>
+                                    <div className="daily-avatars" aria-label="Challenge participants">
+                                        {dailyUsers.slice(0, 5).map((entry) => <span key={entry?._id || entry?.username}>{entry?.username?.charAt(0).toUpperCase() || '?'}</span>)}
                                     </div>
-                                </div>
-                            ) : (
-                                <p className="feature-desc" style={{ marginBottom: '8px' }}>No challenge scheduled for today.</p>
-                            )}
+                                </>
+                            ) : <p className="community-empty">A fresh challenge will appear here when it’s ready.</p>}
+                        </article>
 
-                            {safeDailyUsers.length > 0 && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {safeDailyUsers.slice(0, 6).map((entry) => (
-                                        <div key={entry?._id || entry?.username} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                            <Link to={`/profile/${entry?.username || ''}`} style={{ textDecoration: 'none', color: 'var(--text-primary, #f8fafc)', fontSize: '0.84rem', fontWeight: 600 }}>
-                                                {entry?.username || 'Unknown'}
-                                            </Link>
-                                            <span style={{ fontSize: '0.74rem', color: entry?.solved ? '#22c55e' : '#f59e0b', fontWeight: 600 }}>
-                                                {entry?.solved ? 'Solved ✓' : 'Pending ⏳'}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                        <article className="community-panel community-people">
+                            <div className="community-panel-heading"><h3>People to learn with</h3><span>Suggested</span></div>
+                            {socialLoading && suggested.length === 0 ? (
+                                <p className="community-empty">Finding people…</p>
+                            ) : suggested.length === 0 ? (
+                                <p className="community-empty">No suggestions right now.</p>
+                            ) : (
+                                <ul className="people-list">
+                                    {suggested.slice(0, 4).map((entry) => {
+                                        const id = String(entry?._id || '');
+                                        return (
+                                            <li key={id || entry?.username}>
+                                                <Link to={`/profile/${entry?.username || ''}`}><span className="person-avatar">{entry?.username?.charAt(0).toUpperCase() || '?'}</span><span><strong>{entry?.username || 'Unknown learner'}</strong><small>{Number(entry?.problemsSolved || 0)} problems solved</small></span></Link>
+                                                <FollowButton
+                                                    targetUserId={id}
+                                                    isSelf={id === String(user?._id || user?.id || '')}
+                                                    size="sm"
+                                                    initialFollowing={Boolean(suggestedFollowState[id])}
+                                                    onStateChange={(nextState) => handleFollowStateChange(id, nextState)}
+                                                />
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
                             )}
-                        </div>
+                        </article>
+
+                        <article className="community-panel community-ranking">
+                            <div className="community-panel-heading"><h3>Your circle</h3></div>
+                            {socialLoading && friends.length === 0 ? (
+                                <p className="community-empty">Loading standings…</p>
+                            ) : friends.length === 0 ? (
+                                <p className="community-empty">Your followed learners will show up here.</p>
+                            ) : (
+                                <ol className="ranking-list">
+                                    {friends.slice(0, 4).map((entry) => (
+                                        <li key={entry?._id || entry?.rank}><span>{entry?.rank || '—'}</span><Link to={`/profile/${entry?.username || ''}`}>{entry?.username || 'Unknown'}{entry?.isCurrentUser ? ' (You)' : ''}</Link><strong>{Number(entry?.problemsSolved || 0)}</strong></li>
+                                    ))}
+                                </ol>
+                            )}
+                        </article>
                     </div>
                 </section>
             )}
 
-            {/* ———————————————— FINAL CTA ———————————————— */}
-            <section className="final-cta">
-                <div className="final-cta-bg" />
-                <Reveal>
-                    <div className="final-cta-content">
-                        <h2 className="final-cta-title">
-                            Ready to Crack Your<br />
-                            <span className="gradient-highlight" data-text="Dream Company?">Dream Company?</span>
-                        </h2>
-                        <p className="final-cta-subtitle">
-                            Join thousands of developers who are building their future with Kramaa.
-                            Start visualizing, practicing, and competing today.
-                        </p>
-                        <Link to="/register" className="btn-start-now">
-                            <span>Start Now — It's Free <FaArrowRight size={16} /></span>
-                        </Link>
-                    </div>
-                </Reveal>
-            </section>
-
-            {/* Mobile Sticky CTA */}
-            <div className="mobile-sticky-cta">
-                <Link to="/register" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px' }}>
-                    Start Now — Free <FaArrowRight size={14} />
+            <section className="home-closing" aria-labelledby="closing-heading">
+                <div>
+                    <p className="home-kicker">A clearer way forward</p>
+                    <h2 id="closing-heading">One good session can change how a problem feels.</h2>
+                </div>
+                <Link to={isAuthenticated ? '/coding-platform' : '/register'} className="home-button home-button-primary">
+                    {isAuthenticated ? 'Choose a problem' : 'Create your account'} <FaArrowRight aria-hidden="true" />
                 </Link>
-            </div>
+            </section>
         </div>
     );
 };

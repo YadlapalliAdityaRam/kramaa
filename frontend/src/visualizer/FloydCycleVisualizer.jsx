@@ -5,14 +5,15 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateFloydCycleSteps } from '../algorithms/graphs/floydCycle';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
+import { FaRandom, FaProjectDiagram, FaInfoCircle, FaRedo } from 'react-icons/fa';
 import './FloydCycleVisualizer.css';
 
 const DEFAULT_VALS = [1, 2, 3, 4, 5, 6];
 
 const FloydCycleVisualizer = () => {
-    const [listValues, setListValues] = useState(DEFAULT_VALS);
-    const [cycleBack, setCycleBack] = useState(2);
-    const [showIntuition, setShowIntuition] = useState(true);
+    const [listValues, setListValues]         = useState(DEFAULT_VALS);
+    const [cycleBack, setCycleBack]           = useState(2);
+    const [showIntuition, setShowIntuition]   = useState(true);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const steps = useMemo(
@@ -35,7 +36,7 @@ const FloydCycleVisualizer = () => {
     } = useGenericAnimation(steps);
 
     const handleRandomize = () => {
-        const len = Math.floor(Math.random() * 4) + 5; // 5-8 nodes
+        const len = Math.floor(Math.random() * 3) + 5; // 5-7 nodes
         const newVals = Array.from({ length: len }, (_, i) => i + 1);
         const newCycle = Math.random() > 0.3 ? Math.floor(Math.random() * (len - 1)) : -1;
         setListValues(newVals);
@@ -47,7 +48,7 @@ const FloydCycleVisualizer = () => {
     const toggleCycle = () => {
         if (cycleBack === -1) {
             setCycleBack(Math.floor(listValues.length / 2));
-            toast.success('Cycle added!');
+            toast.success('Cycle added to list!');
         } else {
             setCycleBack(-1);
             toast.success('Cycle removed!');
@@ -58,11 +59,11 @@ const FloydCycleVisualizer = () => {
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'init': return 65;
-            case 'move': return 138;
-            case 'meet': return 125;
-            case 'done': return 153;
-            default: return 0;
+            case 'init': return 2;
+            case 'move': return 7;
+            case 'meet': return 10;
+            case 'done': return step.hasCycle ? 10 : 14;
+            default:     return 0;
         }
     };
 
@@ -71,19 +72,20 @@ const FloydCycleVisualizer = () => {
         const nodeList = currentStep.nodes || [];
         const slow = currentStep.slow;
         const fast = currentStep.fast;
-        const cb = currentStep.cycleBack;
+        const cb   = currentStep.cycleBack;
 
-        const nodeRadius = 30;
-        const spacing = 100;
+        const nodeRadius = 26;
+        const spacing    = 95;
+        const svgWidth   = Math.max(700, nodeList.length * spacing + 120);
 
         return (
-            <svg className="floyd-svg" viewBox={`0 0 ${Math.max(800, nodeList.length * spacing + 100)} 300`}>
+            <svg className="floyd-svg" viewBox={`0 0 ${svgWidth} 260`}>
                 <defs>
-                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-                        <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+                    <marker id="arrow-floyd" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L8,3 z" fill="var(--text-muted)" />
                     </marker>
-                    <marker id="arrow-cycle" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-                        <path d="M0,0 L0,6 L9,3 z" fill="#a855f7" />
+                    <marker id="arrow-cycle" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L8,3 z" fill="#c084fc" />
                     </marker>
                 </defs>
 
@@ -91,18 +93,17 @@ const FloydCycleVisualizer = () => {
                 {nodeList.map((_, i) => {
                     if (i === nodeList.length - 1) {
                         if (cb !== -1) {
-                            // Cycle edge
                             const fromX = i * spacing + 50 + nodeRadius;
-                            const toX = cb * spacing + 50;
-                            const midX = (fromX + toX) / 2;
+                            const toX   = cb * spacing + 50;
+                            const midX  = (fromX + toX) / 2;
                             return (
                                 <path
                                     key="cycle-edge"
-                                    d={`M ${fromX} 150 Q ${midX} 250 ${toX} 185`}
+                                    d={`M ${fromX} 130 Q ${midX} 230 ${toX} 160`}
                                     fill="none"
-                                    stroke="#a855f7"
-                                    strokeWidth="3"
-                                    strokeDasharray="5,5"
+                                    stroke="#c084fc"
+                                    strokeWidth="2.5"
+                                    strokeDasharray="5,4"
                                     markerEnd="url(#arrow-cycle)"
                                     className="cycle-path-anim"
                                 />
@@ -114,47 +115,53 @@ const FloydCycleVisualizer = () => {
                         <line
                             key={`edge-${i}`}
                             x1={i * spacing + 50 + nodeRadius}
-                            y1="150"
+                            y1="130"
                             x2={(i + 1) * spacing + 50 - nodeRadius}
-                            y2="150"
-                            stroke="#64748b"
-                            strokeWidth="2"
-                            markerEnd="url(#arrow)"
+                            y2="130"
+                            stroke="var(--surface-border)"
+                            strokeWidth="2.5"
+                            markerEnd="url(#arrow-floyd)"
                         />
                     );
                 })}
 
-                {/* NULL at end */}
+                {/* NULL Indicator */}
                 {cb === -1 && nodeList.length > 0 && (
-                    <text x={nodeList.length * spacing - 20} y="155" fill="#64748b" fontSize="14" fontWeight="bold">NULL</text>
+                    <g transform={`translate(${nodeList.length * spacing + 20}, 130)`}>
+                        <text dy=".35em" textAnchor="start" fill="var(--text-muted)" fontSize="13" fontWeight="800" fontFamily="Fira Code">
+                            → NULL
+                        </text>
+                    </g>
                 )}
 
                 {/* Nodes */}
                 {nodeList.map((node, i) => {
                     const isSlow = slow === i;
                     const isFast = fast === i;
-                    const isMet = currentStep.met && currentStep.meetNode === i;
+                    const isMet  = currentStep.met && currentStep.meetNode === i;
 
-                    let className = 'node-circle';
-                    if (isMet) className += ' state-met';
-                    else if (isSlow || isFast) className += ' state-active';
+                    let circleClass = 'node-circle';
+                    if (isMet)        circleClass += ' state-met';
+                    else if (isSlow || isFast) circleClass += ' state-active';
 
                     return (
-                        <g key={`node-${i}`} transform={`translate(${i * spacing + 50}, 150)`}>
-                            <circle r={nodeRadius} className={className} />
-                            <text dy=".3em" textAnchor="middle" fill="white" fontWeight="bold">{node.value}</text>
+                        <g key={`node-${i}`} transform={`translate(${i * spacing + 50}, 130)`}>
+                            <circle r={nodeRadius} className={circleClass} />
+                            <text dy=".35em" textAnchor="middle" className="node-text">
+                                {node.value}
+                            </text>
 
-                            {/* Pointers */}
+                            {/* Pointer Labels */}
                             {isSlow && (
-                                <g transform="translate(0, -50)" className="pointer tortoise">
-                                    <text textAnchor="middle" fontSize="24">🐢</text>
-                                    <text y="15" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#3b82f6">SLOW</text>
+                                <g transform="translate(0, -42)" className="pointer tortoise">
+                                    <text textAnchor="middle" fontSize="22">🐢</text>
+                                    <text y="14" textAnchor="middle" fontSize="9" fontWeight="800" fill="#38bdf8">SLOW</text>
                                 </g>
                             )}
                             {isFast && (
-                                <g transform={`translate(${isSlow ? 20 : 0}, -50)`} className="pointer hare">
-                                    <text textAnchor="middle" fontSize="24">🐇</text>
-                                    <text y="15" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#ef4444">FAST</text>
+                                <g transform={`translate(${isSlow ? 18 : 0}, -42)`} className="pointer hare">
+                                    <text textAnchor="middle" fontSize="22">🐇</text>
+                                    <text y="14" textAnchor="middle" fontSize="9" fontWeight="800" fill="#f87171">FAST</text>
                                 </g>
                             )}
                         </g>
@@ -171,59 +178,64 @@ const FloydCycleVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || 'Watch how the Tortoise and Hare move through the list.'}
+            codeSnippetCategory="graphs"
+            description={
+                <div className="fl-desc-wrapper">
+                    <span className="fl-badge">Two-Pointer Algorithm O(N)</span>
+                    <span className="fl-desc-text">
+                        {currentStep?.description || 'Press Play to watch Tortoise (1 step) and Hare (2 steps) traverse the linked list.'}
+                    </span>
+                </div>
+            }
         >
-            <div className="floyd-container">
-                <div className="floyd-top-bar">
-                    <button className="floyd-toggle-btn" onClick={() => setShowIntuition(!showIntuition)}>
-                        {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
-                    </button>
-                    <div className="floyd-actions">
-                        <button className="cs-btn cs-btn-secondary" onClick={handleRandomize}>Random List</button>
-                        <button className="cs-btn cs-btn-primary" onClick={toggleCycle}>
-                            {cycleBack === -1 ? 'Add Cycle' : 'Remove Cycle'}
+            <div className="fl-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="fl-input-panel">
+                    <div className="fl-btn-group">
+                        <button className="fl-btn fl-btn-primary" onClick={toggleCycle}>
+                            <FaProjectDiagram /> {cycleBack === -1 ? 'Add Cycle' : 'Remove Cycle'}
                         </button>
+                        <button className="fl-btn fl-btn-secondary" onClick={handleRandomize}>
+                            <FaRandom /> Random List
+                        </button>
+                        <button className="fl-btn fl-btn-outline" onClick={() => setShowIntuition(!showIntuition)}>
+                            <FaInfoCircle /> {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
+                        </button>
+                        <button className="fl-btn fl-btn-outline" onClick={reset}>
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="fl-legend">
+                        <div className="fl-leg-item"><span className="fl-dot blue"></span> 🐢 Slow</div>
+                        <div className="fl-leg-item"><span className="fl-dot red"></span> 🐇 Fast</div>
+                        <div className="fl-leg-item"><span className="fl-dot green"></span> Meet Point</div>
+                        <div className="fl-leg-item"><span className="fl-dot purple"></span> Cycle Link</div>
                     </div>
                 </div>
 
+                {/* Intuition Callout */}
                 {showIntuition && (
-                    <div className="floyd-intuition-panel">
-                        <h4>🏃 The Two Runners Analogy</h4>
+                    <div className="fl-intuition-panel">
+                        <h4>🏃 Two Runners Analogy</h4>
                         <p>
-                            Imagine a <strong>Tortoise (Slow)</strong> and a <strong>Hare (Fast)</strong> running on a track.
-                            The Hare runs twice as fast as the Tortoise.
+                            The <strong>Tortoise (Slow)</strong> advances 1 node per step, while the <strong>Hare (Fast)</strong> advances 2 nodes per step.
                         </p>
                         <ul>
-                            <li>If the track is straight, the Hare just hits the end.</li>
-                            <li>If the track is <strong>circular</strong>, the Hare will eventually lap the Tortoise and they will meet!</li>
+                            <li>If no cycle exists, the Hare reaches <code>NULL</code> (end of list).</li>
+                            <li>If a cycle exists, the Hare gets trapped inside the loop and eventually laps the Tortoise, meeting at the exact same node!</li>
                         </ul>
                     </div>
                 )}
 
-                <div className="floyd-visual-area">
+                {/* ── Main Canvas Area: SVG Linked List ────────────────── */}
+                <div className="fl-canvas-wrapper">
                     {renderNodes()}
                 </div>
 
-                <div className="floyd-footer">
-                    <div className="floyd-complexity">
-                        <div className="comp-item">
-                            <span className="label">Time Complexity:</span>
-                            <span className="val">O(N)</span>
-                        </div>
-                        <div className="comp-item">
-                            <span className="label">Space Complexity:</span>
-                            <span className="val">O(1)</span>
-                        </div>
-                    </div>
-                    <div className="floyd-legend">
-                        <div className="leg-item"><span className="dot blue"></span> Slow</div>
-                        <div className="leg-item"><span className="dot red"></span> Fast</div>
-                        <div className="leg-item"><span className="dot green"></span> Meet</div>
-                        <div className="leg-item"><span className="dot purple"></span> Cycle</div>
-                    </div>
-                </div>
-
-                <div className="floyd-controls">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="fl-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -239,6 +251,7 @@ const FloydCycleVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

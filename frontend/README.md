@@ -42,3 +42,16 @@ Kramaa is a comprehensive platform designed to help users visualize, learn, and 
 3. **Run the application:**
    - Frontend: `npm run dev` in `frontend/`
    - Backend: `npm run dev` in `backend/`
+
+## Concurrent Motion
+
+Route changes and loading feedback use layered motion so overlapping effects stay independent:
+
+1. The outer route shell fades from transparent to visible.
+2. Its inner content settles upward at the same time.
+3. The top progress indicator advances independently while a route or request is busy.
+4. Blocking loaders animate their panel entry, ring rotation, and progress sweep on separate nested elements.
+
+For example, a new page can fade in while its content settles upward and the progress bar advances. Because opacity and transform belong to different elements, neither animation cancels the other. This pattern is useful for portfolio page transitions, button hover feedback, onboarding panels, and asynchronous form submission states.
+
+Run `npm run verify:motion` to validate the layered animation contract.

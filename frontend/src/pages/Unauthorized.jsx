@@ -1,16 +1,14 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaArrowRight } from 'react-icons/fa';
 
-const Unauthorized = () => {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-            <h1 className="text-4xl font-bold mb-4 text-red-500">403 - Unauthorized</h1>
-            <p className="mb-8 text-gray-300">You do not have permission to access this page.</p>
-            <Link to="/" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded transition">
-                Go to Home
-            </Link>
-        </div>
-    );
-};
+const Unauthorized = () => (
+    <main className="status-page">
+        <span className="status-code">403</span>
+        <p className="content-kicker">Access restricted</p>
+        <h1>You do not have access to this workspace.</h1>
+        <p>Return to the learning area or sign in with an account that has the required permission.</p>
+        <Link to="/" className="content-button">Return home <FaArrowRight aria-hidden="true" /></Link>
+    </main>
+);
 
 export default Unauthorized;

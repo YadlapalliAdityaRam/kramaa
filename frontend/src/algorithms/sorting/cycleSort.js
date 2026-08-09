@@ -2,8 +2,9 @@
 // This version generates rich visualization steps for the dedicated visualizer.
 
 export const generateCycleSortSteps = (inputArray) => {
-    const arr = [...(inputArray && inputArray.length > 0 ? inputArray : [5, 2, 8, 4, 1, 9, 3, 7])]
-        .map(v => Math.max(1, Math.min(999, Math.round(Number(v) || 1))));
+    const arr = (inputArray && inputArray.length > 0)
+        ? inputArray.map(v => Number(v) || 0)
+        : [5, 2, 8, 4, 1, 9, 3, 7];
 
     const n = arr.length;
     const steps = [];
@@ -43,24 +44,24 @@ export const generateCycleSortSteps = (inputArray) => {
 
         // Step: Find correct position by counting smaller elements
         for (let i = cycleStart + 1; i < n; i++) {
+            if (arr[i] < item) {
+                pos++;
+            }
             steps.push(getSnapshot('count', {
-                description: `🔍 Counting elements smaller than ${item}. Checking index ${i} (${arr[i]}).`,
+                description: `🔍 Counting elements smaller than ${item}. Checking index ${i} (${arr[i]}). Current target position: ${pos}.`,
                 heldItem: item,
                 heldFrom: cycleStart,
                 currentPos: cycleStart,
                 scanningIdx: i,
                 targetPos: pos
             }));
-            if (arr[i] < item) {
-                pos++;
-            }
         }
 
         // If item is already in correct position
         if (pos === cycleStart) {
             sortedIndices.push(cycleStart);
             steps.push(getSnapshot('in-place', {
-                description: `✅ Element ${item} is already in its correct position.`,
+                description: `✅ Element ${item} is already in its correct position (index ${pos}).`,
                 heldItem: null,
                 heldFrom: -1,
                 currentPos: -1,
@@ -74,7 +75,7 @@ export const generateCycleSortSteps = (inputArray) => {
         while (item === arr[pos]) {
             pos++;
             steps.push(getSnapshot('duplicate', {
-                description: `👯 Found duplicate at index ${pos - 1}. Moving to the next available slot at index ${pos}.`,
+                description: `👯 Found duplicate at index ${pos - 1}. Moving to next available slot at index ${pos}.`,
                 heldItem: item,
                 heldFrom: cycleStart,
                 currentPos: cycleStart,
@@ -105,7 +106,7 @@ export const generateCycleSortSteps = (inputArray) => {
 
             // Re-calculate target for the new held item
             steps.push(getSnapshot('rotate-start', {
-                description: `🔄 Finding the correct position for the displaced element ${item}.`,
+                description: `🔄 Finding correct position for displaced element ${item}.`,
                 heldItem: item,
                 heldFrom: -1,
                 currentPos: -1,
@@ -114,21 +115,21 @@ export const generateCycleSortSteps = (inputArray) => {
             }));
 
             for (let i = cycleStart + 1; i < n; i++) {
+                if (arr[i] < item) pos++;
                 steps.push(getSnapshot('count', {
-                    description: `🔍 Counting elements smaller than ${item}. Checking index ${i} (${arr[i]}).`,
+                    description: `🔍 Counting elements smaller than ${item}. Checking index ${i} (${arr[i]}). Current target position: ${pos}.`,
                     heldItem: item,
                     heldFrom: -1,
                     currentPos: -1,
                     scanningIdx: i,
                     targetPos: pos
                 }));
-                if (arr[i] < item) pos++;
             }
 
             while (item === arr[pos]) {
                 pos++;
                 steps.push(getSnapshot('duplicate', {
-                    description: `👯 Found duplicate at index ${pos - 1}. Moving to the next available slot.`,
+                    description: `👯 Found duplicate at index ${pos - 1}. Moving to next available slot.`,
                     heldItem: item,
                     heldFrom: -1,
                     currentPos: -1,
@@ -143,7 +144,7 @@ export const generateCycleSortSteps = (inputArray) => {
             writes++;
 
             steps.push(getSnapshot('place', {
-                description: `📥 Placing ${item} at its correct position (index ${pos}). ${pos === cycleStart ? 'The cycle is now closed!' : `Element ${nextDisplaced} is now displaced.`}`,
+                description: `📥 Placing ${item} at index ${pos}. ${pos === cycleStart ? 'Cycle is now closed!' : `Element ${nextDisplaced} is now displaced.`}`,
                 heldItem: pos === cycleStart ? null : nextDisplaced,
                 heldFrom: pos,
                 currentPos: pos,
@@ -163,7 +164,7 @@ export const generateCycleSortSteps = (inputArray) => {
     }
 
     steps.push(getSnapshot('completed', {
-        description: `🎯 Sorting complete! Used exactly ${writes} writes. Every element is now in its proper home.`,
+        description: `🎯 Sorting complete! Used exactly ${writes} writes. Every element is now in its sorted position.`,
         heldItem: null,
         heldFrom: -1,
         currentPos: -1,

@@ -4,17 +4,16 @@ import DualView from './DualView';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateBucketSortSteps } from '../algorithms/sorting/bucketSort';
-import { FaRandom, FaPlus, FaMinus } from 'react-icons/fa';
+import { algorithmCodes } from '../data/algorithmCodes';
+import { FaRandom, FaPlus, FaMinus, FaCheck, FaRedo } from 'react-icons/fa';
 import './BucketSortVisualizer.css';
 
-const MAX_ARRAY_SIZE = 15;
-const MIN_ARRAY_SIZE = 5;
-
 const BucketSortVisualizer = () => {
-    const [array, setArray] = useState([]);
-    const [bucketCount, setBucketCount] = useState(5);
-    const [inputString, setInputString] = useState('');
-    const [isAscending, setIsAscending] = useState(true);
+    const [array, setArray]               = useState([]);
+    const [bucketCount, setBucketCount]   = useState(5);
+    const [inputString, setInputString]   = useState('');
+    const [isAscending, setIsAscending]   = useState(true);
+    const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const [steps, setSteps] = useState([]);
 
@@ -28,12 +27,9 @@ const BucketSortVisualizer = () => {
         stepBackward,
         reset,
         setSpeed,
-        totalSteps
-    ,
+        totalSteps,
         setIndex
     } = useGenericAnimation(steps);
-
-    const isFinished = currentStepIndex === steps.length - 1 && steps.length > 0;
 
     const currentStep = steps[currentStepIndex];
 
@@ -41,10 +37,9 @@ const BucketSortVisualizer = () => {
         const newArr = [];
         for (let i = 0; i < size; i++) {
             if (isDecimal) {
-                // Random decimals between 0.01 and 0.99
                 newArr.push(Number((Math.random() * 0.98 + 0.01).toFixed(2)));
             } else {
-                newArr.push(Math.floor(Math.random() * 100));
+                newArr.push(Math.floor(Math.random() * 90) + 10);
             }
         }
         setArray(newArr);
@@ -53,22 +48,15 @@ const BucketSortVisualizer = () => {
     };
 
     useEffect(() => {
-        // Init with random decimals
         generateRandomArray(10, true);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Whenever array or bucket details change, regenerate steps.
     useEffect(() => {
         if (array.length > 0) {
             const newSteps = generateBucketSortSteps(array, bucketCount, isAscending);
             setSteps(newSteps);
         }
-    }, [array, bucketCount, isAscending, setSteps]);
-
-    const handleInputStringChange = (e) => {
-        setInputString(e.target.value);
-    };
+    }, [array, bucketCount, isAscending]);
 
     const applyInputString = () => {
         const parsed = inputString.split(',')
@@ -80,8 +68,6 @@ const BucketSortVisualizer = () => {
         if (parsed.length > 0) {
             setArray(parsed);
             reset();
-        } else {
-            alert('Please enter a valid comma-separated list of numbers.');
         }
     };
 
@@ -94,37 +80,46 @@ const BucketSortVisualizer = () => {
         reset();
     };
 
+    const getActiveLine = (step) => {
+        if (!step) return 0;
+        switch (step.type) {
+            case 'scatter': return 9;
+            case 'sort':    return 13;
+            case 'gather':  return 14;
+            case 'done':    return 14;
+            default:        return 0;
+        }
+    };
+
+    const codeSnippet = algorithmCodes.bucketSort?.[activeLanguage] || "";
+
     const renderArray = () => {
-        // If sorting started, show the snapshot. Otherwise show raw base array.
         const arrToRender = currentStep?.arraySnapshot || array;
         const activeIndices = currentStep?.activeIndices || [];
         const sortedIndices = currentStep?.sortedIndices || [];
 
         return (
-            <div className="bs-main-array">
-                <AnimatePresence>
+            <div className="bkt-main-array">
+                <AnimatePresence mode="popLayout">
                     {arrToRender.map((val, idx) => {
                         let stateClass = 'default';
                         if (activeIndices.includes(idx)) {
-                            stateClass = 'active'; // Scatter/Gather target
+                            stateClass = 'active';
                         } else if (sortedIndices.includes(idx)) {
                             stateClass = 'sorted';
                         }
 
-                        // Treat nulls as empty placeholders for visually "removing" items
-                        const isEmpty = val === null || val === undefined;
-
                         return (
                             <motion.div
-                                key={`arr-${idx}-${val}`}
+                                key={`${idx}-${val}`}
                                 layout
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                className={`bs-array-box bs-box-${isEmpty ? 'empty' : stateClass}`}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.25 }}
+                                className={`bkt-arr-item ${stateClass}`}
                             >
-                                {!isEmpty ? val : ''}
+                                <span className="bkt-val">{val}</span>
+                                <span className="bkt-idx">[{idx}]</span>
                             </motion.div>
                         );
                     })}
@@ -134,55 +129,35 @@ const BucketSortVisualizer = () => {
     };
 
     const renderBuckets = () => {
-        // Initial state or active step snapshot
-        let bucketsToRender = currentStep?.bucketsSnapshot;
-        if (!bucketsToRender) {
-            bucketsToRender = Array.from({ length: bucketCount }, () => []);
-        }
-
-        const activeBuckets = currentStep?.activeBuckets || [];
+        const bucketsToRender = currentStep?.bucketsSnapshot || Array.from({ length: bucketCount }, () => []);
+        const activeBucketIdx = currentStep?.activeBucketIndex;
 
         return (
-            <div className="bs-buckets-container">
+            <div className="bkt-buckets-grid">
                 {bucketsToRender.map((bucket, bIdx) => {
-                    const isActiveBucket = activeBuckets.includes(bIdx);
-                    let bucketClass = 'default';
-
-                    if (isActiveBucket && currentStep.type === 'scatter') bucketClass = 'receiving';
-                    else if (isActiveBucket && currentStep.type.startsWith('sort')) bucketClass = 'sorting';
-                    else if (isActiveBucket && currentStep.type.startsWith('gather')) bucketClass = 'gathering';
-                    else if (isActiveBucket && currentStep.type === 'bucket-sorted') bucketClass = 'sorted';
+                    const isActive = activeBucketIdx === bIdx;
 
                     return (
-                        <div key={`bucket-${bIdx}`} className={`bs-bucket bs-bucket-${bucketClass}`}>
-                            <div className="bs-bucket-header">Bucket {bIdx}</div>
-                            <div className="bs-bucket-contents">
-                                <AnimatePresence>
-                                    {bucket.map((val, vIdx) => {
-                                        let itemClass = 'default';
-
-                                        // If sorting internally, highlight comparisons/swaps
-                                        if (isActiveBucket && currentStep.activeBucketItems) {
-                                            if (currentStep.activeBucketItems.includes(vIdx)) {
-                                                itemClass = currentStep.type === 'compare' ? 'comparing' : 'swapping';
-                                            }
-                                        }
-
-                                        return (
-                                            <motion.div
-                                                key={`b-${bIdx}-v-${val}-${vIdx}`}
-                                                layout
-                                                initial={{ opacity: 0, scale: 0.8 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, y: -20 }}
-                                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                                className={`bs-bucket-item bs-item-${itemClass}`}
-                                            >
-                                                {val}
-                                            </motion.div>
-                                        );
-                                    })}
+                        <div key={`bkt-${bIdx}`} className={`bkt-bucket-card ${isActive ? 'active-bucket' : ''}`}>
+                            <div className="bkt-header-label">
+                                Bucket {bIdx}
+                                <span className="bkt-count">{bucket.length}</span>
+                            </div>
+                            <div className="bkt-items-container">
+                                <AnimatePresence mode="popLayout">
+                                    {bucket.map((item, itemIdx) => (
+                                        <motion.div
+                                            key={`${bIdx}-${itemIdx}-${item}`}
+                                            layout
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bkt-item-chip"
+                                        >
+                                            {item}
+                                        </motion.div>
+                                    ))}
                                 </AnimatePresence>
+                                {bucket.length === 0 && <span className="bkt-empty-text">Empty</span>}
                             </div>
                         </div>
                     );
@@ -194,108 +169,94 @@ const BucketSortVisualizer = () => {
     return (
         <DualView
             algorithmName="Bucket Sort"
-            language="javascript"
+            code={codeSnippet}
+            activeLine={getActiveLine(currentStep)}
+            activeLanguage={activeLanguage}
+            onLanguageChange={setActiveLanguage}
             codeSnippetCategory="sorting"
             description={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                    <span className="step-badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '4px 10px', borderRadius: '12px' }}>
-                        Step {currentStepIndex + 1} / {steps.length || 1}
-                    </span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600 }}>
-                        {currentStep?.description || 'Ready to start'}
+                <div className="bkt-desc-wrapper">
+                    <span className="bkt-badge">Distribution Sort O(N + K)</span>
+                    <span className="bkt-desc-text">
+                        {currentStep?.description || "Press Play to observe Scatter -> Sort -> Gather bucket distribution."}
                     </span>
                 </div>
             }
         >
-            <div className="bs-layout">
-                <div className="bs-controls-panel">
-                    <div className="bs-input-group">
-                        <label>Input Array (comma separated):</label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <input
-                                type="text"
-                                value={inputString}
-                                onChange={handleInputStringChange}
-                                placeholder="e.g. 0.78, 0.17, 0.39"
-                                className="bs-input"
-                                disabled={isPlaying}
-                            />
-                            <button className="bs-btn bs-apply-btn" onClick={applyInputString} disabled={isPlaying}>
-                                Apply
-                            </button>
-                        </div>
+            <div className="bkt-visualizer-wrapper">
+
+                {/* ── Top Input Panel ──────────────────────────────────────── */}
+                <div className="bkt-input-panel">
+                    <div className="bkt-input-group">
+                        <label className="bkt-input-label">Custom Array:</label>
+                        <input
+                            type="text"
+                            value={inputString}
+                            onChange={(e) => setInputString(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && applyInputString()}
+                            placeholder="0.42, 0.32, 0.23, 0.52"
+                            className="bkt-text-input"
+                        />
+                        <button onClick={applyInputString} className="bkt-btn bkt-btn-primary">
+                            <FaCheck /> Apply
+                        </button>
                     </div>
 
-                    <div className="bs-toolbar">
-                        <div className="bs-tool-group">
-                            <span>Random:</span>
-                            <button className="bs-btn bs-icon-btn" onClick={() => generateRandomArray(10, true)} title="Random Decimals" disabled={isPlaying}>
-                                <FaRandom /> [0, 1)
-                            </button>
-                            <button className="bs-btn bs-icon-btn" onClick={() => generateRandomArray(10, false)} title="Random Integers" disabled={isPlaying}>
-                                <FaRandom /> Integers
-                            </button>
-                        </div>
+                    <div className="bkt-input-group">
+                        <label className="bkt-input-label">Buckets ({bucketCount}):</label>
+                        <button onClick={() => handleBucketCountChange(-1)} className="bkt-btn mini">
+                            <FaMinus />
+                        </button>
+                        <button onClick={() => handleBucketCountChange(1)} className="bkt-btn mini">
+                            <FaPlus />
+                        </button>
+                    </div>
 
-                        <div className="bs-tool-group">
-                            <span>Buckets:</span>
-                            <div className="bs-counter">
-                                <button className="bs-counter-btn" onClick={() => handleBucketCountChange(-1)} disabled={isPlaying || bucketCount <= 2}><FaMinus /></button>
-                                <div className="bs-counter-val">{bucketCount}</div>
-                                <button className="bs-counter-btn" onClick={() => handleBucketCountChange(1)} disabled={isPlaying || bucketCount >= 10}><FaPlus /></button>
-                            </div>
-                        </div>
-
-                        <div className="bs-tool-group">
-                            <span>Order:</span>
-                            <button
-                                className={`bs-btn ${isAscending ? 'active' : ''}`}
-                                onClick={() => { setIsAscending(true); reset(); }}
-                                disabled={isPlaying}
-                            >
-                                Asc
-                            </button>
-                            <button
-                                className={`bs-btn ${!isAscending ? 'active' : ''}`}
-                                onClick={() => { setIsAscending(false); reset(); }}
-                                disabled={isPlaying}
-                            >
-                                Desc
-                            </button>
-                        </div>
+                    <div className="bkt-btn-group">
+                        <button onClick={() => generateRandomArray(10, true)} className="bkt-btn bkt-btn-secondary">
+                            <FaRandom /> Decimals
+                        </button>
+                        <button onClick={() => generateRandomArray(10, false)} className="bkt-btn bkt-btn-secondary">
+                            <FaRandom /> Integers
+                        </button>
+                        <button onClick={() => generateRandomArray(10, true)} className="bkt-btn bkt-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
                     </div>
                 </div>
 
-                <div className="bs-visualization-area">
-                    <div className="bs-section-title">Main Array</div>
-                    {renderArray()}
-
-                    <div className="bs-divider">
-                        <div className="bs-divider-line"></div>
-                        <span>Distribution Mapping (index = floor(k * val))</span>
-                        <div className="bs-divider-line"></div>
+                {/* ── Main Canvas Stage: Input Array & Buckets ──────────────── */}
+                <div className="bkt-canvas-wrapper">
+                    <div className="bkt-stage-card">
+                        <div className="bkt-card-title">Main Array Snapshot</div>
+                        {renderArray()}
                     </div>
 
-                    <div className="bs-section-title">Buckets ({bucketCount})</div>
-                    {renderBuckets()}
+                    <div className="bkt-stage-card">
+                        <div className="bkt-card-title">Buckets ({bucketCount})</div>
+                        {renderBuckets()}
+                    </div>
                 </div>
 
-                <AnimationControls
-                    onPlay={play}
-                    onPause={pause}
-                    onStepForward={stepForward}
-                    onStepBackward={stepBackward}
-                    onReset={reset}
-                    onSpeedChange={setSpeed}
-                    isPlaying={isPlaying}
-                    speed={speed}
-                    currentStep={currentStepIndex}
-                    totalSteps={totalSteps}
-                    onScrub={setIndex}
-                    inputType="none"
-                />
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="bkt-controls-wrapper">
+                    <AnimationControls
+                        inputType="none"
+                        onNext={stepForward}
+                        onPrev={stepBackward}
+                        onPlay={play}
+                        onPause={pause}
+                        onReset={reset}
+                        isPlaying={isPlaying}
+                        speed={speed}
+                        onSpeedChange={setSpeed}
+                        currentStep={currentStepIndex}
+                        totalSteps={totalSteps}
+                        onScrub={setIndex}
+                    />
+                </div>
+
             </div>
-
         </DualView>
     );
 };

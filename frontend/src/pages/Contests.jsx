@@ -1,224 +1,209 @@
-﻿import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import api from '../utils/api';
 import { toast } from 'react-hot-toast';
-import { FaUsers, FaClock, FaCalendarAlt, FaCheckCircle, FaUserPlus, FaLock, FaTrophy, FaArrowRight } from 'react-icons/fa';
+import {
+    FaArrowRight,
+    FaCalendarAlt,
+    FaCheckCircle,
+    FaClock,
+    FaLock,
+    FaTrophy,
+    FaUserPlus,
+    FaUsers
+} from 'react-icons/fa';
+import api from '../utils/api';
 
-const ContestCard = ({ contest, onRegister, nowMs, isMobile }) => {
-    const { isAuthenticated } = useSelector(state => state.auth);
-    const now = new Date(nowMs || Date.now());
+const normalizeContest = (contest = {}) => ({
+    ...contest,
+    _id: contest._id || contest.id,
+    participantCount: contest.participantCount ?? contest.participantsCount ?? 0
+});
+
+const normalizeContestsPayload = (payload) => {
+    if (Array.isArray(payload)) return payload.map(normalizeContest);
+
+    if (payload && typeof payload === 'object') {
+        return ['running', 'upcoming', 'completed']
+            .flatMap((key) => Array.isArray(payload[key]) ? payload[key] : [])
+            .map(normalizeContest);
+    }
+
+    return [];
+};
+
+const formatDate = (value) => new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+}).format(new Date(value));
+
+const getDuration = (startTime, endTime) => {
+    const durationMinutes = Math.max(0, Math.round((new Date(endTime) - new Date(startTime)) / 60000));
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+
+    if (!hours) return `${minutes} min`;
+    return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+};
+
+const getCountdown = (startTime, nowMs) => {
+    const difference = Math.max(0, new Date(startTime).getTime() - nowMs);
+    const days = Math.floor(difference / 86400000);
+    const hours = Math.floor((difference % 86400000) / 3600000);
+    const minutes = Math.floor((difference % 3600000) / 60000);
+
+    if (days) return `${days}d ${hours}h`;
+    if (hours) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+};
+
+const getContestState = (contest, nowMs) => {
+    const now = new Date(nowMs);
     const startTime = new Date(contest.startTime);
     const endTime = new Date(contest.endTime);
-    const regOpenDate = contest.registrationOpenDate ? new Date(contest.registrationOpenDate) : null;
 
-    const isActive = now >= startTime && now <= endTime;
-    const isUpcoming = now < startTime;
-    const isPast = now > endTime;
-    const isRegistered = contest.isRegistered || false;
-    const isRegistrationOpen = typeof contest.isRegistrationOpen === 'boolean'
+    if (now >= startTime && now <= endTime) {
+        return { key: 'live', label: 'Live now' };
+    }
+
+    if (now < startTime) {
+        return { key: 'upcoming', label: 'Upcoming' };
+    }
+
+    return { key: 'completed', label: 'Completed' };
+};
+
+const ContestCard = ({ contest, onRegister, nowMs }) => {
+    const { isAuthenticated } = useSelector((state) => state.auth);
+    const [registering, setRegistering] = useState(false);
+    const state = getContestState(contest, nowMs);
+    const isLive = state.key === 'live';
+    const isUpcoming = state.key === 'upcoming';
+    const isCompleted = state.key === 'completed';
+    const isRegistered = Boolean(contest.isRegistered);
+    const registrationOpenDate = contest.registrationOpenDate ? new Date(contest.registrationOpenDate) : null;
+    const registrationNotOpen = registrationOpenDate && Date.now() < registrationOpenDate.getTime();
+    const canRegister = typeof contest.isRegistrationOpen === 'boolean'
         ? contest.isRegistrationOpen
         : isUpcoming;
-    const regNotYetOpen = regOpenDate && now < regOpenDate;
-
-    const [registering, setRegistering] = useState(false);
-
-    const formatDate = (date) => {
-        return new Date(date).toLocaleString('en-US', {
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-    };
-
-    const getDuration = () => {
-        const diff = endTime - startTime;
-        const mins = Math.floor(diff / 60000);
-        if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-        return `${mins} min`;
-    };
-
-    const getCountdown = () => {
-        const diff = startTime - now;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        if (days > 0) return `${days}d ${hours}h`;
-        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        if (hours > 0) return `${hours}h ${mins}m`;
-        return `${mins}m`;
-    };
 
     const handleRegister = async () => {
-        if (!isAuthenticated) return toast.error('Login required to register');
+        if (!isAuthenticated) {
+            toast.error('Login required to register');
+            return;
+        }
+
         setRegistering(true);
         try {
             await api.post(`/contests/${contest._id}/register`);
-            toast.success('Registered successfully! 🎉');
-            if (onRegister) onRegister();
+            toast.success('You are registered. Good luck!');
+            onRegister();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to register');
+            toast.error(error.response?.data?.message || 'Unable to register for this contest');
         } finally {
             setRegistering(false);
         }
     };
 
-    // Status indicator styles
-    const statusConfig = isActive
-        ? { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: '#22c55e', label: '🟢 LIVE', glow: '0 0 20px rgba(34,197,94,0.3)' }
-        : isUpcoming
-            ? { color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', border: '#3b82f6', label: '🔵 Upcoming', glow: 'none' }
-            : { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', border: '#444', label: '⚫ Ended', glow: 'none' };
-
     return (
-        <motion.div
-            whileHover={{ scale: 1.01, y: -2 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            style={{
-                background: 'rgba(17,24,39,0.7)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: '16px',
-                borderLeft: `4px solid ${statusConfig.border}`,
-                border: `1px solid rgba(255,255,255,0.06)`,
-                borderLeftWidth: '4px',
-                borderLeftColor: statusConfig.border,
-                padding: isMobile ? '16px' : '24px',
-                marginBottom: '16px',
-                boxShadow: statusConfig.glow
-            }}
-        >
-            {/* Top row: Title + Status */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', gap: '10px', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: '0 0 6px 0', fontSize: isMobile ? '1.05rem' : '1.3rem', color: 'var(--text-primary, #f3f4f6)', fontWeight: '700' }}>{contest.title}</h3>
-                    {contest.description && (
-                        <p style={{ color: 'var(--text-secondary, #9ca3af)', margin: 0, fontSize: '0.85rem', lineHeight: '1.4', maxWidth: '500px' }}>
-                            {contest.description.substring(0, 120)}{contest.description.length > 120 ? '...' : ''}
-                        </p>
-                    )}
+        <article className={`contest-card contest-card--${state.key}`}>
+            <div className="contest-card-heading">
+                <div>
+                    <p className="contest-card-overline">{state.label}</p>
+                    <h3>{contest.title}</h3>
                 </div>
-                <span style={{
-                    padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700',
-                    background: statusConfig.bg, color: statusConfig.color, whiteSpace: 'nowrap',
-                    border: `1px solid ${statusConfig.color}30`
-                }}>
-                    {statusConfig.label}
-                </span>
+                <span className={`contest-status contest-status--${state.key}`}>{state.label}</span>
             </div>
 
-            {/* Info row */}
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
-                    <FaCalendarAlt style={{ color: '#fb923c' }} />
-                    {formatDate(contest.startTime)}
+            {contest.description && (
+                <p className="contest-card-description">
+                    {contest.description.length > 170
+                        ? `${contest.description.slice(0, 170)}…`
+                        : contest.description}
+                </p>
+            )}
+
+            <dl className="contest-card-facts">
+                <div>
+                    <dt><FaCalendarAlt aria-hidden="true" /> Starts</dt>
+                    <dd>{formatDate(contest.startTime)}</dd>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
-                    <FaClock style={{ color: '#3b82f6' }} />
-                    {getDuration()}
+                <div>
+                    <dt><FaClock aria-hidden="true" /> Duration</dt>
+                    <dd>{getDuration(contest.startTime, contest.endTime)}</dd>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary, #9ca3af)', fontSize: '0.85rem' }}>
-                    <FaUsers style={{ color: '#a855f7' }} />
-                    {(contest.participantCount ?? contest.participantsCount) || 0} registered
+                <div>
+                    <dt><FaUsers aria-hidden="true" /> Registered</dt>
+                    <dd>{contest.participantCount}</dd>
                 </div>
                 {isUpcoming && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#14b8a6', fontSize: '0.85rem', fontWeight: '600' }}>
-                        ⏱ Starts in {getCountdown()}
+                    <div>
+                        <dt>Begins in</dt>
+                        <dd>{getCountdown(contest.startTime, nowMs)}</dd>
                     </div>
                 )}
-            </div>
+            </dl>
 
-            {/* Action row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                {/* Register button logic */}
-                {isRegistered ? (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '8px 18px', borderRadius: '10px',
-                        background: 'rgba(34,197,94,0.15)', color: '#22c55e',
-                        fontSize: '0.85rem', fontWeight: '600',
-                        border: '1px solid rgba(34,197,94,0.3)'
-                    }}>
-                        <FaCheckCircle /> Registered ✓
-                    </div>
-                ) : regNotYetOpen ? (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '8px 18px', borderRadius: '10px',
-                        background: 'rgba(107,114,128,0.15)', color: 'var(--text-secondary, #9ca3af)',
-                        fontSize: '0.85rem', fontWeight: '500',
-                        border: '1px solid rgba(107,114,128,0.2)'
-                    }}>
-                        <FaLock style={{ fontSize: '0.75rem' }} />
-                        Registration opens {formatDate(contest.registrationOpenDate)}
-                    </div>
-                ) : isUpcoming && isRegistrationOpen && !regNotYetOpen ? (
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleRegister}
-                        disabled={registering}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '8px 20px', borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                            color: 'var(--text-primary, white)', border: 'none', cursor: 'pointer',
-                            fontSize: '0.85rem', fontWeight: '700',
-                            opacity: registering ? 0.7 : 1,
-                            boxShadow: '0 4px 15px rgba(59,130,246,0.3)'
-                        }}
-                    >
-                        <FaUserPlus /> {registering ? 'Registering...' : 'Register Now'}
-                    </motion.button>
-                ) : isPast ? (
-                    <Link to={`/contest/${contest._id}`} style={{ textDecoration: 'none' }}>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                padding: '8px 20px', borderRadius: '10px',
-                                background: 'rgba(107,114,128,0.2)',
-                                color: 'var(--text-secondary, #9ca3af)', border: '1px solid rgba(107,114,128,0.3)', cursor: 'pointer',
-                                fontSize: '0.85rem', fontWeight: '600',
-                            }}
-                        >
-                            View Contest <FaArrowRight />
-                        </motion.button>
-                    </Link>
-                ) : null}
+            <div className="contest-card-actions">
+                {isRegistered && (
+                    <span className="contest-registration"><FaCheckCircle aria-hidden="true" /> Registered</span>
+                )}
 
-                {/* Enter contest button — only for registered users when active */}
-                {isActive && isRegistered && (
-                    <Link to={`/contest/${contest._id}`} style={{ textDecoration: 'none' }}>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                padding: '8px 20px', borderRadius: '10px',
-                                background: 'linear-gradient(135deg, #22c55e, #14b8a6)',
-                                color: 'var(--text-primary, white)', border: 'none', cursor: 'pointer',
-                                fontSize: '0.85rem', fontWeight: '700',
-                                boxShadow: '0 4px 15px rgba(34,197,94,0.3)'
-                            }}
-                        >
-                            Enter Contest <FaArrowRight />
-                        </motion.button>
+                {!isRegistered && registrationNotOpen && (
+                    <span className="contest-registration contest-registration--muted">
+                        <FaLock aria-hidden="true" /> Opens {formatDate(contest.registrationOpenDate)}
+                    </span>
+                )}
+
+                {!isRegistered && isUpcoming && canRegister && !registrationNotOpen && (
+                    <button type="button" className="content-button" onClick={handleRegister} disabled={registering}>
+                        <FaUserPlus aria-hidden="true" />
+                        {registering ? 'Registering…' : 'Register'}
+                    </button>
+                )}
+
+                {isLive && isRegistered && (
+                    <Link className="content-button" to={`/contest/${contest._id}`}>
+                        Enter contest <FaArrowRight aria-hidden="true" />
                     </Link>
                 )}
 
-                {/* Active but not registered */}
-                {isActive && !isRegistered && (
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '8px 18px', borderRadius: '10px',
-                        background: 'rgba(239,68,68,0.1)', color: '#ef4444',
-                        fontSize: '0.85rem', fontWeight: '500',
-                        border: '1px solid rgba(239,68,68,0.2)'
-                    }}>
-                        <FaLock style={{ fontSize: '0.75rem' }} /> Registration required to participate
-                    </div>
+                {isLive && !isRegistered && (
+                    <span className="contest-registration contest-registration--warning">
+                        <FaLock aria-hidden="true" /> Registration is required to enter
+                    </span>
+                )}
+
+                {isCompleted && (
+                    <Link className="content-button content-button-secondary" to={`/contest/${contest._id}`}>
+                        Review contest <FaArrowRight aria-hidden="true" />
+                    </Link>
                 )}
             </div>
-        </motion.div>
+        </article>
+    );
+};
+
+const ContestSection = ({ title, detail, contests, nowMs, onRegister }) => {
+    if (!contests.length) return null;
+
+    return (
+        <section className="contest-section" aria-labelledby={`contest-section-${title}`}>
+            <header className="contest-section-heading">
+                <div>
+                    <p>{detail}</p>
+                    <h2 id={`contest-section-${title}`}>{title}</h2>
+                </div>
+                <span>{contests.length}</span>
+            </header>
+            <div className="contest-list">
+                {contests.map((contest) => (
+                    <ContestCard key={contest._id} contest={contest} onRegister={onRegister} nowMs={nowMs} />
+                ))}
+            </div>
+        </section>
     );
 };
 
@@ -226,162 +211,110 @@ const Contests = () => {
     const [contests, setContests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nowMs, setNowMs] = useState(() => Date.now());
-    const [viewportWidth, setViewportWidth] = useState(() => (
-        typeof window !== 'undefined' ? window.innerWidth : 1400
-    ));
 
-    const normalizeContest = (contest = {}) => ({
-        ...contest,
-        _id: contest._id || contest.id,
-        participantCount: contest.participantCount ?? contest.participantsCount ?? 0
-    });
-
-    const normalizeContestsPayload = (payload) => {
-        if (Array.isArray(payload)) {
-            return payload.map(normalizeContest);
-        }
-
-        if (payload && typeof payload === 'object') {
-            const grouped = ['running', 'upcoming', 'completed']
-                .reduce((allContests, key) => {
-                    const contestsByKey = Array.isArray(payload[key]) ? payload[key] : [];
-                    return allContests.concat(contestsByKey);
-                }, []);
-            return grouped.map(normalizeContest);
-        }
-
-        return [];
-    };
-
-    const fetchContests = async ({ silent = false } = {}) => {
+    const fetchContests = useCallback(async ({ silent = false } = {}) => {
         try {
-            const res = await api.get('/contests');
-            setContests(normalizeContestsPayload(res.data.contests));
+            const response = await api.get('/contests');
+            setContests(normalizeContestsPayload(response.data.contests));
         } catch (error) {
-            if (!silent) {
-                toast.error('Failed to load contests');
-            }
-            console.error(error);
+            if (!silent) toast.error('Unable to load contests');
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchContests({ silent: false });
     }, []);
 
     useEffect(() => {
-        const onResize = () => setViewportWidth(window.innerWidth);
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, []);
+        fetchContests();
+    }, [fetchContests]);
 
     useEffect(() => {
-        const tick = setInterval(() => {
-            setNowMs(Date.now());
-        }, 1000);
+        const clock = window.setInterval(() => setNowMs(Date.now()), 1000);
+        const refresh = window.setInterval(() => fetchContests({ silent: true }), 15000);
 
-        return () => clearInterval(tick);
-    }, []);
+        return () => {
+            window.clearInterval(clock);
+            window.clearInterval(refresh);
+        };
+    }, [fetchContests]);
 
-    useEffect(() => {
-        const poll = setInterval(() => {
-            fetchContests({ silent: true });
-        }, 15000);
+    const contestGroups = useMemo(() => {
+        const groups = { live: [], upcoming: [], completed: [] };
 
-        return () => clearInterval(poll);
-    }, []);
+        contests.forEach((contest) => {
+            groups[getContestState(contest, nowMs).key].push(contest);
+        });
 
-    const now = new Date(nowMs);
-    const isMobile = viewportWidth <= 768;
-    const activeContests = contests.filter(c => {
-        const start = new Date(c.startTime);
-        const end = new Date(c.endTime);
-        return now >= start && now <= end;
-    });
-
-    const upcomingContests = contests.filter(c => {
-        const start = new Date(c.startTime);
-        return now < start;
-    });
-
-    const pastContests = contests.filter(c => {
-        const end = new Date(c.endTime);
-        return now > end;
-    });
+        return groups;
+    }, [contests, nowMs]);
 
     if (loading) {
         return (
-            <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }}>⚡</div>
-                    <p style={{ color: 'var(--text-secondary, #9ca3af)' }}>Loading contests...</p>
-                </div>
-            </div>
+            <main className="content-page contest-page page-loading" aria-live="polite">
+                <span aria-hidden="true" />
+                <p>Loading contests</p>
+            </main>
         );
     }
 
-    const Section = ({ title, icon, color, contests: sectionContests }) => (
-        sectionContests.length > 0 && (
-            <section style={{ marginBottom: '32px' }}>
-                <h2 style={{
-                    marginBottom: '16px',
-                    paddingBottom: '10px',
-                    borderBottom: `2px solid ${color}`,
-                    color: color,
-                    fontWeight: '700',
-                    fontSize: '1.2rem',
-                    display: 'flex', alignItems: 'center', gap: '8px'
-                }}>
-                    {icon} {title}
-                    <span style={{
-                        fontSize: '0.75rem', padding: '2px 8px',
-                        background: `${color}20`, borderRadius: '10px', color
-                    }}>
-                        {sectionContests.length}
-                    </span>
-                </h2>
-                {sectionContests.map(contest => (
-                    <ContestCard key={contest._id} contest={contest} onRegister={fetchContests} nowMs={nowMs} isMobile={isMobile} />
-                ))}
-            </section>
-        )
-    );
+    const totalOpen = contestGroups.live.length + contestGroups.upcoming.length;
 
     return (
-        <div className="main-content">
-            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '20px 12px' : '40px 20px' }}>
-                <div style={{ textAlign: 'center', marginBottom: isMobile ? '24px' : '40px' }}>
-                    <h1 style={{
-                        fontSize: isMobile ? '2rem' : '3rem', marginBottom: '16px', fontWeight: '800',
-                        background: 'linear-gradient(135deg, #14b8a6, #3b82f6, #a855f7)',
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                    }}>
-                        Contest Arena <FaTrophy style={{ WebkitTextFillColor: '#facc15', fontSize: '2.5rem' }} />
-                    </h1>
-                    <p style={{ color: 'var(--text-secondary, #9ca3af)', fontSize: isMobile ? '0.95rem' : '1.1rem' }}>Compete with the best. Climb the global leaderboard.</p>
+        <main className="content-page contest-page">
+            <header className="contest-intro">
+                <div className="content-page-intro">
+                    <p className="content-kicker">Competitive programming</p>
+                    <h1>Make practice count.</h1>
+                    <p className="content-lede">
+                        Choose a timed event, prepare with purpose, and review the work when the clock stops.
+                    </p>
                 </div>
-
-                <div style={{ display: 'grid', gap: '8px' }}>
-                    <Section title="Live Contests" icon="🟢" color="#22c55e" contests={activeContests} />
-                    <Section title="Upcoming Contests" icon="🔵" color="#3b82f6" contests={upcomingContests} />
-                    <Section title="Past Contests" icon="⚫" color="#6b7280" contests={pastContests} />
-
-                    {contests.length === 0 && (
-                        <div style={{
-                            textAlign: 'center', padding: '60px 20px',
-                            border: '2px dashed #374151', borderRadius: '16px',
-                            background: 'rgba(0,0,0,0.2)'
-                        }}>
-                            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏆</div>
-                            <h3 style={{ color: 'var(--text-secondary, #9ca3af)', marginBottom: '0.5rem' }}>No Contests Available</h3>
-                            <p style={{ color: '#6b7280' }}>Check back soon for upcoming contests!</p>
-                        </div>
-                    )}
+                <div className="contest-intro-meta" aria-label="Contest overview">
+                    <div>
+                        <strong>{totalOpen}</strong>
+                        <span>open events</span>
+                    </div>
+                    <div>
+                        <strong>{contests.length}</strong>
+                        <span>in the archive</span>
+                    </div>
+                    <Link to="/leaderboard" className="content-button content-button-secondary">
+                        View standings <FaArrowRight aria-hidden="true" />
+                    </Link>
                 </div>
-            </div>
-        </div>
+            </header>
+
+            {contests.length ? (
+                <div className="contest-sections">
+                    <ContestSection
+                        title="Live events"
+                        detail="Available now"
+                        contests={contestGroups.live}
+                        nowMs={nowMs}
+                        onRegister={fetchContests}
+                    />
+                    <ContestSection
+                        title="Coming up"
+                        detail="Plan ahead"
+                        contests={contestGroups.upcoming}
+                        nowMs={nowMs}
+                        onRegister={fetchContests}
+                    />
+                    <ContestSection
+                        title="Past events"
+                        detail="Review and learn"
+                        contests={contestGroups.completed}
+                        nowMs={nowMs}
+                        onRegister={fetchContests}
+                    />
+                </div>
+            ) : (
+                <section className="catalog-empty">
+                    <FaTrophy aria-hidden="true" />
+                    <h2>No events are scheduled yet.</h2>
+                    <p>New contests will appear here as soon as they are published.</p>
+                </section>
+            )}
+        </main>
     );
 };
 

@@ -3,18 +3,25 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 /**
  * Generic animation hook that works with any step format (arrays, graphs, trees, DP tables).
  * Unlike useAnimation, this accepts pre-generated steps directly or a flexible generator.
+ * Supports autoPlay: when steps change and autoPlay is true, animation starts immediately.
  */
 const useGenericAnimation = (steps) => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [speed, setSpeed] = useState(1);
+    const [isPlaying, setIsPlaying]               = useState(false);
+    const [speed, setSpeed]                       = useState(1);
+    const [autoPlay, setAutoPlay]                 = useState(false);
     const timerRef = useRef(null);
 
-    // Reset when steps change
+    // Reset when steps change; if autoPlay flag is set, start playing immediately
     useEffect(() => {
         setCurrentStepIndex(0);
-        setIsPlaying(false);
-    }, [steps]);
+        if (autoPlay && steps.length > 1) {
+            setIsPlaying(true);
+            setAutoPlay(false); // consume the flag
+        } else {
+            setIsPlaying(false);
+        }
+    }, [steps]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Animation Loop
     useEffect(() => {
@@ -60,6 +67,15 @@ const useGenericAnimation = (steps) => {
         setCurrentStepIndex(Math.max(0, Math.min(index, steps.length - 1)));
     }, [steps.length, pause]);
 
+    /**
+     * playFromStart() — used by Apply/Search/Find buttons.
+     * Sets the autoPlay flag so that when steps regenerate (from setState),
+     * the animation starts automatically from step 0.
+     */
+    const playFromStart = useCallback(() => {
+        setAutoPlay(true);
+    }, []);
+
     const currentStep = steps[currentStepIndex] || {};
 
     return {
@@ -74,7 +90,8 @@ const useGenericAnimation = (steps) => {
         stepForward,
         stepBackward,
         reset,
-        setIndex
+        setIndex,
+        playFromStart,
     };
 };
 

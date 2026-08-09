@@ -117,7 +117,6 @@ const buildEmailVerificationLink = (req, rawToken) => {
     if (clientUrl) {
         return `${clientUrl}/verify-email?token=${encodedToken}`;
     }
-
     const backendUrl = String(process.env.BACKEND_URL || '').trim().replace(/\/+$/, '');
     if (backendUrl) {
         return `${backendUrl}/api/auth/verify-email?token=${encodedToken}`;
@@ -473,7 +472,8 @@ exports.login = async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: 'Please verify your email before logging in.',
-                requiresVerification: true
+                requiresVerification: true,
+                verificationEmail: user.email
             });
         }
 

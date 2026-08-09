@@ -12,11 +12,24 @@
  */
 export const generateCountingSortSteps = (arr) => {
     const steps = [];
-    if (arr.length === 0) return steps;
+    const input = Array.isArray(arr) ? arr : [];
+    if (input.length === 0) {
+        return [{
+            type: 'final',
+            arraySnapshot: [],
+            countArray: [],
+            outputArray: [],
+            activeIndices: [],
+            countActiveIndex: null,
+            outputActiveIndex: null,
+            description: 'Counting Sort complete. The input is empty.',
+            stats: { comparisons: 0, swaps: 0, phase: 'Finished' }
+        }];
+    }
 
-    const n = arr.length;
-    const max = Math.max(...arr);
-    const min = Math.min(...arr);
+    const n = input.length;
+    const max = Math.max(...input);
+    const min = Math.min(...input);
     const range = max - min + 1;
 
     // Initial State
@@ -25,7 +38,7 @@ export const generateCountingSortSteps = (arr) => {
 
     steps.push({
         type: 'start',
-        arraySnapshot: [...arr],
+        arraySnapshot: [...input],
         countArray: [...initialCount],
         outputArray: [...initialOutput],
         activeIndices: [],
@@ -38,12 +51,12 @@ export const generateCountingSortSteps = (arr) => {
     // 1. Counting Phase
     const counts = Array(range).fill(0);
     for (let i = 0; i < n; i++) {
-        const value = arr[i];
+        const value = input[i];
         const countIdx = value - min;
 
         steps.push({
             type: 'count',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...initialOutput],
             activeIndices: [i],
@@ -56,7 +69,7 @@ export const generateCountingSortSteps = (arr) => {
 
         steps.push({
             type: 'count',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...initialOutput],
             activeIndices: [i],
@@ -69,7 +82,7 @@ export const generateCountingSortSteps = (arr) => {
     // 2. Prefix Sum Phase
     steps.push({
         type: 'prefix-sum-start',
-        arraySnapshot: [...arr],
+        arraySnapshot: [...input],
         countArray: [...counts],
         outputArray: [...initialOutput],
         activeIndices: [],
@@ -83,7 +96,7 @@ export const generateCountingSortSteps = (arr) => {
 
         steps.push({
             type: 'prefix-sum',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...initialOutput],
             activeIndices: [],
@@ -96,7 +109,7 @@ export const generateCountingSortSteps = (arr) => {
 
         steps.push({
             type: 'prefix-sum',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...initialOutput],
             activeIndices: [],
@@ -109,7 +122,7 @@ export const generateCountingSortSteps = (arr) => {
     // 3. Output Building Phase
     steps.push({
         type: 'output-start',
-        arraySnapshot: [...arr],
+        arraySnapshot: [...input],
         countArray: [...counts],
         outputArray: [...initialOutput],
         activeIndices: [],
@@ -120,13 +133,13 @@ export const generateCountingSortSteps = (arr) => {
     const output = Array(n).fill(null);
     // Iterate backwards to maintain stability
     for (let i = n - 1; i >= 0; i--) {
-        const value = arr[i];
+        const value = input[i];
         const countIdx = value - min;
         const targetPos = counts[countIdx] - 1;
 
         steps.push({
             type: 'output-place',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...output],
             activeIndices: [i],
@@ -141,7 +154,7 @@ export const generateCountingSortSteps = (arr) => {
 
         steps.push({
             type: 'output-place',
-            arraySnapshot: [...arr],
+            arraySnapshot: [...input],
             countArray: [...counts],
             outputArray: [...output],
             activeIndices: [i],
@@ -154,7 +167,7 @@ export const generateCountingSortSteps = (arr) => {
 
     steps.push({
         type: 'final',
-        arraySnapshot: [...arr],
+        arraySnapshot: [...output],
         countArray: [...counts],
         outputArray: [...output],
         activeIndices: [],

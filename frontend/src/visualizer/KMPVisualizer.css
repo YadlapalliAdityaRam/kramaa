@@ -1,422 +1,313 @@
-/* ── KMP Algorithm Visualizer ── */
+/* ═══════════════════════════════════════════════════════════════════════
+   KMPVisualizer.css — Theme-Adaptive & Redesigned Layout
+   ═══════════════════════════════════════════════════════════════════════ */
 
-.kmp-container {
+.kmp-visualizer-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
     height: 100%;
+    min-height: 560px;
+    gap: 12px;
 }
 
-/* ── Input Bar ── */
-.kmp-input-bar {
+.kmp-desc-wrapper {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: 12px;
+    flex-wrap: wrap;
+}
+
+.kmp-badge {
+    font-size: 0.8rem;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 3px 10px;
+    border-radius: 6px;
+    color: #38bdf8;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.kmp-desc-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Input Panel */
+.kmp-input-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
     padding: 12px 16px;
-    flex-wrap: wrap;
-}
-
-.kmp-inputs {
-    display: flex;
-    gap: 12px;
-    flex: 1;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-shrink: 0;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .kmp-input-group {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
-    min-width: 180px;
 }
 
-.kmp-pattern-group {
-    flex: 0 0 auto;
-    min-width: 140px;
-}
-
-.kmp-label {
+.kmp-input-label {
     font-size: 0.8rem;
-    color: #94a3b8;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
     white-space: nowrap;
-    font-weight: 500;
 }
 
-.kmp-text-input,
-.kmp-pattern-input {
-    flex: 1;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+.kmp-text-input {
+    width: 170px;
+    background: var(--algo-input-bg);
+    border: 1px solid var(--algo-input-border);
     border-radius: 8px;
-    padding: 8px 12px;
-    color: #e2e8f0;
-    font-size: 0.85rem;
-    font-family: 'JetBrains Mono', monospace;
+    color: var(--algo-input-text);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
     outline: none;
-    transition: border-color 0.2s;
-    letter-spacing: 1px;
+    transition: border-color 0.2s ease;
 }
-
-.kmp-text-input:focus,
-.kmp-pattern-input:focus {
-    border-color: #6366f1;
-}
+.kmp-text-input:focus { border-color: #38bdf8; }
 
 .kmp-pattern-input {
-    width: 100px;
+    width: 90px;
+    background: var(--algo-input-bg);
+    border: 1px solid var(--algo-input-border);
+    border-radius: 8px;
+    color: var(--algo-input-text);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    outline: none;
+    transition: border-color 0.2s ease;
 }
+.kmp-pattern-input:focus { border-color: #38bdf8; }
 
-/* ── Main Area ── */
-.kmp-main-area {
-    display: flex;
-    gap: 16px;
-    flex: 1;
-    min-height: 0;
-}
-
-/* ── Alignment Panel ── */
-.kmp-alignment-panel {
-    flex: 2;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    overflow-x: auto;
-}
-
-.kmp-panel-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 12px;
-}
-
-/* Character rows */
-.kmp-char-row {
-    display: flex;
-    gap: 2px;
-    margin-bottom: 4px;
-}
-
-.kmp-index-row {
-    margin-bottom: 2px;
-}
-
-.kmp-cell {
-    width: 32px;
-    height: 32px;
+.kmp-btn-group {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border-radius: 4px;
-    transition: all 0.25s;
-    flex-shrink: 0;
-}
-
-.kmp-index-cell {
-    font-size: 0.6rem;
-    color: #475569;
-    font-weight: 500;
-    height: 20px;
-}
-
-.kmp-text-cell {
-    background: rgba(15, 23, 42, 0.5);
-    color: #94a3b8;
-    border: 1px solid rgba(99, 102, 241, 0.1);
-}
-
-.kmp-text-cell.state-in-range {
-    background: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.25);
-    color: #c7d2fe;
-}
-
-.kmp-text-cell.state-comparing {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.5);
-    color: #fbbf24;
-}
-
-.kmp-text-cell.state-match {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: rgba(16, 185, 129, 0.5);
-    color: #34d399;
-}
-
-.kmp-text-cell.state-matched-prefix {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.25);
-    color: #6ee7b7;
-}
-
-.kmp-text-cell.state-mismatch {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #f87171;
-    animation: kmp-shake 0.3s ease;
-}
-
-.kmp-text-cell.state-found {
-    background: rgba(99, 102, 241, 0.25);
-    border-color: rgba(99, 102, 241, 0.6);
-    color: #a5b4fc;
-    box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
-}
-
-@keyframes kmp-shake {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(-2px);
-    }
-
-    75% {
-        transform: translateX(2px);
-    }
-}
-
-.kmp-pattern-row {
-    margin-top: 2px;
-}
-
-.kmp-pattern-cell {
-    background: rgba(99, 102, 241, 0.12);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-.kmp-pattern-cell.state-match {
-    background: rgba(16, 185, 129, 0.25);
-    border-color: rgba(16, 185, 129, 0.5);
-    color: #34d399;
-}
-
-.kmp-pattern-cell.state-matched-prefix {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
-    color: #6ee7b7;
-}
-
-.kmp-pattern-cell.state-mismatch {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #f87171;
-}
-
-.kmp-pattern-cell.state-found {
-    background: rgba(99, 102, 241, 0.3);
-    border-color: rgba(99, 102, 241, 0.6);
-    color: #c7d2fe;
-}
-
-.kmp-empty-cell {
-    background: transparent;
-    border: none;
-}
-
-/* Match badges */
-.kmp-matches-bar {
-    display: flex;
     gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(99, 102, 241, 0.1);
 }
 
-.kmp-match-badge {
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.72rem;
-    color: #a5b4fc;
-    font-weight: 600;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ── Side Panel ── */
-.kmp-side-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 200px;
-}
-
-/* LPS Card */
-.kmp-lps-card {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 12px;
-    padding: 14px;
-}
-
-.kmp-lps-table {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.kmp-lps-row {
-    display: flex;
-    gap: 2px;
-}
-
-.kmp-lps-header .kmp-lps-cell {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
-    font-weight: 700;
-}
-
-.kmp-lps-cell {
-    flex: 1;
-    min-width: 28px;
-    height: 30px;
-    display: flex;
+.kmp-btn {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    border-radius: 4px;
-    background: rgba(15, 23, 42, 0.5);
-    color: #64748b;
-    border: 1px solid rgba(99, 102, 241, 0.08);
-}
-
-.kmp-lps-val {
-    font-weight: 600;
-}
-
-.kmp-lps-nonzero {
-    color: #f59e0b;
-    background: rgba(245, 158, 11, 0.08);
-    border-color: rgba(245, 158, 11, 0.2);
-}
-
-.kmp-lps-empty {
-    color: #475569;
-    font-style: italic;
-    font-size: 0.8rem;
-    text-align: center;
-    padding: 10px;
-}
-
-/* Stats Card */
-.kmp-stats-card {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 12px;
-    padding: 14px;
-}
-
-.kmp-stats-grid {
-    display: flex;
-    gap: 10px;
-}
-
-.kmp-stat {
-    flex: 1;
-    text-align: center;
-}
-
-.kmp-stat-label {
-    display: block;
-    font-size: 0.65rem;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 2px;
-}
-
-.kmp-stat-value {
-    display: block;
-    font-size: 1rem;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 9px;
+    font-size: 0.82rem;
     font-weight: 700;
-    color: #e2e8f0;
-    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease;
+    white-space: nowrap;
+}
+.kmp-btn:hover { transform: translateY(-1px); }
+
+.kmp-btn-primary {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    color: #ffffff;
 }
 
-.kmp-stat-green {
-    color: #10b981;
-}
-
-/* Legend Card */
-.kmp-legend-card {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 12px;
-    padding: 12px 14px;
+.kmp-btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--surface-border);
 }
 
 .kmp-legend {
     display: flex;
+    align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
+    margin-left: auto;
+    background: var(--surface-bg);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--surface-border);
 }
 
-.kmp-legend-item {
+.kmp-leg-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.7rem;
-    color: #94a3b8;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
-.kmp-legend-dot {
+.kmp-dot {
     width: 10px;
     height: 10px;
-    border-radius: 3px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.kmp-dot.yellow { background: #fbbf24; }
+.kmp-dot.green  { background: #10b981; }
+.kmp-dot.red    { background: #f87171; }
+
+/* Canvas Stage */
+.kmp-canvas-wrapper {
+    flex: 1;
+    min-height: 280px;
+    background: var(--algo-grid-bg);
+    border: 1px solid var(--algo-grid-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    gap: 16px;
+    overflow-x: auto;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
-.kmp-lg-match {
-    background: #10b981;
+.kmp-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
 }
 
-.kmp-lg-mismatch {
-    background: #ef4444;
+.kmp-lps-card {
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
 }
 
-.kmp-lg-found {
-    background: #6366f1;
+.kmp-lps-row {
+    display: flex;
+    gap: 8px;
 }
 
-.kmp-lg-prefix {
-    background: rgba(16, 185, 129, 0.4);
+.lps-cell {
+    width: 36px;
+    height: 42px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
 }
 
-/* Controls */
+.lps-ch {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+.lps-val {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.kmp-text-card {
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: auto;
+}
+
+.kmp-text-grid {
+    display: flex;
+    gap: 8px;
+    position: relative;
+}
+
+.kmp-cell-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.kmp-cell {
+    width: 38px;
+    height: 42px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.p-cell {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.kmp-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+}
+
+.kmp-idx {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.kmp-cell.state-comparing {
+    background: rgba(251, 191, 36, 0.25);
+    border-color: #fbbf24;
+}
+.kmp-cell.state-comparing .kmp-val { color: #fbbf24; }
+
+.kmp-cell.state-match {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+}
+.kmp-cell.state-match .kmp-val { color: #10b981; }
+
+.kmp-cell.state-mismatch {
+    background: rgba(248, 113, 113, 0.25);
+    border-color: #f87171;
+}
+.kmp-cell.state-mismatch .kmp-val { color: #f87171; }
+
+.kmp-cell.state-found {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.kmp-pattern-slider {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    transition: transform 0.25s ease;
+}
+
 .kmp-controls-wrapper {
-    padding-top: 4px;
+    flex-shrink: 0;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-    .kmp-main-area {
-        flex-direction: column;
-    }
-
-    .kmp-cell {
-        width: 26px;
-        height: 26px;
-        font-size: 0.75rem;
-    }
+    .kmp-input-panel { flex-direction: column; align-items: stretch; }
+    .kmp-legend      { margin-left: 0; flex-wrap: wrap; }
 }

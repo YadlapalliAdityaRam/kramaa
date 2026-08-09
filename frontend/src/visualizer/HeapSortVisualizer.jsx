@@ -1,20 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import DualView from './DualView';
 import TreeCanvas from './TreeCanvas';
-import InputArrayDisplay from '../components/InputArrayDisplay';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateHeapSortSteps } from '../algorithms/sorting/heapSort';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { FaPlay, FaRandom, FaExchangeAlt } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { FaRandom, FaCheck, FaRedo } from 'react-icons/fa';
 import './HeapSortVisualizer.css';
 
-// Build a tree structure out of an array for TreeCanvas
+const DEFAULT_ARRAY = [4, 10, 3, 5, 1, 8, 7];
+
 const buildTreeFromArray = (arr, heapSize) => {
-    if (arr.length === 0 || heapSize === 0) return null;
-    const nodes = arr.slice(0, heapSize).map((val, i) => ({
+    if (!arr || arr.length === 0) return null;
+    const effectiveSize = (heapSize !== undefined && heapSize !== null) ? heapSize : arr.length;
+    if (effectiveSize === 0) return null;
+
+    const nodes = arr.slice(0, effectiveSize).map((val, i) => ({
         id: `hs_${i}`,
         value: val,
         label: `${val}`,
@@ -32,8 +34,8 @@ const buildTreeFromArray = (arr, heapSize) => {
 };
 
 const HeapSortVisualizer = () => {
-    const [inputVal, setInputVal] = useState('4, 10, 3, 5, 1');
-    const [arrayData, setArrayData] = useState([4, 10, 3, 5, 1]);
+    const [inputValue, setInputValue]         = useState(DEFAULT_ARRAY.join(', '));
+    const [arrayData, setArrayData]           = useState(DEFAULT_ARRAY);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const steps = useMemo(() => generateHeapSortSteps(arrayData, true), [arrayData]);
@@ -57,24 +59,24 @@ const HeapSortVisualizer = () => {
     }, [arrayData]);
 
     const handleApply = () => {
-        const parsed = inputVal.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        const parsed = inputValue.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
         if (parsed.length === 0) {
             toast.error("Please enter valid numbers separated by commas.");
             return;
         }
         if (parsed.length > 15) {
-            toast.error("Maximum 15 elements allowed for clear visualization.");
+            toast.error("Maximum 15 elements allowed.");
             return;
         }
         setArrayData(parsed);
-        toast.success("Array applied");
+        toast.success("Array applied!");
     };
 
     const handleRandomize = () => {
-        const randomArr = Array.from({ length: 8 }, () => Math.floor(Math.random() * 99) + 1);
+        const randomArr = Array.from({ length: 7 }, () => Math.floor(Math.random() * 90) + 10);
         setArrayData(randomArr);
-        setInputVal(randomArr.join(', '));
-        toast.success("Array randomized");
+        setInputValue(randomArr.join(', '));
+        toast.success("Array randomized!");
     };
 
     const codeSnippet = algorithmCodes.heapSort?.[activeLanguage] || '';
@@ -82,131 +84,142 @@ const HeapSortVisualizer = () => {
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'heapify-start': return 13;
-            case 'compare': return 17;
-            case 'swap': return 28;
-            case 'swap-root': return 43;
-            case 'reduce-heap': return 45;
-            default: return 0;
+            case 'heapify-start': return 4;
+            case 'compare':       return 17;
+            case 'swap':          return 20;
+            case 'swap-root':     return 8;
+            case 'reduce-heap':   return 9;
+            default:              return 0;
         }
     };
 
-    // Calculate dynamic node states based on the current step
     const treeData = useMemo(() => {
-        if (!currentStep) return null;
-        return buildTreeFromArray(currentStep.arraySnapshot, currentStep.heapSize);
-    }, [currentStep]);
+        if (!currentStep) return buildTreeFromArray(arrayData, arrayData.length);
+        const size = currentStep.heapSize !== undefined ? currentStep.heapSize : (currentStep.arraySnapshot?.length || arrayData.length);
+        return buildTreeFromArray(currentStep.arraySnapshot || arrayData, size);
+    }, [currentStep, arrayData]);
 
     const nodeStates = useMemo(() => {
         if (!currentStep) return {};
         const states = {};
-        for (let i = 0; i < currentStep.heapSize; i++) {
+        const size = currentStep.heapSize !== undefined ? currentStep.heapSize : (currentStep.arraySnapshot?.length || arrayData.length);
+
+        for (let i = 0; i < size; i++) {
             states[`hs_${i}`] = 'default';
         }
-
-        if (currentStep.activeNode !== undefined) {
-             states[`hs_${currentStep.activeNode}`] = 'root-node'; // Blue
+        if (currentStep.activeNode !== undefined && currentStep.activeNode < size) {
+            states[`hs_${currentStep.activeNode}`] = 'root-node';
         }
         if (currentStep.compareNodes) {
-             currentStep.compareNodes.forEach(idx => {
-                 states[`hs_${idx}`] = 'compare-node'; // Yellow
-             });
+            currentStep.compareNodes.forEach(idx => {
+                if (idx < size) states[`hs_${idx}`] = 'comparing';
+            });
         }
         if (currentStep.swapNodes) {
-             currentStep.swapNodes.forEach(idx => {
-                 // only mark if within heap size bounds
-                 if (idx < currentStep.heapSize) states[`hs_${idx}`] = 'swap-node'; // Red
-             });
+            currentStep.swapNodes.forEach(idx => {
+                if (idx < size) states[`hs_${idx}`] = 'swapping';
+            });
         }
         return states;
-    }, [currentStep]);
+    }, [currentStep, arrayData]);
+
+    const currentArray = currentStep?.arraySnapshot || arrayData;
+    const heapSize     = currentStep?.heapSize ?? arrayData.length;
 
     return (
         <DualView
-            algorithmName="Heap Sort"
+            algorithmName="Heap Sort (Binary Heap Representation)"
             code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Build a Max Heap, then repeatedly swap the root with the last element."}
+            codeSnippetCategory="sorting"
+            description={
+                <div className="hs-desc-wrapper">
+                    <span className="hs-badge">Max-Heap Tree O(N log N)</span>
+                    <span className="hs-desc-text">
+                        {currentStep?.description || 'Press Play to build Max-Heap and extract maximum elements to the end.'}
+                    </span>
+                </div>
+            }
         >
-            <div className="heapsort-container">
-                <div className="heapsort-input-bar">
-                    <div className="heapsort-input-group">
-                        <label>Array:</label>
+            <div className="hs-visualizer-wrapper">
+
+                {/* ── Top Input Panel ──────────────────────────────────────── */}
+                <div className="hs-input-panel">
+                    <div className="hs-input-group">
+                        <label className="hs-input-label">Custom Array:</label>
                         <input
                             type="text"
-                            className="heapsort-value-input"
-                            value={inputVal}
-                            onChange={(e) => setInputVal(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleApply()}
-                            placeholder="e.g. 4, 10, 3, 5, 1"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+                            placeholder="4, 10, 3, 5, 1"
+                            className="hs-text-input"
                         />
+                        <button onClick={handleApply} className="hs-btn hs-btn-primary">
+                            <FaCheck /> Apply
+                        </button>
                     </div>
-                    <button className="hs-btn btn-primary" onClick={handleApply}>
-                        <FaPlay style={{fontSize: '0.8rem'}} /> Apply
-                    </button>
-                    <button className="hs-btn btn-secondary" onClick={handleRandomize}>
-                        <FaRandom /> Random
-                    </button>
+
+                    <div className="hs-btn-group">
+                        <button onClick={handleRandomize} className="hs-btn hs-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => { setArrayData(DEFAULT_ARRAY); setInputValue(DEFAULT_ARRAY.join(", ")); reset(); }} className="hs-btn hs-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="hs-legend">
+                        <div className="hs-leg-item"><span className="hs-dot blue"></span> Heap Root</div>
+                        <div className="hs-leg-item"><span className="hs-dot yellow"></span> Comparing</div>
+                        <div className="hs-leg-item"><span className="hs-dot red"></span> Swapping</div>
+                        <div className="hs-leg-item"><span className="hs-dot green"></span> Sorted (Extracted)</div>
+                    </div>
                 </div>
 
-                <div className="heapsort-visual-grid">
-                    <div className="heapsort-tree-area">
-                        <div className="panel-label">
-                            Max Heap (Size: {currentStep ? currentStep.heapSize : arrayData.length})
-                        </div>
-                        <div className="tree-wrapper">
-                            <TreeCanvas
-                                treeData={treeData}
-                                nodeStates={nodeStates}
-                            />
+                {/* ── Main Canvas Stage: Binary Heap Tree & Array View ───────── */}
+                <div className="hs-canvas-wrapper">
+                    
+                    {/* Binary Heap Tree */}
+                    <div className="hs-tree-panel">
+                        <div className="hs-card-title">Binary Max-Heap Representation</div>
+                        <div className="hs-tree-canvas-wrap">
+                            <TreeCanvas treeData={treeData} nodeStates={nodeStates} />
                         </div>
                     </div>
 
-                    <div className="heapsort-array-panel">
-                        <div className="panel-label">
-                            <FaExchangeAlt /> Array Representation
-                        </div>
-                        <div className="heapsort-array-display">
-                            {(currentStep?.arraySnapshot || arrayData).map((val, idx) => {
-                                let boxClass = 'array-box';
-                                const isSorted = currentStep?.sortedIndices?.includes(idx);
-                                const isRoot = idx === currentStep?.activeNode;
-                                const isComparing = currentStep?.compareNodes?.includes(idx);
-                                const isSwapping = currentStep?.swapNodes?.includes(idx);
+                    {/* Array Representation */}
+                    <div className="hs-array-panel">
+                        <div className="hs-card-title">Array Representation</div>
+                        <div className="hs-array-row">
+                            {currentArray.map((val, idx) => {
+                                const isSorted = idx >= heapSize;
+                                const isRoot   = idx === currentStep?.activeNode;
+                                const isComp   = currentStep?.compareNodes?.includes(idx);
+                                const isSwap   = currentStep?.swapNodes?.includes(idx);
 
-                                if (isSorted) boxClass += ' sorted-box';
-                                else if (isSwapping) boxClass += ' swap-box';
-                                else if (isComparing) boxClass += ' compare-box';
-                                else if (isRoot) boxClass += ' root-box';
-
-                                const isInHeap = currentStep ? idx < currentStep.heapSize : true;
-                                if (!isInHeap && !isSorted) boxClass += ' dim-box'; 
+                                let stateClass = 'default';
+                                if (isSorted) stateClass = 'sorted';
+                                else if (isSwap) stateClass = 'swap';
+                                else if (isComp) stateClass = 'compare';
+                                else if (isRoot) stateClass = 'root';
 
                                 return (
-                                    <div key={idx} className="array-item">
-                                        <div className={boxClass}>
-                                            {val}
-                                        </div>
-                                        <div className="array-idx">{idx}</div>
+                                    <div key={idx} className={`hs-arr-cell ${stateClass}`}>
+                                        <span className="hs-val">{val}</span>
+                                        <span className="hs-idx">[{idx}]</span>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
+
                 </div>
 
-                <div className="heapsort-footer">
-                    <div className="heapsort-legend">
-                        <div className="leg-item"><span className="dot blue"></span> Root / Active</div>
-                        <div className="leg-item"><span className="dot yellow"></span> Comparing</div>
-                        <div className="leg-item"><span className="dot red"></span> Swapping</div>
-                        <div className="leg-item"><span className="dot green"></span> Sorted</div>
-                    </div>
-                </div>
-
-                <div className="heapsort-controls-wrapper">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="hs-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -223,50 +236,6 @@ const HeapSortVisualizer = () => {
                     />
                 </div>
 
-                {/* Education Panel */}
-                <div className="cs-education-panel">
-                    <div className="cs-edu-grid">
-                        <div className="cs-edu-section">
-                            <h3>How It Works</h3>
-                            <p>
-                                Heap Sort works by visualizing the elements of the array as a special kind of complete binary tree called a heap. 
-                                First, it builds a <strong>Max-Heap</strong> from the input array, where the largest element becomes the root.
-                            </p>
-                            <h3 style={{ marginTop: '16px' }}>The Sorting Process</h3>
-                            <p>
-                                It then repeatedly swaps the root (the maximum value) with the last element of the heap, 
-                                effectively placing the largest number in its correct sorted position. The heap size is reduced by 1, 
-                                and the remaining properties of the heap are restored by "heapifying" the new root downwards. 
-                                This repeats until the heap is empty and the array is sorted.
-                            </p>
-                        </div>
-                        <div className="cs-edu-section">
-                            <h3>Complexity</h3>
-                            <div className="cs-complexity-bubble">
-                                <div className="cs-complexity-item">
-                                    <span>Time (Best)</span>
-                                    <span style={{ color: '#34d399' }}>O(n log n)</span>
-                                </div>
-                                <div className="cs-complexity-item">
-                                    <span>Time (Average)</span>
-                                    <span style={{ color: '#fbbf24' }}>O(n log n)</span>
-                                </div>
-                                <div className="cs-complexity-item">
-                                    <span>Time (Worst)</span>
-                                    <span style={{ color: '#f87171' }}>O(n log n)</span>
-                                </div>
-                                <div className="cs-complexity-item">
-                                    <span>Space Complexity</span>
-                                    <span style={{ color: '#6366f1' }}>O(1)</span>
-                                </div>
-                                <div className="cs-complexity-item">
-                                    <span>Stable Sort</span>
-                                    <span style={{ color: '#f87171' }}>No</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </DualView>
     );

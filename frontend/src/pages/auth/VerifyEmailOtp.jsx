@@ -169,11 +169,11 @@ const VerifyEmailOtp = () => {
 
     return (
         <div
-            className="main-content"
+            className="main-content auth-page"
             style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}
         >
             <div
-                className="glass-panel"
+                className="glass-panel auth-card"
                 style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '420px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '24px' }}>

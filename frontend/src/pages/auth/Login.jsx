@@ -25,24 +25,41 @@ const Login = () => {
                 navigate('/coding-platform');
             }
         }
-        if (error) {
-            setTimeout(() => dispatch(clearError()), 3000);
-        }
-    }, [isAuthenticated, user, error, navigate, dispatch]);
+    }, [isAuthenticated, user, navigate]);
 
-    const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
+    useEffect(() => () => dispatch(clearError()), [dispatch]);
 
-    const onSubmit = e => {
+    const onChange = e => {
+        if (error) dispatch(clearError());
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const goToEmailVerification = () => {
+        const verificationEmail = email.trim().toLowerCase();
+        if (!verificationEmail) return;
+        sessionStorage.setItem('pendingVerificationEmail', verificationEmail);
+        navigate(`/verify-email-otp?${new URLSearchParams({ email: verificationEmail })}`, {
+            state: { email: verificationEmail }
+        });
+    };
+
+    const onSubmit = async (e) => {
         e.preventDefault();
-        dispatch(login({ email, password }));
+        const action = await dispatch(login({ email: email.trim(), password }));
+
+        // An unverified account is not a failed sign-in. Take the user straight to
+        // the OTP screen and retain the email so they never need to type it again.
+        if (login.rejected.match(action) && action.payload?.requiresVerification) {
+            goToEmailVerification();
+        }
     };
 
     return (
-        <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <div className="main-content auth-page">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-panel"
+                className="glass-panel auth-card"
                 style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '400px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -56,7 +73,16 @@ const Login = () => {
                         animate={{ opacity: 1 }}
                         style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '10px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', fontSize: '0.9rem' }}
                     >
-                        {error}
+                        <span>{error}</span>
+                        {error?.requiresVerification && (
+                            <button
+                                type="button"
+                                onClick={goToEmailVerification}
+                                style={{ display: 'block', margin: '8px auto 0', border: 'none', background: 'transparent', color: 'inherit', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                            >
+                                Verify email now
+                            </button>
+                        )}
                     </motion.div>
                 )}
 

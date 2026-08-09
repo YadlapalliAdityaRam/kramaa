@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../redux/slices/authSlice';
@@ -35,7 +35,6 @@ const Navbar = () => {
     const [viewportWidth, setViewportWidth] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth : 1400
     ));
-    const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
 
@@ -45,6 +44,17 @@ const Navbar = () => {
     const mobileMenuTriggerRef = useRef(null);
     const searchRef = useRef(null);
     const isMobile = viewportWidth <= 1024;
+    const suggestions = useMemo(() => {
+        const normalizedQuery = searchQuery.trim().toLowerCase();
+        if (!normalizedQuery) return [];
+
+        return algorithmList
+            .filter((algorithm) => (
+                algorithm.name.toLowerCase().includes(normalizedQuery)
+                || algorithm.category.toLowerCase().includes(normalizedQuery)
+            ))
+            .slice(0, 8);
+    }, [searchQuery]);
 
     // Smart scroll-aware navbar
     useEffect(() => {
@@ -62,11 +72,6 @@ const Navbar = () => {
     const isActive = (path) => {
         return location.pathname.startsWith(path) && path !== '/';
     };
-
-    const getLinkStyle = (path) => ({
-        color: isActive(path) ? 'var(--primary-orange)' : 'var(--text-primary)',
-        fontWeight: isActive(path) ? '600' : '400'
-    });
 
     const onLogout = () => {
         dispatch(logout());
@@ -136,32 +141,6 @@ const Navbar = () => {
     }, [isMobileMenuOpen]);
 
     useEffect(() => {
-        closeProfileDrawer();
-        setIsMobileMenuOpen(false);
-        setShowSuggestions(false);
-        setSearchQuery('');
-    }, [location.pathname]);
-
-    useEffect(() => {
-        if (!searchQuery.trim()) {
-            setSuggestions([]);
-            setShowSuggestions(false);
-            return;
-        }
-
-        const filtered = algorithmList
-            .filter(algo => 
-                algo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                algo.category.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .slice(0, 8);
-        
-        setSuggestions(filtered);
-        setShowSuggestions(true);
-        setActiveIndex(-1);
-    }, [searchQuery]);
-
-    useEffect(() => {
         const handleClickOutside = (event) => {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setShowSuggestions(false);
@@ -206,8 +185,7 @@ const Navbar = () => {
         { to: '/compare', label: 'Compare' },
         { to: '/contests', label: 'Contests' },
         { to: '/community', label: 'Community' },
-        { to: '/coding-platform', label: 'Practice' },
-        { to: '/leaderboard', label: 'Leaderboard' }
+        { to: '/coding-platform', label: 'Practice' }
     ];
 
     const adminLinks = [
@@ -265,20 +243,25 @@ const Navbar = () => {
                     <div className="nav-backforward">
                         <BackForward />
                     </div>
-                    <Link to="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                        <img src="/assets/krama-logo.png" alt="Kramaa" style={{ height: '32px', width: 'auto' }} />
-                        <span className="logo-wordmark" style={{ fontSize: '1.3rem', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Kramaa</span>
+                    <Link to="/" className="nav-brand">
+                        <img src="/assets/krama-logo.png" alt="Kramaa" className="nav-brand-mark" />
+                        <span className="nav-brand-wordmark">Kramaa</span>
                     </Link>
 
-                    <div className="search-wrapper" style={{ position: 'relative', width: isMobile ? '100%' : '300px' }} ref={searchRef}>
+                    <div className="search-wrapper" ref={searchRef}>
                         <form className="search-container" onSubmit={handleSearchSubmit}>
-                            <FaSearch className="nav-search-icon" style={{ position: 'absolute', left: '14px', top: '13px', color: '#64748b' }} />
+                            <FaSearch className="nav-search-icon" />
                             <input
                                 type="text"
                                 placeholder={isMobile ? 'Search...' : 'Search algorithms...'}
                                 className="search-input"
                                 value={searchQuery}
-                                onChange={(event) => setSearchQuery(event.target.value)}
+                                onChange={(event) => {
+                                    const nextQuery = event.target.value;
+                                    setSearchQuery(nextQuery);
+                                    setShowSuggestions(Boolean(nextQuery.trim()));
+                                    setActiveIndex(-1);
+                                }}
                                 onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
                                 onKeyDown={handleKeyDown}
                                 aria-label="Search algorithms"
@@ -319,14 +302,14 @@ const Navbar = () => {
                     {!isMobile && !['ADMIN', 'SUPER_ADMIN'].includes(user?.role) && (
                         <>
                             {publicLinks.map((link) => (
-                                <Link key={link.to} to={link.to} className="nav-link" style={getLinkStyle(link.to)}>{link.label}</Link>
+                                <Link key={link.to} to={link.to} className={`nav-link ${isActive(link.to) ? 'active' : ''}`}>{link.label}</Link>
                             ))}
                         </>
                     )}
 
                     {/* Admin Links */}
                     {!isMobile && user?.role === 'SUPER_ADMIN' && (
-                        <Link to="/super-admin/profile" className="nav-link" style={{ ...getLinkStyle('/super-admin'), color: '#ec4899' }}>
+                        <Link to="/super-admin/profile" className={`nav-link nav-link-admin ${isActive('/super-admin') ? 'active' : ''}`}>
                             Super Admin
                         </Link>
                     )}
@@ -380,7 +363,7 @@ const Navbar = () => {
                     <ThemeToggle />
 
                     {isAuthenticated ? (
-                        <div className="nav-user-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="nav-user-actions">
                             <NotificationBell />
                             <button
                                 ref={triggerRef}
@@ -390,18 +373,16 @@ const Navbar = () => {
                                 type="button"
                             >
                                 {user?.avatar && user.avatar !== 'default-avatar.png' ? (
-                                    <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                                    <img src={user.avatar} alt="" className="nav-avatar-image" />
                                 ) : (
                                     <span>{user?.username?.charAt(0).toUpperCase()}</span>
                                 )}
                             </button>
                         </div>
                     ) : (
-                        <div className="nav-guest-actions" style={{ display: 'flex', gap: '10px' }}>
-                            {!isMobile && <Link to="/login" className="nav-link" style={{ color: 'var(--text-primary)' }}>Login</Link>}
-                            {!isMobile && <Link to="/register" className="nav-link" style={{
-                                background: 'var(--primary-orange)', color: 'black', padding: '6px 16px', borderRadius: '8px', fontWeight: 'bold'
-                            }}>Sign Up</Link>}
+                        <div className="nav-guest-actions">
+                            {!isMobile && <Link to="/login" className="nav-link nav-login">Login</Link>}
+                            {!isMobile && <Link to="/register" className="nav-register">Sign up</Link>}
                         </div>
                     )}
                 </div>
@@ -475,7 +456,7 @@ const Navbar = () => {
                         <div className="profile-drawer-header">
                             <div className="profile-drawer-avatar">
                                 {user?.avatar && user.avatar !== 'default-avatar.png' ? (
-                                    <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                                    <img src={user.avatar} alt="" className="nav-avatar-image" />
                                 ) : (
                                     <span>{user?.username?.charAt(0).toUpperCase()}</span>
                                 )}

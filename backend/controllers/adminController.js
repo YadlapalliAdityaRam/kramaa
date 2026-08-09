@@ -4,20 +4,19 @@ const Problem = require('../models/Problem');
 const Submission = require('../models/Submission');
 const User = require('../models/User');
 const auditLogger = require('../services/auditLogger');
+const notificationService = require('../services/notificationService');
 const mongoose = require('mongoose');
 const { PROBLEM_STATUS, buildPublicationFields, buildPublishedProblemMatch } = require('../utils/problemPublication');
 
-// Get Audit Logs
+// ─── Get Audit Logs ────────────────────────────────────────────────────────────
 exports.getAuditLogs = async (req, res) => {
     try {
         const { page = 1, limit = 20, action, actor } = req.query;
         const query = {};
 
         if (action) query.action = action;
-        // Only query by actor if it's a valid ObjectId (since schema ref is ObjectId)
-        // If we want to search by username, we'd need to look up User IDs first, but for now let's prevent the 500 crash.
-        // Assuming the UI might send a username string, we should eventually implement that lookup.
-        // For now, only assign if it's a valid ObjectId to prevent CastError.
+
+        // Only assign actor if it's a valid ObjectId to prevent CastError.
         if (actor && mongoose.Types.ObjectId.isValid(actor)) {
             query.actor = actor;
         }
@@ -34,17 +33,17 @@ exports.getAuditLogs = async (req, res) => {
             success: true,
             logs,
             totalPages: Math.ceil(total / limit),
-            currentPage: page
+            currentPage: Number(page)
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Get All Users (Admin)
+// ─── Get All Users (Admin) ─────────────────────────────────────────────────────
 exports.getUsers = async (req, res) => {
     try {
-        const { search, role, page = 1, limit = 10 } = req.query;
+        const { search, role, page = 1, limit = 100 } = req.query;
         const query = {};
 
         if (search) {
@@ -59,7 +58,6 @@ exports.getUsers = async (req, res) => {
         }
 
         // Filter by active status if provided
-        // usage: /users?status=active or /users?status=inactive
         if (req.query.status) {
             if (req.query.status === 'active') query.isActive = true;
             if (req.query.status === 'inactive') query.isActive = false;
@@ -84,8 +82,7 @@ exports.getUsers = async (req, res) => {
     }
 };
 
-// Get System Health / Stats
-// Get System Health / Stats
+// ─── Get System Health / Stats ─────────────────────────────────────────────────
 exports.getSystemHealth = async (req, res) => {
     try {
         console.log('Fetching System Health stats...');
@@ -117,19 +114,14 @@ exports.getSystemHealth = async (req, res) => {
             }
         };
 
-        console.log('System Health Stats:', stats);
-
-        res.json({
-            success: true,
-            stats
-        });
+        res.json({ success: true, stats });
     } catch (error) {
         console.error('getSystemHealth Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Emergency Action
+// ─── Emergency Action ──────────────────────────────────────────────────────────
 exports.emergencyAction = async (req, res) => {
     try {
         const { action, targetId, reason, password } = req.body;
@@ -155,30 +147,26 @@ exports.emergencyAction = async (req, res) => {
 
         switch (action) {
             case 'DISABLE_PROBLEM':
-                // targetId required
                 if (!targetId) return res.status(400).json({ success: false, message: 'Target Problem ID required' });
                 await Problem.findByIdAndUpdate(targetId, buildPublicationFields(PROBLEM_STATUS.APPROVED));
                 break;
 
             case 'BAN_USER':
-                // targetId required
                 if (!targetId) return res.status(400).json({ success: false, message: 'Target User ID required' });
                 await User.findByIdAndUpdate(targetId, { isActive: false });
                 break;
 
-            case 'PAUSE_CONTESTS':
-                // Stop all ongoing contests
+            case 'PAUSE_CONTESTS': {
                 const result = await Contest.updateMany(
                     { status: 'ONGOING' },
                     { status: 'PAUSED' }
                 );
                 console.log(`[EMERGENCY] Paused ${result.modifiedCount} contests.`);
                 break;
+            }
 
             case 'MAINTENANCE_MODE':
-                // For now, this remains a logged event as it requires a global config store (e.g. Redis/DB)
-                // which we haven't set up yet.
-                console.log("[EMERGENCY] Enabling Maintenance Mode...");
+                console.log('[EMERGENCY] Enabling Maintenance Mode...');
                 break;
 
             default:
@@ -196,7 +184,7 @@ exports.emergencyAction = async (req, res) => {
     }
 };
 
-// Super Admin: Revoke Admin Access
+// ─── Revoke Admin Access (Super Admin Only) ────────────────────────────────────
 exports.revokeAdmin = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -224,7 +212,7 @@ exports.revokeAdmin = async (req, res) => {
     }
 };
 
-// Super Admin: Delete/Deactivate Admin
+// ─── Delete Admin (Super Admin Only) ──────────────────────────────────────────
 exports.deleteAdmin = async (req, res) => {
     try {
         const { reason } = req.body;
@@ -255,7 +243,7 @@ exports.deleteAdmin = async (req, res) => {
     }
 };
 
-// Update User Role (Super Admin Only)
+// ─── Update User Role (Super Admin Only) ───────────────────────────────────────
 exports.updateUserRole = async (req, res) => {
     try {
         const { role } = req.body;
@@ -289,7 +277,7 @@ exports.updateUserRole = async (req, res) => {
     }
 };
 
-// Delete User (Soft Delete)
+// ─── Delete User from Database & Notify Super Admin ───────────────────────────
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -298,25 +286,265 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Hierarchy Check
+        // Hierarchy guard
         if (user.role === 'SUPER_ADMIN') {
-            return res.status(403).json({ success: false, message: 'Cannot delete Super Admin' });
+            return res.status(403).json({ success: false, message: 'Cannot delete Super Admin account' });
         }
 
         if (user.role === 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
-            return res.status(403).json({ success: false, message: 'Admins cannot delete other Admins' });
+            return res.status(403).json({ success: false, message: 'Admins cannot delete other Admins. Contact Super Admin.' });
         }
 
-        // Soft Delete
-        user.isActive = false;
-        await user.save();
+        const deletedUsername = user.username;
+        const deletedEmail = user.email;
+        const deletedRole = user.role;
+        const deletedUserId = user._id;
+        const adminName = req.user?.username || 'Admin';
 
-        await auditLogger.log(req.user._id, 'USER_DELETE', 'USER', {
-            targetUser: user.email,
-            role: user.role
+        // 1. Hard-delete user from DB immediately
+        await User.findByIdAndDelete(deletedUserId);
+
+        // 2. Cascade cleanup — submissions and notifications owned by the user
+        try {
+            await Submission.deleteMany({ userId: deletedUserId });
+            const Notification = require('../models/Notification');
+            await Notification.deleteMany({ userId: deletedUserId });
+        } catch (cleanupErr) {
+            console.error('[deleteUser] Cascade cleanup warning:', cleanupErr.message);
+        }
+
+        // 3. Audit log
+        await auditLogger.log(req.user._id, 'USER_PERMANENT_DELETE', 'USER', {
+            deletedUserId: deletedUserId.toString(),
+            targetUser: deletedEmail,
+            targetUsername: deletedUsername,
+            role: deletedRole,
+            deletedBy: adminName
         }, req.ip);
 
-        res.json({ success: true, message: 'User deactivated successfully' });
+        // 4. Notify every Super Admin in real-time
+        try {
+            const superAdmins = await User.find({ role: 'SUPER_ADMIN' }).select('_id');
+            if (superAdmins.length > 0) {
+                const superAdminIds = superAdmins.map(sa => sa._id);
+                await notificationService.broadcastNotification(req, superAdminIds, {
+                    type: 'admin',
+                    title: '🗑️ User Deleted',
+                    message: `Admin ${adminName} permanently deleted user "${deletedUsername}" (${deletedEmail}) [Role: ${deletedRole}].`,
+                    link: '/super-admin',
+                    icon: '🗑️'
+                });
+            }
+        } catch (notifErr) {
+            console.error('[deleteUser] Super Admin notification error:', notifErr.message);
+        }
+
+        // 5. Real-time refresh broadcast to all dashboard clients
+        try {
+            const io = req.app?.get?.('io');
+            if (io) {
+                io.emit('admin:refresh', { sections: ['users', 'dashboard'] });
+                io.emit('superadmin:refresh', { sections: ['users', 'dashboard'] });
+            }
+        } catch (_) {}
+
+        res.json({
+            success: true,
+            message: `User "${deletedUsername}" has been permanently deleted and Super Admin has been notified.`
+        });
+    } catch (error) {
+        console.error('[deleteUser] Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Daily Challenge Handlers ──────────────────────────────────────────────────
+exports.getDailyChallengesHistory = async (req, res) => {
+    try {
+        const DailyChallenge = require('../models/DailyChallenge');
+        const { page = 1, limit = 10 } = req.query;
+        const challenges = await DailyChallenge.find()
+            .populate('problem', 'title difficulty')
+            .populate('scheduledBy', 'username email')
+            .sort({ scheduledDate: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+
+        const total = await DailyChallenge.countDocuments();
+
+        res.json({ success: true, challenges, total, totalPages: Math.ceil(total / limit) });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getUpcomingDailyChallenges = async (req, res) => {
+    try {
+        const DailyChallenge = require('../models/DailyChallenge');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const upcoming = await DailyChallenge.find({ scheduledDate: { $gte: today } })
+            .populate('problem', 'title difficulty')
+            .populate('scheduledBy', 'username email')
+            .sort({ scheduledDate: 1 });
+
+        res.json({ success: true, challenges: upcoming });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.scheduleDailyChallenge = async (req, res) => {
+    try {
+        const DailyChallenge = require('../models/DailyChallenge');
+        const { problemId, scheduledDate, notes } = req.body;
+
+        if (!problemId || !scheduledDate) {
+            return res.status(400).json({ success: false, message: 'problemId and scheduledDate are required' });
+        }
+
+        const existing = await DailyChallenge.findOne({ scheduledDate: new Date(scheduledDate) });
+        if (existing) {
+            return res.status(409).json({ success: false, message: 'A challenge is already scheduled for that date' });
+        }
+
+        const challenge = await DailyChallenge.create({
+            problem: problemId,
+            scheduledDate: new Date(scheduledDate),
+            scheduledBy: req.user._id,
+            notes
+        });
+
+        await auditLogger.log(req.user._id, 'DAILY_CHALLENGE_SCHEDULE', 'PROBLEM', {
+            problemId,
+            scheduledDate
+        }, req.ip);
+
+        res.status(201).json({ success: true, challenge });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateDailyChallenge = async (req, res) => {
+    try {
+        const DailyChallenge = require('../models/DailyChallenge');
+        const { id, problemId, scheduledDate, notes } = req.body;
+
+        if (!id) return res.status(400).json({ success: false, message: 'Challenge id is required' });
+
+        const challenge = await DailyChallenge.findByIdAndUpdate(
+            id,
+            { problem: problemId, scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined, notes },
+            { new: true, runValidators: true }
+        );
+
+        if (!challenge) return res.status(404).json({ success: false, message: 'Challenge not found' });
+
+        res.json({ success: true, challenge });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteDailyChallenge = async (req, res) => {
+    try {
+        const DailyChallenge = require('../models/DailyChallenge');
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ success: false, message: 'Challenge id is required' });
+
+        const challenge = await DailyChallenge.findByIdAndDelete(id);
+        if (!challenge) return res.status(404).json({ success: false, message: 'Challenge not found' });
+
+        res.json({ success: true, message: 'Daily challenge deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Super Admin Analytics ─────────────────────────────────────────────────────
+exports.getAdminList = async (req, res) => {
+    try {
+        const admins = await User.find({ role: { $in: ['ADMIN'] } })
+            .select('-password')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, admins });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getAdminAnalytics = async (req, res) => {
+    try {
+        const admin = await User.findById(req.params.id).select('-password');
+        if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
+
+        const [problemCount, submissionCount, recentActivity] = await Promise.all([
+            Problem.countDocuments({ createdBy: admin._id }),
+            Submission.countDocuments({ gradedBy: admin._id }),
+            AuditLog.find({ actor: admin._id })
+                .sort({ timestamp: -1 })
+                .limit(10)
+        ]);
+
+        res.json({ success: true, admin, problemCount, submissionCount, recentActivity });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Admin Profile Handlers ────────────────────────────────────────────────────
+exports.getAdminProfile = async (req, res) => {
+    try {
+        const admin = await User.findById(req.user._id).select('-password');
+        if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
+        res.json({ success: true, admin });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateAdminProfile = async (req, res) => {
+    try {
+        const { username, email, bio } = req.body;
+        const admin = await User.findByIdAndUpdate(
+            req.user._id,
+            { username, email, bio },
+            { new: true, runValidators: true }
+        ).select('-password');
+        res.json({ success: true, admin });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getAdminSecurity = async (req, res) => {
+    try {
+        const admin = await User.findById(req.user._id).select('twoFactorEnabled loginHistory');
+        res.json({ success: true, security: admin });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateAdminSecurity = async (req, res) => {
+    try {
+        const { twoFactorEnabled } = req.body;
+        const admin = await User.findByIdAndUpdate(
+            req.user._id,
+            { twoFactorEnabled },
+            { new: true }
+        ).select('twoFactorEnabled');
+        res.json({ success: true, admin });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.forceLogoutAllDevices = async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+        res.json({ success: true, message: 'All sessions invalidated. Please login again.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

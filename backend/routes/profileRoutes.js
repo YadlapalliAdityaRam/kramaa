@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, optionalProtect } = require('../middleware/auth');
+const { uploadAvatar } = require('../middleware/upload');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
 const UserAnalytics = require('../models/UserAnalytics');
@@ -238,6 +239,67 @@ router.put('/me', protect, async (req, res) => {
 
         let profile = await Profile.findOne({ user: req.user.id });
 
+
+        if (!profile) return res.status(404).json({ message: 'Profile not found' });
+
+        // Privacy check
+        if (!profile.preferences.isPublic && (!req.user || req.user.id !== user.id)) {
+            return res.status(403).json({ message: 'This profile is private' });
+        }
+
+        // Fetch Analytics Summary (if user allows)
+        let analytics = null;
+        if (profile.preferences.showActivity) {
+            analytics = await UserAnalytics.findOne({ user: user._id })
+                .select('languageStats tagStats heatmap insights');
+        }
+
+        res.json({ profile, analytics });
+
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind == 'ObjectId') {
+            return res.status(404).json({ message: 'Profile not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   PUT /api/profiles/me
+// @desc    Create or update user profile
+// @access  Private
+router.put('/me', protect, async (req, res) => {
+    const {
+        fullName, phoneNumber,
+        bio, title, website, location, coverPhoto,
+        social, education, educationDetails, skills, preferences, experienceLevel
+    } = req.body;
+
+    const profileFields = {};
+    profileFields.user = req.user.id;
+    if (bio !== undefined) profileFields.bio = bio;
+    if (title !== undefined) profileFields.title = title;
+    if (website !== undefined) profileFields.website = website;
+    if (coverPhoto !== undefined) profileFields.coverPhoto = coverPhoto;
+    if (experienceLevel !== undefined) profileFields.experienceLevel = experienceLevel;
+
+    if (location) profileFields.location = location;
+    if (social) profileFields.social = social;
+    if (educationDetails) profileFields.educationDetails = educationDetails;
+    if (education) profileFields.education = education;
+    if (preferences) profileFields.preferences = preferences;
+    if (skills) profileFields.skills = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim());
+
+    try {
+        if (fullName || phoneNumber) {
+            const userFields = {};
+            if (fullName !== undefined) userFields.fullName = fullName;
+            if (phoneNumber !== undefined) userFields.phoneNumber = phoneNumber;
+            await User.findByIdAndUpdate(req.user.id, { $set: userFields });
+        }
+
+        let profile = await Profile.findOne({ user: req.user.id });
+
         if (profile) {
             profile = await Profile.findOneAndUpdate(
                 { user: req.user.id },
@@ -257,6 +319,30 @@ router.put('/me', protect, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// @route   POST /api/profiles/avatar
+// @desc    Upload profile picture
+// @access  Private
+router.post('/avatar', protect, uploadAvatar.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Please upload an image file.' });
+        }
+
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { avatar: avatarUrl },
+            { new: true }
+        ).select('-password');
+
+        res.json({ message: 'Avatar uploaded successfully', avatar: avatarUrl, user });
+    } catch (err) {
+        console.error('Avatar upload error:', err);
+        res.status(500).json({ message: err.message || 'Server Error' });
     }
 });
 

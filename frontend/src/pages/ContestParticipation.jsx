@@ -281,7 +281,7 @@ const ContestParticipation = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-gray-300">
+            <div className="competition-page contest-participation-page contest-state-page min-h-screen bg-gray-900 flex items-center justify-center text-gray-300">
                 Loading contest...
             </div>
         );
@@ -289,7 +289,7 @@ const ContestParticipation = () => {
 
     if (!contest) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="competition-page contest-participation-page contest-state-page min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-white text-2xl font-semibold mb-3">Contest Not Found</p>
                     <Link to="/contests" className="text-teal-400 hover:text-teal-300">Back to Contests</Link>
@@ -299,7 +299,7 @@ const ContestParticipation = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white py-8 px-4">
+        <div className="competition-page contest-participation-page min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white py-8 px-4">
             <div className="max-w-6xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}

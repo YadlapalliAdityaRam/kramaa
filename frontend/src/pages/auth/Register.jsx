@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, clearError, clearRegisterMessage } from '../../redux/slices/authSlice';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaUserPlus, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const RECAPTCHA_SCRIPT_ID = 'algoverse-recaptcha-script';
 const RECAPTCHA_SCRIPT_SRC = 'https://www.google.com/recaptcha/api.js?render=explicit';
@@ -16,6 +16,9 @@ const Register = () => {
         confirmPassword: ''
     });
     const [captchaToken, setCaptchaToken] = useState('');
+    const [formError, setFormError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { username, email, password, confirmPassword } = formData;
 
     const captchaEnabled = String(import.meta.env.VITE_AUTH_CAPTCHA_ENABLED || '').trim().toLowerCase() === 'true';
@@ -39,12 +42,6 @@ const Register = () => {
             navigate('/coding-platform');
         }
     }, [isAuthenticated, navigate]);
-
-    useEffect(() => {
-        if (!error) return undefined;
-        const timeoutId = setTimeout(() => dispatch(clearError()), 3000);
-        return () => clearTimeout(timeoutId);
-    }, [error, dispatch]);
 
     useEffect(() => {
         if (!registerMessage) return undefined;
@@ -90,18 +87,21 @@ const Register = () => {
     }, [shouldRenderCaptcha, captchaSiteKey]);
 
     const onChange = (event) => {
+        if (error) dispatch(clearError());
+        if (formError) setFormError('');
         setFormData({ ...formData, [event.target.name]: event.target.value });
     };
 
     const onSubmit = (event) => {
         event.preventDefault();
+        setFormError('');
         if (password !== confirmPassword) {
-            alert('Passwords do not match');
+            setFormError('Passwords do not match. Please check and try again.');
             return;
         }
 
         if (captchaEnabled && !captchaToken) {
-            alert('Please complete captcha verification');
+            setFormError('Please complete captcha verification.');
             return;
         }
 
@@ -123,11 +123,11 @@ const Register = () => {
     };
 
     return (
-        <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <div className="main-content auth-page">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-panel"
+                className="glass-panel auth-card"
                 style={{ padding: '40px', borderRadius: '20px', width: '100%', maxWidth: '400px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -142,6 +142,17 @@ const Register = () => {
                         style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '10px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', fontSize: '0.9rem' }}
                     >
                         {error}
+                    </motion.div>
+                )}
+
+                {formError && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        role="alert"
+                        style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '10px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center', fontSize: '0.9rem' }}
+                    >
+                        {formError}
                     </motion.div>
                 )}
 
@@ -190,7 +201,7 @@ const Register = () => {
                     <div className="search-container" style={{ marginBottom: '20px' }}>
                         <FaLock style={{ position: 'absolute', left: '14px', top: '14px', color: '#64748b' }} />
                         <input
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={password}
                             onChange={onChange}
@@ -200,12 +211,20 @@ const Register = () => {
                             autoComplete="new-password"
                             required
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((value) => !value)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
                     <div className="search-container" style={{ marginBottom: '20px' }}>
                         <FaLock style={{ position: 'absolute', left: '14px', top: '14px', color: '#64748b' }} />
                         <input
-                            type="password"
+                            type={showConfirmPassword ? 'text' : 'password'}
                             name="confirmPassword"
                             value={confirmPassword}
                             onChange={onChange}
@@ -215,6 +234,14 @@ const Register = () => {
                             autoComplete="new-password"
                             required
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword((value) => !value)}
+                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
+                        >
+                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
                     {captchaEnabled && !captchaSiteKey && (

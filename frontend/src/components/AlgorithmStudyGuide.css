@@ -1,0 +1,92 @@
+.algorithm-study-guide {
+    --guide-ink: #f4f3ee;
+    --guide-muted: #a9afa9;
+    --guide-faint: #747a74;
+    --guide-line: rgba(244, 243, 238, 0.13);
+    --guide-surface: #171c18;
+    --guide-raised: #1d231f;
+    --guide-accent: #dd8d32;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 64px 32px 80px;
+    color: var(--guide-ink);
+}
+
+[data-theme="light"] .algorithm-study-guide {
+    --guide-ink: #18201b;
+    --guide-muted: #59645b;
+    --guide-faint: #7a837a;
+    --guide-line: rgba(24, 32, 27, 0.14);
+    --guide-surface: #fffef9;
+    --guide-raised: #f4f3ec;
+    --guide-accent: #b8641c;
+}
+
+.algorithm-study-header { display: flex; align-items: end; justify-content: space-between; gap: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--guide-line); }
+.algorithm-study-kicker,
+.algorithm-study-label { margin: 0; color: var(--guide-accent); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.algorithm-study-header h2 { max-width: 760px; margin: 11px 0 0; color: var(--guide-ink); font-size: clamp(1.7rem, 3.5vw, 2.65rem); font-weight: 650; letter-spacing: -0.05em; line-height: 1.05; }
+.algorithm-study-tags { display: flex; flex-wrap: wrap; justify-content: end; gap: 6px; }
+.algorithm-study-tags span { padding: 5px 7px; border: 1px solid var(--guide-line); color: var(--guide-muted); font-family: var(--font-mono); font-size: 0.63rem; font-weight: 600; }
+.algorithm-study-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1px; margin-top: 32px; border: 1px solid var(--guide-line); background: var(--guide-line); }
+.algorithm-study-card { position: relative; grid-column: span 4; min-height: 286px; padding: 22px; background: var(--bg-dark); }
+.algorithm-study-card > svg { color: #8dc9b1; font-size: 0.94rem; }
+.algorithm-study-card h3 { margin: 14px 0 0; color: var(--guide-ink); font-size: 1.04rem; font-weight: 700; letter-spacing: -0.025em; }
+.algorithm-study-card > p:not(.algorithm-study-label) { margin: 9px 0 0; color: var(--guide-muted); font-size: 0.81rem; line-height: 1.55; }
+.algorithm-study-card--intro { grid-column: span 6; }
+.algorithm-study-card--example { grid-column: span 6; }
+.algorithm-study-card--uses { grid-column: span 6; }
+.algorithm-study-card--check { grid-column: span 6; }
+.algorithm-study-core { margin-top: 18px !important; }
+.algorithm-study-core strong,
+.algorithm-study-requirement strong { color: var(--guide-ink); }
+.algorithm-study-requirement { color: var(--guide-faint) !important; }
+.algorithm-study-steps,
+.algorithm-study-trace,
+.algorithm-study-checklist { display: grid; gap: 9px; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: guide-step; }
+.algorithm-study-steps li,
+.algorithm-study-trace li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; color: var(--guide-muted); font-size: 0.8rem; line-height: 1.48; }
+.algorithm-study-steps li::before,
+.algorithm-study-trace li::before { display: grid; width: 18px; height: 18px; place-items: center; border: 1px solid var(--guide-line); color: var(--guide-accent); content: counter(guide-step, decimal-leading-zero); counter-increment: guide-step; font-family: var(--font-mono); font-size: 0.54rem; }
+.algorithm-study-example-values { display: grid; gap: 1px; margin: 18px 0 0; border: 1px solid var(--guide-line); background: var(--guide-line); }
+.algorithm-study-example-values div { display: grid; grid-template-columns: 58px 1fr; gap: 10px; padding: 9px; background: var(--guide-raised); }
+.algorithm-study-example-values dt { color: var(--guide-faint); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.algorithm-study-example-values dd { margin: 0; color: var(--guide-ink); font-family: var(--font-mono); font-size: 0.69rem; line-height: 1.45; }
+.algorithm-study-complexity { display: grid; gap: 1px; margin: 18px 0 0; border: 1px solid var(--guide-line); background: var(--guide-line); }
+.algorithm-study-complexity div { padding: 11px; background: var(--guide-raised); }
+.algorithm-study-complexity dt { color: var(--guide-faint); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+.algorithm-study-complexity dd { margin: 7px 0 0; color: var(--guide-ink); font-family: var(--font-mono); font-size: 0.68rem; line-height: 1.45; }
+.algorithm-study-uses { display: grid; gap: 12px; margin: 18px 0 0; padding: 0; list-style: none; }
+.algorithm-study-uses li { display: grid; gap: 3px; padding-bottom: 11px; border-bottom: 1px solid var(--guide-line); }
+.algorithm-study-uses li:last-child { padding-bottom: 0; border-bottom: 0; }
+.algorithm-study-uses strong { color: var(--guide-ink); font-size: 0.75rem; }
+.algorithm-study-uses span { color: var(--guide-muted); font-size: 0.76rem; line-height: 1.46; }
+.algorithm-study-checklist li { display: grid; grid-template-columns: 12px 1fr; gap: 8px; color: var(--guide-muted); font-size: 0.8rem; line-height: 1.48; }
+.algorithm-study-checklist li::before { width: 5px; height: 5px; margin-top: 0.42rem; border-radius: 50%; background: #8dc9b1; content: ''; }
+.algorithm-study-code { margin-top: 32px; border: 1px solid var(--guide-line); background: var(--guide-surface); }
+.algorithm-study-code summary { display: flex; align-items: center; gap: 9px; min-height: 54px; padding: 0 18px; color: var(--guide-ink); cursor: pointer; font-size: 0.82rem; font-weight: 700; list-style: none; }
+.algorithm-study-code summary::-webkit-details-marker { display: none; }
+.algorithm-study-code summary svg { color: var(--guide-accent); font-size: 0.76rem; }
+.algorithm-study-code pre { max-height: 580px; margin: 0; overflow: auto; padding: 20px; border-top: 1px solid var(--guide-line); background: #101511; color: #d6ded7; font-family: var(--font-mono); font-size: 0.74rem; line-height: 1.68; tab-size: 4; }
+[data-theme="light"] .algorithm-study-code pre { background: #eff0ea; color: #263129; }
+
+@media (max-width: 900px) {
+    .algorithm-study-card,
+    .algorithm-study-card--intro,
+    .algorithm-study-card--example,
+    .algorithm-study-card--uses,
+    .algorithm-study-card--check { grid-column: span 6; }
+}
+
+@media (max-width: 680px) {
+    .algorithm-study-guide { padding: 48px 20px 56px; }
+    .algorithm-study-header { display: grid; grid-template-columns: 1fr; align-items: start; gap: 18px; }
+    .algorithm-study-tags { justify-content: start; }
+    .algorithm-study-card,
+    .algorithm-study-card--intro,
+    .algorithm-study-card--example,
+    .algorithm-study-card--uses,
+    .algorithm-study-card--check { grid-column: 1 / -1; min-height: 0; }
+    .algorithm-study-code { margin-right: -20px; margin-left: -20px; border-right: 0; border-left: 0; }
+    .algorithm-study-code pre { max-height: 440px; padding: 16px; font-size: 0.68rem; }
+}

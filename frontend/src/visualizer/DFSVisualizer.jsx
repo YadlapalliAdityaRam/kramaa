@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DualView from "./DualView";
 import GraphCanvas from "./GraphCanvas";
@@ -8,12 +8,14 @@ import useGenericAnimation from "../hooks/useGenericAnimation";
 import { generateDFSSteps } from "../algorithms/graphs/dfs";
 import { algorithmCodes } from "../data/algorithmCodes";
 import { defaultGraph } from "../algorithms/graphs/graphData";
+import { FaNetworkWired, FaRedo, FaProjectDiagram } from "react-icons/fa";
 import "./GraphTraversalVisualizer.css";
 
 const DFSVisualizer = () => {
-    const [graph, setGraph] = useState(defaultGraph);
-    const [startNode, setStartNode] = useState("A");
+    const [graph, setGraph]                 = useState(defaultGraph);
+    const [startNode, setStartNode]         = useState("A");
     const [activeLanguage, setActiveLanguage] = useState("javascript");
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
     const steps = useMemo(() => generateDFSSteps(graph, startNode), [graph, startNode]);
 
@@ -27,19 +29,16 @@ const DFSVisualizer = () => {
         stepBackward,
         reset,
         speed,
-        setSpeed
-    ,
+        setSpeed,
         setIndex
     } = useGenericAnimation(steps);
 
     const stepData = currentStep || {};
     const { nodeStates, edgeStates, stack, visited, description } = stepData;
 
-    const handleReset = () => {
-        reset();
-    };
-
-    const handleGraphUpdate = (newNodes, newEdges) => {
+    const handleGraphUpdate = (arg1, arg2) => {
+        const newNodes = Array.isArray(arg1) ? arg1 : (arg1?.nodes || []);
+        const newEdges = Array.isArray(arg1) ? (arg2 || []) : (arg1?.edges || []);
         setGraph({ nodes: newNodes, edges: newEdges });
         if (newNodes.length > 0 && !newNodes.find(n => n.id === startNode)) {
             setStartNode(newNodes[0].id);
@@ -50,8 +49,8 @@ const DFSVisualizer = () => {
     const getActiveLine = (snapshot) => {
         if (!snapshot) return 0;
         switch (true) {
-            case snapshot.type === 'graph' && snapshot.description.includes('Starting'): return 18;
-            case snapshot.type === 'graph' && snapshot.description.includes('Popped'): return 28;
+            case snapshot.type === 'graph' && snapshot.description.includes('Starting'):   return 18;
+            case snapshot.type === 'graph' && snapshot.description.includes('Popped'):     return 28;
             case snapshot.type === 'graph' && snapshot.description.includes('Discovered'): return 65;
             case snapshot.type === 'graph-complete': return 95;
             default: return 0;
@@ -67,41 +66,82 @@ const DFSVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={description || "Select a start node and press Play to begin DFS traversal."}
-        >
-            <div className="traversal-container">
-                <div className="legend">
-                    <div className="legend-item"><div className="l-dot unvisited"></div> Unvisited</div>
-                    <div className="legend-item"><div className="l-dot discovery" style={{ borderColor: '#f472b6', background: 'rgba(244, 114, 182, 0.1)' }}></div> In Stack</div>
-                    <div className="legend-item"><div className="l-dot current"></div> Current</div>
-                    <div className="legend-item"><div className="l-dot visited"></div> Visited</div>
+            description={
+                <div className="gt-desc-wrapper">
+                    <span className="gt-badge" style={{ color: '#f472b6', borderColor: 'rgba(244,114,182,0.3)', background: 'rgba(244,114,182,0.12)' }}>
+                        Depth Traversal
+                    </span>
+                    <span className="gt-desc-text">
+                        {description || "Select a start node and press Play to explore graph paths as deep as possible using a LIFO Stack."}
+                    </span>
                 </div>
+            }
+        >
+            <div className="gt-wrapper">
 
-                <GraphInput
-                    nodes={graph.nodes}
-                    edges={graph.edges}
-                    onGraphUpdate={handleGraphUpdate}
-                    requiresWeights={false}
-                />
-
-                <div className="traversal-layout">
-                    <div className="graph-section">
-                        <GraphCanvas
-                            nodes={graph.nodes}
-                            edges={graph.edges}
-                            nodeStates={nodeStates || {}}
-                            edgeStates={edgeStates || {}}
-                        />
+                {/* ── Top Input Panel ──────────────────────────────────────── */}
+                <div className="gt-input-panel">
+                    <div className="gt-input-group">
+                        <label className="gt-input-label">
+                            <FaNetworkWired className="gt-icon" style={{ color: '#f472b6' }} /> Start Node:
+                        </label>
+                        <select
+                            className="gt-start-select"
+                            value={startNode}
+                            onChange={(e) => { setStartNode(e.target.value); reset(); }}
+                        >
+                            {(graph.nodes || []).map(n => (
+                                <option key={n.id} value={n.id}>{n.id}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div className="data-structure-section">
-                        <div className="ds-panel">
-                            <div className="ds-title">
-                                Stack (LIFO)
-                                <span className="ds-count" style={{ background: '#f472b6' }}>{stack?.length || 0}</span>
+                    <div className="gt-btn-group">
+                        <button className="gt-btn gt-btn-config" onClick={() => setIsConfigModalOpen(true)}>
+                            <FaProjectDiagram /> Configure Graph
+                        </button>
+                        <button className="gt-btn gt-btn-reset" onClick={reset}>
+                            <FaRedo /> Reset State
+                        </button>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="gt-legend">
+                        <div className="gt-leg-item"><span className="gt-dot unvisited"></span> Unvisited</div>
+                        <div className="gt-leg-item"><span className="gt-dot" style={{ background: '#f472b6' }}></span> In Stack</div>
+                        <div className="gt-leg-item"><span className="gt-dot current"></span> Current</div>
+                        <div className="gt-leg-item"><span className="gt-dot visited"></span> Visited</div>
+                    </div>
+                </div>
+
+                {/* ── Main Area: Graph + Stack (LIFO) side-by-side ────────── */}
+                <div className="gt-main-area">
+
+                    {/* Graph Canvas */}
+                    <div className="gt-graph-panel">
+                        <div className="gt-graph-label">Unweighted Graph</div>
+                        <div className="gt-canvas-wrap">
+                            <GraphCanvas
+                                nodes={graph.nodes || []}
+                                edges={graph.edges || []}
+                                nodeStates={nodeStates || {}}
+                                edgeStates={edgeStates || {}}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Stack (LIFO) Data Structure Panel */}
+                    <div className="gt-ds-panel">
+                        {/* Stack Box */}
+                        <div className="gt-ds-card">
+                            <div className="gt-ds-title">
+                                <span>📤 Stack (LIFO)</span>
+                                <span className="gt-ds-count" style={{ background: '#f472b6', color: '#ffffff' }}>
+                                    {stack?.length || 0}
+                                </span>
                             </div>
                             <div className="stack-list">
-                                <AnimatePresence>
+                                <AnimatePresence mode="popLayout">
                                     {stack?.map((nodeId, idx) => (
                                         <motion.div
                                             key={`${nodeId}-${idx}`}
@@ -115,53 +155,71 @@ const DFSVisualizer = () => {
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
+                                {(!stack || stack.length === 0) && (
+                                    <div className="gt-empty-hint">Stack Empty</div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="ds-panel" style={{ flex: 0.6 }}>
-                            <div className="ds-title">Visited Order</div>
+                        {/* Visited Nodes Box */}
+                        <div className="gt-ds-card">
+                            <div className="gt-ds-title">
+                                <span>✓ Visited Order</span>
+                                <span className="gt-ds-count green">{visited?.length || 0}</span>
+                            </div>
                             <div className="visited-list">
                                 {visited?.map(nodeId => (
                                     <div key={nodeId} className="visited-item">{nodeId}</div>
                                 ))}
+                                {(!visited || visited.length === 0) && (
+                                    <div className="gt-empty-hint">None visited yet</div>
+                                )}
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-                <div className="controls-area">
-                    <div className="cs-controls-wrapper">
-                        <AnimationControls
-                            inputType="none"
-                            onNext={stepForward}
-                            onPrev={stepBackward}
-                            onPlay={play}
-                            onPause={pause}
-                            onReset={handleReset}
-                            isPlaying={isPlaying}
-                            speed={speed}
-                            onSpeedChange={setSpeed}
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="gt-controls-bar">
+                    <AnimationControls
+                        inputType="none"
+                        onNext={stepForward}
+                        onPrev={stepBackward}
+                        onPlay={play}
+                        onPause={pause}
+                        onReset={reset}
+                        isPlaying={isPlaying}
+                        speed={speed}
+                        onSpeedChange={setSpeed}
                         currentStep={currentStepIndex}
                         totalSteps={steps.length}
                         onScrub={setIndex}
+                    />
+                </div>
+
+            </div>
+
+            {/* Configuration Modal */}
+            {isConfigModalOpen && (
+                <div className="gt-modal-backdrop" onClick={() => setIsConfigModalOpen(false)}>
+                    <div className="gt-modal-box" onClick={e => e.stopPropagation()}>
+                        <div className="gt-modal-header">
+                            <h3><FaProjectDiagram style={{ color: '#38bdf8' }} /> Configure Custom Graph</h3>
+                            <button className="gt-modal-close" onClick={() => setIsConfigModalOpen(false)}>✕</button>
+                        </div>
+                        <GraphInput
+                            nodes={graph.nodes || []}
+                            edges={graph.edges || []}
+                            onGraphUpdate={(newNodes, newEdges) => {
+                                handleGraphUpdate(newNodes, newEdges);
+                                setIsConfigModalOpen(false);
+                            }}
+                            requiresWeights={false}
                         />
                     </div>
-
-                    <div className="input-bar">
-                        <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Start Node:</span>
-                            <select
-                                className="start-input"
-                                value={startNode}
-                                onChange={(e) => { setStartNode(e.target.value); reset(); }}
-                            >
-                                {graph.nodes.map(n => <option key={n.id} value={n.id}>{n.id}</option>)}
-                            </select>
-                        </div>
-                        <button className="btn-action" onClick={() => reset()}>Reset State</button>
-                    </div>
                 </div>
-            </div>
+            )}
         </DualView>
     );
 };

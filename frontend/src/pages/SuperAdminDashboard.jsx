@@ -97,10 +97,18 @@ const SuperAdminDashboard = () => {
                 </div>
             ) : (
                 <div
-                    className="flex flex-nowrap items-center justify-start md:justify-center mb-12 w-full overflow-x-auto py-4 px-4 scrollbar-hide"
+                    className="sa-nav-wrapper"
                     style={{
                         display: 'flex',
-                        gap: '30px'
+                        flexWrap: 'wrap',
+                        gap: '6px',
+                        padding: '6px',
+                        borderRadius: '999px',
+                        background: 'var(--sa-pill-inactive)',
+                        border: '1px solid var(--sa-border)',
+                        marginBottom: '2.5rem',
+                        maxWidth: '100%',
+                        justifyContent: 'center'
                     }}
                 >
                     {tabs.map((tab) => {
@@ -109,31 +117,41 @@ const SuperAdminDashboard = () => {
                                 key={tab.id}
                                 to={tab.id}
                                 style={{
-                                    padding: '12px 25px'
+                                    padding: '8px 18px',
+                                    position: 'relative',
+                                    borderRadius: '999px',
+                                    fontSize: '0.84rem',
+                                    fontWeight: '700',
+                                    letterSpacing: '0.02em',
+                                    whiteSpace: 'nowrap',
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'pointer'
                                 }}
-                                className="relative rounded-full text-sm font-bold tracking-wide whitespace-nowrap flex-shrink-0 transition-colors duration-300"
                             >
                                 {({ isActive }) => (
                                     <>
                                         {isActive && (
                                             <motion.div
                                                 layoutId="active-pill"
-                                                className={`absolute inset-0 rounded-full bg-gradient-to-r ${getGradient(tab.color)} shadow-lg`}
+                                                className={`absolute inset-0 rounded-full bg-gradient-to-r ${getGradient(tab.color)} shadow-md`}
                                                 initial={false}
-                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                transition={{ type: "spring", stiffness: 350, damping: 30 }}
                                             />
                                         )}
-                                        <span className={`relative z-10 ${isActive ? 'text-white' : 'text-gray-400 hover:text-white transition-colors duration-200'}`}>
+                                        <span
+                                            style={{
+                                                position: 'relative',
+                                                zIndex: 10,
+                                                color: isActive ? '#ffffff' : 'var(--sa-pill-text)',
+                                                transition: 'color 0.2s ease'
+                                            }}
+                                        >
                                             {tab.label}
                                         </span>
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="active-underline"
-                                                className="absolute bottom-2 left-6 right-6 h-0.5 bg-white/50 rounded-full z-20"
-                                                initial={false}
-                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                            />
-                                        )}
                                     </>
                                 )}
                             </NavLink>

@@ -25,14 +25,25 @@ const stateColors = {
 };
 
 const edgeStateColors = {
-    default: '#94a3b8',
-    considering: '#64748b',
-    selected: '#10b981',
-    relaxed: '#10b981',
-    'mst-edge': '#10b981',
-    'shortest-edge': '#fbbf24',
-    rejected: '#ef4444',
+    default:          '#64748b',
+    considering:      '#94a3b8',
+    selected:         '#10b981',
+    relaxed:          '#10b981',
+    'mst-edge':       '#10b981',
+    'shortest-edge':  '#fbbf24',   // bright yellow for shortest path
+    rejected:         '#ef4444',
     'negative-cycle': '#ef4444'
+};
+
+const edgeStateWidths = {
+    default:          2.0,
+    considering:      2.4,
+    selected:         3.2,
+    relaxed:          3.2,
+    'mst-edge':       3.2,
+    'shortest-edge':  4.0,         // extra thick for visibility
+    rejected:         2.8,
+    'negative-cycle': 3.2
 };
 
 const GraphCanvas = ({
@@ -47,8 +58,9 @@ const GraphCanvas = ({
     isDirected = true
 }) => {
     const svgRef = useRef(null);
+    const wrapRef = useRef(null);          // stable wrapper div to measure
     const [selectedSourceNode, setSelectedSourceNode] = useState(null);
-    const [containerSize, setContainerSize] = useState({ width: 600, height: 400 });
+    const [containerSize, setContainerSize] = useState({ width: 640, height: 420 });
 
     const normalizedNodes = Array.isArray(nodes)
         ? nodes.filter((node) => node && node.id !== undefined && node.id !== null)
@@ -56,19 +68,31 @@ const GraphCanvas = ({
     const normalizedEdges = Array.isArray(edges) ? edges : [];
     const safeNodeRadius = toFiniteNumber(NODE_RADIUS, FALLBACK_NODE_RADIUS);
 
-    // Auto-resize observer
+    // ── Auto-resize: observe the stable wrapper div ──────────────────────
     useEffect(() => {
-        if (!svgRef.current) return;
-        const observer = new ResizeObserver(entries => {
-            if (entries[0]) {
-                const { width, height } = entries[0].contentRect;
-                if (width > 0 && height > 0) {
-                    setContainerSize({ width, height });
-                }
+        const el = wrapRef.current;
+        if (!el) return;
+
+        const measure = () => {
+            // getBoundingClientRect is reliable after layout; offsetWidth/Height
+            // works during transitions when bounding rect is mid-animation.
+            const rect = el.getBoundingClientRect();
+            const w = rect.width  || el.offsetWidth  || 640;
+            const h = rect.height || el.offsetHeight || 420;
+            if (w > 10 && h > 10) {
+                setContainerSize({ width: w, height: h });
             }
-        });
-        observer.observe(svgRef.current.parentElement);
-        return () => observer.disconnect();
+        };
+
+        // Defer first measure to next animation frame so flexbox has settled
+        const rafId = requestAnimationFrame(measure);
+
+        const observer = new ResizeObserver(measure);
+        observer.observe(el);
+        return () => {
+            cancelAnimationFrame(rafId);
+            observer.disconnect();
+        };
     }, []);
 
     const isInteractive = typeof onGraphUpdate === 'function';
@@ -93,6 +117,10 @@ const GraphCanvas = ({
             if (selectedSourceNode) {
                 setSelectedSourceNode(null); // Cancel edge creation
                 return;
+            }
+
+            if (normalizedNodes.length >= 6) {
+                return; // Max 6 nodes limit
             }
 
             const rect = svgRef.current.getBoundingClientRect();
@@ -239,6 +267,7 @@ const GraphCanvas = ({
 
     return (
         <div
+            ref={wrapRef}
             className={`graph-canvas ${isInteractive ? 'graph-canvas-interactive' : ''}`}
             onClick={handleSvgClick}
         >
@@ -257,22 +286,9 @@ const GraphCanvas = ({
             <svg
                 ref={svgRef}
                 viewBox={`0 0 ${containerSize.width} ${containerSize.height}`}
+                preserveAspectRatio="xMidYMid meet"
                 className="graph-svg"
             >
-                <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
-                    </marker>
-                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
-                    </marker>
-                    <marker id="arrowhead-path" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#38bdf8" />
-                    </marker>
-                    <marker id="arrowhead-considering" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b" />
-                    </marker>
-                </defs>
 
                 {/* Physical Edges */}
                 {normalizedEdges.map((edge, i) => {
@@ -280,22 +296,22 @@ const GraphCanvas = ({
                     const to = nodePositions[edge.to];
                     if (!from || !to) return null;
 
-                    const edgeKey = `${edge.from}-${edge.to}`;
-                    const state = edgeStates[edgeKey] || 'default';
-                    let color = edgeStateColors[state] || edgeStateColors.default;
+                    const forwardKey = `${edge.from}-${edge.to}`;
+                    const reverseKey = `${edge.to}-${edge.from}`;
+                    const state  = edgeStates[forwardKey] || edgeStates[reverseKey] || edgeStates[edge.id] || 'default';
+                    const color  = edgeStateColors[state]  || edgeStateColors.default;
+                    const sw     = edgeStateWidths[state]  || 2.0;
                     const isActive = state !== 'default';
 
-                    // Highlight exact matched edge overrides
-                    if (edgeStates[edge.id]) {
-                        color = edgeStateColors[edgeStates[edge.id]] || color;
-                    }
-
+                    // Use a smaller offset so the color reaches near the node
+                    // boundary without disappearing behind it.
+                    const shrink = Math.max(safeNodeRadius - 4, 8);
                     const dx = to.x - from.x;
                     const dy = to.y - from.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     const safeDist = dist > 0 ? dist : 1;
-                    const offsetX = (dx / safeDist) * safeNodeRadius;
-                    const offsetY = (dy / safeDist) * safeNodeRadius;
+                    const offsetX = (dx / safeDist) * shrink;
+                    const offsetY = (dy / safeDist) * shrink;
 
                     const midX = (from.x + to.x) / 2;
                     const midY = (from.y + to.y) / 2;
@@ -314,11 +330,11 @@ const GraphCanvas = ({
                                 x2={to.x - offsetX}
                                 y2={to.y - offsetY}
                                 stroke={color}
-                                strokeWidth={isActive ? 3.4 : 2.2}
-                                opacity={isActive ? 1 : 0.78}
-                                markerEnd={isDirected ? (isActive ? 'url(#arrowhead-active)' : 'url(#arrowhead)') : undefined}
-                                animate={{ stroke: color, strokeWidth: isActive ? 3.4 : 2.2 }}
-                                transition={{ duration: 0.3 }}
+                                strokeWidth={sw}
+                                strokeLinecap="round"
+                                opacity={isActive ? 1 : 0.65}
+                                animate={{ stroke: color, strokeWidth: sw, opacity: isActive ? 1 : 0.65 }}
+                                transition={{ duration: 0.25 }}
                             />
                             {/* Hitbox for easier right-clicking an edge */}
                             {isInteractive && (
@@ -392,8 +408,8 @@ const GraphCanvas = ({
                                 stroke={color}
                                 strokeWidth="2.5"
                                 strokeDasharray="6,4"
+                                strokeLinecap="round"
                                 opacity="1"
-                                markerEnd={isDirected ? `url(#arrowhead-${isConsidering ? 'considering' : 'path'})` : undefined}
                                 initial={{ pathLength: 0 }}
                                 animate={{ pathLength: 1 }}
                                 transition={{ duration: 0.3 }}

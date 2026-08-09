@@ -5,8 +5,19 @@ import {
     clearLegacyUnscopedEditorDrafts
 } from '../../utils/sessionIsolation';
 
+// A damaged/old localStorage value must never prevent the sign-in screen from loading.
+const getStoredUser = () => {
+    try {
+        const storedUser = localStorage.getItem('user');
+        return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+        localStorage.removeItem('user');
+        return null;
+    }
+};
+
 // Get user from localStorage
-const user = JSON.parse(localStorage.getItem('user'));
+const user = getStoredUser();
 const token = localStorage.getItem('token');
 
 const extractApiErrorMessage = (error, fallbackMessage) => {
@@ -52,13 +63,21 @@ export const register = createAsyncThunk('auth/register', async (userData, thunk
 export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) => {
     try {
         const response = await api.post('/auth/login', userData);
-        if (response.data.success) {
+        if (response.data?.success && response.data?.token && response.data?.user) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             localStorage.setItem('krama:auth:last-login-at', String(Date.now()));
+            return response.data;
         }
-        return response.data;
+        return thunkAPI.rejectWithValue('Login could not be completed. Please try again.');
     } catch (error) {
+        if (error?.response?.data?.requiresVerification) {
+            return thunkAPI.rejectWithValue({
+                message: error.response.data.message || 'Please verify your email before logging in.',
+                requiresVerification: true,
+                verificationEmail: error.response.data.verificationEmail
+            });
+        }
         const message = extractApiErrorMessage(error, 'Login failed.');
         return thunkAPI.rejectWithValue(message);
     }
@@ -153,7 +172,7 @@ const authSlice = createSlice({
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
-                state.error = action.payload;
+                state.error = action.payload?.message || action.payload || 'Login failed. Please try again.';
             })
             .addCase(loadUser.pending, (state) => {
                 state.isLoading = true;
@@ -168,6 +187,14 @@ const authSlice = createSlice({
             .addCase(loadUser.rejected, (state, action) => {
                 const tokenUsed = action.payload?.tokenUsed || null;
                 const activeToken = state.token || localStorage.getItem('token') || null;
+
+                // A guest opening the app has no session to restore. This is normal,
+                // so do not show it as a login error on the form.
+                if (!tokenUsed && !activeToken) {
+                    state.isLoading = false;
+                    state.error = null;
+                    return;
+                }
 
                 // Ignore stale bootstrap failures when user logged in after loadUser started.
                 // Covers both:

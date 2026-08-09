@@ -1,4 +1,4 @@
-import { buildAdjList } from './graphData';
+import { buildAdjList } from './graphData.js';
 
 export const generateDFSSteps = (graph, startNode) => {
     const steps = [];
@@ -30,7 +30,7 @@ export const generateDFSSteps = (graph, startNode) => {
         if (visited.has(current)) {
             steps.push({
                 type: 'graph',
-                description: `Popped ${current} but already visited. Skipping.`,
+                description: `Popped node ${current} but already visited. Skipping.`,
                 nodeStates: { ...nodeStates },
                 edgeStates: { ...edgeStates },
                 stack: [...stack],
@@ -51,7 +51,8 @@ export const generateDFSSteps = (graph, startNode) => {
             visited: [...visited]
         });
 
-        const neighbors = (adj[current] || []).reverse(); // reverse for natural DFS order
+        // Use shallow copy before reversing to avoid mutating adjacency list in-place
+        const neighbors = [...(adj[current] || [])].reverse();
         for (const { node: neighbor } of neighbors) {
             const edgeKey1 = `${current}-${neighbor}`;
             const edgeKey2 = `${neighbor}-${current}`;

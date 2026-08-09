@@ -1,3 +1,8 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   AnimationCanvas.css — Theme-Adaptive
+   Uses CSS custom properties from :root / [data-theme="light"] in index.css
+   ═══════════════════════════════════════════════════════════════════════ */
+
 .animation-canvas {
     width: 100%;
     height: 100%;
@@ -13,6 +18,7 @@
     min-height: 230px;
 }
 
+/* ── Info strip (complexity / target chips) ──────────────────────────── */
 .algorithm-info-strip {
     width: 100%;
     display: flex;
@@ -25,39 +31,29 @@
 .algorithm-info-chip {
     padding: 8px 12px;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    color: var(--text-secondary);
     font-size: 0.88rem;
     font-weight: 600;
     text-align: center;
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
 }
 
-.algorithm-info-chip--blue {
-    color: #93c5fd;
-}
+.algorithm-info-chip--blue   { color: #3b82f6; }
+.algorithm-info-chip--yellow { color: #d97706; }
+.algorithm-info-chip--green  { color: #16a34a; }
+.algorithm-info-chip--best   { color: #15803d; }
+.algorithm-info-chip--target { color: var(--text-primary); }
+.algorithm-info-chip--full   { color: var(--text-secondary); flex: 1 1 100%; }
 
-.algorithm-info-chip--yellow {
-    color: #fde68a;
-}
+/* Light theme keeps the same semantic hues but uses dark-enough values */
+[data-theme="light"] .algorithm-info-chip--blue   { color: #1d4ed8; }
+[data-theme="light"] .algorithm-info-chip--yellow { color: #92400e; }
+[data-theme="light"] .algorithm-info-chip--green  { color: #14532d; }
+[data-theme="light"] .algorithm-info-chip--best   { color: #15803d; }
 
-.algorithm-info-chip--green {
-    color: #86efac;
-}
-
-.algorithm-info-chip--best {
-    color: #bbf7d0;
-}
-
-.algorithm-info-chip--target {
-    color: #f8fafc;
-}
-
-.algorithm-info-chip--full {
-    color: #cbd5e1;
-    flex: 1 1 100%;
-}
-
+/* ── Bar container ───────────────────────────────────────────────────── */
 .bars-container {
     display: flex;
     align-items: flex-end;
@@ -76,6 +72,7 @@
     padding: 6px 0 4px;
 }
 
+/* ── Individual bar ──────────────────────────────────────────────────── */
 .array-bar {
     flex: 1;
     margin: 0 4px;
@@ -84,7 +81,7 @@
     justify-content: center;
     position: relative;
     min-width: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.18);
 }
 
 .array-bar--card {
@@ -102,6 +99,7 @@
     text-decoration: line-through;
 }
 
+/* ── Labels ──────────────────────────────────────────────────────────── */
 .bar-value {
     position: absolute;
     bottom: -30px;
@@ -110,15 +108,18 @@
     font-weight: 600;
     width: 100%;
     text-align: center;
+    transition: color 0.2s ease;
 }
 
+/* Card mode: value shown inline — always contrast against card bg */
 .array-bar--card .bar-value {
     position: static;
     bottom: auto;
     font-size: 1rem;
-    color: #f8fafc;
+    color: #f8fafc;          /* stays light — sits on coloured card */
     line-height: 1.1;
 }
+[data-theme="light"] .array-bar--card .bar-value { color: #fff; }
 
 .array-index {
     position: absolute;
@@ -127,9 +128,10 @@
     font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: rgba(248, 250, 252, 0.82);
+    color: rgba(248, 250, 252, 0.82);   /* on coloured bg — stays white */
 }
 
+/* ── Status badges ───────────────────────────────────────────────────── */
 .array-status-badge {
     position: absolute;
     left: 10px;
@@ -140,34 +142,18 @@
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #0f172a;
+    color: #0f172a;   /* always dark — badge bg is always pale */
 }
 
-.array-status-badge--active {
-    background: rgba(250, 204, 21, 0.88);
-}
-
-.array-status-badge--discarded {
-    background: rgba(203, 213, 225, 0.88);
-}
-
+.array-status-badge--active    { background: rgba(250, 204, 21, 0.9); }
+.array-status-badge--discarded { background: rgba(203, 213, 225, 0.9); }
 .array-status-badge--found,
-.array-status-badge--best {
-    background: rgba(134, 239, 172, 0.92);
-}
+.array-status-badge--best      { background: rgba(134, 239, 172, 0.92); }
+.array-status-badge--window    { background: rgba(147, 197, 253, 0.92); }
+.array-status-badge--incoming  { background: rgba(253, 224, 71, 0.92); }
+.array-status-badge--outgoing  { background: rgba(252, 165, 165, 0.92); }
 
-.array-status-badge--window {
-    background: rgba(147, 197, 253, 0.92);
-}
-
-.array-status-badge--incoming {
-    background: rgba(253, 224, 71, 0.92);
-}
-
-.array-status-badge--outgoing {
-    background: rgba(252, 165, 165, 0.92);
-}
-
+/* ── Pointer arrow ───────────────────────────────────────────────────── */
 .bar-pointer {
     position: absolute;
     top: -32px;
@@ -176,76 +162,28 @@
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--accent-yellow);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
     animation: bounce 1s infinite;
 }
 
 @keyframes bounce {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-5px);
-    }
+    0%, 100% { transform: translateY(0);    }
+    50%       { transform: translateY(-5px); }
 }
 
+/* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .animation-canvas {
-        min-height: 250px;
-    }
-
-    .animation-canvas--cards {
-        min-height: 180px;
-    }
-
-    .algorithm-info-strip {
-        gap: 8px;
-        margin-bottom: 14px;
-    }
-
-    .algorithm-info-chip {
-        flex: 1 1 calc(50% - 8px);
-        font-size: 0.78rem;
-        padding: 7px 10px;
-    }
-
-    .algorithm-info-chip--full {
-        flex-basis: 100%;
-    }
-
-    .bars-container--cards {
-        grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
-        gap: 8px;
-    }
-
-    .array-bar {
-        margin: 0 2px;
-        min-width: 8px;
-    }
-
-    .array-bar--card {
-        min-height: 88px;
-        padding: 30px 8px 24px;
-    }
-
-    .bar-value {
-        font-size: 0.65rem;
-        bottom: -20px;
-    }
-
-    .array-bar--card .bar-value {
-        font-size: 0.92rem;
-    }
-
+    .animation-canvas       { min-height: 250px; }
+    .animation-canvas--cards{ min-height: 180px; }
+    .algorithm-info-strip   { gap: 8px; margin-bottom: 14px; }
+    .algorithm-info-chip    { flex: 1 1 calc(50% - 8px); font-size: 0.78rem; padding: 7px 10px; }
+    .algorithm-info-chip--full { flex-basis: 100%; }
+    .bars-container--cards  { grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 8px; }
+    .array-bar              { margin: 0 2px; min-width: 8px; }
+    .array-bar--card        { min-height: 88px; padding: 30px 8px 24px; }
+    .bar-value              { font-size: 0.65rem; bottom: -20px; }
+    .array-bar--card .bar-value { font-size: 0.92rem; }
     .array-index,
-    .array-status-badge {
-        font-size: 0.54rem;
-    }
-
-    .bar-pointer {
-        font-size: 1.1rem;
-        top: -24px;
-    }
+    .array-status-badge     { font-size: 0.54rem; }
+    .bar-pointer            { font-size: 1.1rem; top: -24px; }
 }

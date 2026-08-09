@@ -1,17 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import DualView from './DualView';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateCoinChangeWaysSteps } from '../algorithms/dp/coinChangeWays';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
+import { FaCheck, FaRandom, FaRedo } from 'react-icons/fa';
 import './CoinChangeWaysVisualizer.css';
 
+const DEFAULT_COINS  = [1, 2, 5];
+const DEFAULT_AMOUNT = 5;
+
 const CoinChangeWaysVisualizer = () => {
-    const [coinsStr, setCoinsStr] = useState("1, 2, 5");
+    const [coinsStr, setCoinsStr]   = useState("1, 2, 5");
     const [targetStr, setTargetStr] = useState("5");
-    const [coins, setCoins] = useState([1, 2, 5]);
-    const [amount, setAmount] = useState(5);
+    const [coins, setCoins]         = useState(DEFAULT_COINS);
+    const [amount, setAmount]       = useState(DEFAULT_AMOUNT);
     const [activeLanguage, setActiveLanguage] = useState("javascript");
 
     const steps = useMemo(() => generateCoinChangeWaysSteps(coins, amount), [coins, amount]);
@@ -26,24 +30,23 @@ const CoinChangeWaysVisualizer = () => {
         stepForward,
         stepBackward,
         speed,
-        setSpeed
-    ,
+        setSpeed,
         setIndex
     } = useGenericAnimation(steps);
 
     const handleApply = () => {
         try {
-            const parsedCoins = coinsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
-            const parsedTarget = parseInt(targetStr);
+            const parsedCoins = coinsStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+            const parsedTarget = parseInt(targetStr, 10);
 
             if (parsedCoins.length === 0) throw new Error("Need at least one valid coin.");
             if (isNaN(parsedTarget) || parsedTarget <= 0) throw new Error("Target amount must be a positive integer.");
-            if (parsedTarget > 30) {
-                toast.error("Target amount is too large for visualization (max 30).");
+            if (parsedTarget > 15) {
+                toast.error("Target amount is too large for visualization (max 15).");
                 return;
             }
-            if (parsedCoins.length > 8) {
-                toast.error("Too many coins for visualization (max 8).");
+            if (parsedCoins.length > 6) {
+                toast.error("Too many coins for visualization (max 6).");
                 return;
             }
 
@@ -56,14 +59,27 @@ const CoinChangeWaysVisualizer = () => {
         }
     };
 
+    const handleRandom = () => {
+        const randCoins = [1, 2, 5, 10].filter(() => Math.random() > 0.3);
+        if (randCoins.length === 0) randCoins.push(1);
+        const randAmount = Math.floor(Math.random() * 8) + 4;
+
+        setCoins(randCoins);
+        setAmount(randAmount);
+        setCoinsStr(randCoins.join(", "));
+        setTargetStr(String(randAmount));
+        reset();
+        toast.success("Randomized coins & target!");
+    };
+
     const getActiveLine = (snapshot) => {
         if (!snapshot) return 0;
         switch (snapshot.type) {
-            case 'init': return 4;
+            case 'init':     return 3;
             case 'checking': return 11;
-            case 'updated': return 12;
-            case 'complete': return 15;
-            default: return 0;
+            case 'updated':  return 13;
+            case 'complete': return 17;
+            default:         return 0;
         }
     };
 
@@ -71,7 +87,7 @@ const CoinChangeWaysVisualizer = () => {
     const isCellDependency = (i, j) => {
         if (!currentStep?.dependencies) return null;
         const dep = currentStep.dependencies.find(d => d.r === i && d.c === j);
-        return dep ? dep.label : null; // 'include' or 'exclude'
+        return dep ? dep.label : null;
     };
 
     const getCellClass = (i, j) => {
@@ -86,6 +102,7 @@ const CoinChangeWaysVisualizer = () => {
     };
 
     const codeSnippet = algorithmCodes.coinChangeWays?.[activeLanguage] || "";
+    const dpMatrix    = currentStep?.dp || currentStep?.table;
 
     return (
         <DualView
@@ -94,119 +111,109 @@ const CoinChangeWaysVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Select parameters and press Play."}
+            codeSnippetCategory="dp"
+            description={
+                <div className="ccw-desc-wrapper">
+                    <span className="ccw-badge">2D DP Combinations O(N × Target)</span>
+                    <span className="ccw-desc-text">
+                        {currentStep?.description || "Select parameters and press Play to observe computing total combinations."}
+                    </span>
+                </div>
+            }
         >
-            <div className="ccw-container">
-                {/* Inputs */}
-                <div className="ccw-input-bar">
-                    <div className="ccw-inputs">
-                        <div className="ccw-input-group">
-                            <span className="ccw-label">Coins (comma separated):</span>
-                            <input
-                                type="text"
-                                className="ccw-array-input"
-                                value={coinsStr}
-                                onChange={(e) => setCoinsStr(e.target.value)}
-                                placeholder="1, 2, 5"
-                            />
-                        </div>
-                        <div className="ccw-input-group">
-                            <span className="ccw-label">Target Amount:</span>
-                            <input
-                                type="number"
-                                className="ccw-target-input"
-                                value={targetStr}
-                                onChange={(e) => setTargetStr(e.target.value)}
-                                placeholder="5"
-                                min="1"
-                                max="30"
-                            />
-                        </div>
+            <div className="ccw-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="ccw-input-panel">
+                    <div className="ccw-input-group">
+                        <label className="ccw-input-label">Coins:</label>
+                        <input
+                            type="text"
+                            value={coinsStr}
+                            onChange={(e) => setCoinsStr(e.target.value)}
+                            placeholder="1, 2, 5"
+                            className="ccw-text-input"
+                        />
                     </div>
-                    <button className="cs-btn cs-btn-primary" onClick={handleApply}>Generate Table</button>
+
+                    <div className="ccw-input-group">
+                        <label className="ccw-input-label">Target Amount:</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="15"
+                            value={targetStr}
+                            onChange={(e) => setTargetStr(e.target.value)}
+                            className="ccw-number-input"
+                        />
+                    </div>
+
+                    <div className="ccw-btn-group">
+                        <button onClick={handleApply} className="ccw-btn ccw-btn-primary">
+                            <FaCheck /> Apply
+                        </button>
+                        <button onClick={handleRandom} className="ccw-btn ccw-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => { setCoins(DEFAULT_COINS); setAmount(DEFAULT_AMOUNT); setCoinsStr(DEFAULT_COINS.join(", ")); setTargetStr(String(DEFAULT_AMOUNT)); reset(); }} className="ccw-btn ccw-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
                 </div>
 
-                {/* Main Visualization */}
-                <div className="ccw-main-area">
-                    {/* DP Table */}
-                    <div className="ccw-table-container">
-                        <table className="ccw-table">
-                            <thead>
-                                <tr>
-                                    <th className="row-header">Coins \ Sum</th>
-                                    {Array.from({ length: amount + 1 }).map((_, j) => (
-                                        <th key={`col-${j}`}>{j}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentStep?.dp && currentStep.dp.map((row, i) => (
-                                    <tr key={`row-${i}`}>
-                                        <th className="row-header">
-                                            {i === 0 ? "0 (Base)" : `[${coins.slice(0, i).join(',')}]`}
-                                        </th>
-                                        {row.map((val, j) => (
-                                            <td key={`cell-${i}-${j}`}>
-                                                <div className={`ccw-cell ${getCellClass(i, j)}`}>
-                                                    {val}
-                                                </div>
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Data Panel */}
-                    <div className="ccw-side-panel">
-                        <div className="ccw-info-card">
-                            <div className="ccw-info-title">Logic Breakdown</div>
-                            {currentStep?.type === 'checking' || currentStep?.type === 'updated' ? (
-                                <div className="ccw-formula-box">
-                                    <div className="ccw-formula-row">
-                                        <span className="ccw-formula-label">Current Coin:</span>
-                                        <span className="ccw-formula-value">{currentStep.coin}</span>
-                                    </div>
-                                    <div className="ccw-formula-row">
-                                        <span className="ccw-formula-label">Target Sum:</span>
-                                        <span className="ccw-formula-value">{currentStep.currentAmount}</span>
-                                    </div>
-                                    <div className="ccw-calc-result">
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Exclude Coin {currentStep.coin} (Above)</span>
-                                            <span className="ccw-formula-value ccw-f-blue">{currentStep.excludeWays} ways</span>
-                                        </div>
-                                        <span style={{ color: '#64748b' }}>+</span>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Include Coin {currentStep.coin} (Left)</span>
-                                            <span className="ccw-formula-value ccw-f-pink">{currentStep.includeWays} ways</span>
-                                        </div>
-                                        <span style={{ color: '#64748b' }}>=</span>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Total Ways</span>
-                                            <span className="ccw-formula-value ccw-f-green">{currentStep.type === 'updated' ? currentStep.cellValue : '?'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div style={{ color: '#64748b', fontStyle: 'italic', padding: '20px 0', textAlign: 'center' }}>
-                                    {currentStep?.type === 'complete' ? "Algorithm Finished." : "Press Play to begin computation."}
-                                </div>
-                            )}
-
-                            <div className="ccw-legend">
-                                <div className="ccw-info-title" style={{ marginTop: '10px', marginBottom: '10px' }}>Legend</div>
-                                <div className="ccw-legend-item"><div className="ccw-legend-color ccw-l-yellow"></div> Current Target Cell</div>
-                                <div className="ccw-legend-item"><div className="ccw-legend-color ccw-l-blue"></div> Exclude Coin (Row Above)</div>
-                                <div className="ccw-legend-item"><div className="ccw-legend-color ccw-l-pink"></div> Include Coin (Same Row, Left)</div>
-                                <div className="ccw-legend-item"><div className="ccw-legend-color ccw-l-green"></div> Computed Cell</div>
+                {/* ── Main Canvas Stage: 2D DP Table Grid ───────────────── */}
+                <div className="ccw-canvas-wrapper">
+                    <div className="ccw-table-card">
+                        <div className="ccw-card-header">
+                            <span>2D DP Table <code>dp[coinIndex][amount]</code></span>
+                            <div className="ccw-legend-pills">
+                                <span className="leg-pill exclude">Exclude: dp[i-1][sum]</span>
+                                <span className="leg-pill include">Include: dp[i][sum - coin]</span>
                             </div>
                         </div>
 
+                        <div className="ccw-table-scroll">
+                            <table className="ccw-dp-table">
+                                <thead>
+                                    <tr>
+                                        <th className="sticky-corner">Coin \ Sum</th>
+                                        {Array.from({ length: amount + 1 }, (_, j) => (
+                                            <th key={j} className={currentStep?.activeCol === j ? 'col-highlight' : ''}>
+                                                {j}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Base row 0 */}
+                                    <tr>
+                                        <th className="row-header">ø (0)</th>
+                                        {Array.from({ length: amount + 1 }, (_, j) => (
+                                            <td key={j} className={getCellClass(0, j)}>
+                                                {dpMatrix?.[0]?.[j] ?? (j === 0 ? 1 : 0)}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                    {/* Coin rows */}
+                                    {coins.map((coin, i) => (
+                                        <tr key={i + 1} className={currentStep?.activeRow === i + 1 ? 'row-active' : ''}>
+                                            <th className="row-header">
+                                                Coin {coin}
+                                            </th>
+                                            {Array.from({ length: amount + 1 }, (_, j) => (
+                                                <td key={j} className={getCellClass(i + 1, j)}>
+                                                    {dpMatrix?.[i + 1]?.[j] ?? 0}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
+                {/* ── YouTube Video Player Controls ────────────────────── */}
                 <div className="ccw-controls-wrapper">
                     <AnimationControls
                         inputType="none"
@@ -223,6 +230,7 @@ const CoinChangeWaysVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

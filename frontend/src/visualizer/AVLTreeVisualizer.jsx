@@ -403,6 +403,7 @@ const AVLTreeVisualizer = () => {
 
                     {/* Tree View */}
                     <div className="avl-canvas-wrapper" style={{ position: 'relative' }}>
+                        {/* Stat cards — normal flow above the SVG, no overlap */}
                         <div className="avl-stats-grid">
                             <div className="avl-stat-card">
                                 <span className="avl-stat-label">Root</span>

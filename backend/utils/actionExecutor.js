@@ -2,6 +2,7 @@ const Problem = require('../models/Problem');
 const User = require('../models/User');
 const { PROBLEM_STATUS, buildPublicationFields } = require('./problemPublication');
 
+
 const actionExecutor = {
     // 1. ADD_PROBLEM: Publish the problem
     ADD_PROBLEM: async (ticket, session) => {
@@ -38,6 +39,7 @@ const actionExecutor = {
     },
 
     // 4. ADD_CONTEST: Publish and approve contest
+
     ADD_CONTEST: async (ticket, session) => {
         const Contest = require('../models/Contest');
         const contest = await Contest.findByIdAndUpdate(
@@ -68,5 +70,4 @@ const actionExecutor = {
         return `Edit request approved.`;
     }
 };
-
 module.exports = actionExecutor;

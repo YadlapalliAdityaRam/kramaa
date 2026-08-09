@@ -973,10 +973,10 @@ const ProblemWorkspace = () => {
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100dvh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ minHeight: '100dvh', background: 'var(--ws-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
                     <FaClock style={{ fontSize: '60px', color: '#14b8a6', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                    <p style={{ color: '#9ca3af', fontSize: '20px' }}>Loading Problem...</p>
+                    <p style={{ color: 'var(--ws-text-muted)', fontSize: '20px' }}>Loading Problem...</p>
                 </div>
             </div>
         );
@@ -984,10 +984,10 @@ const ProblemWorkspace = () => {
 
     if (!problem) {
         return (
-            <div style={{ minHeight: '100dvh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ minHeight: '100dvh', background: 'var(--ws-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
                     <FaExclamationCircle style={{ fontSize: '60px', color: '#f87171', margin: '0 auto 16px' }} />
-                    <p style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Problem Not Found</p>
+                    <p style={{ color: 'var(--ws-text)', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Problem Not Found</p>
                     <button onClick={() => navigate('/coding-platform')} style={{ color: '#14b8a6', cursor: 'pointer', background: 'none', border: 'none' }}>
                         ← Back to Problems
                     </button>
@@ -1022,16 +1022,16 @@ const ProblemWorkspace = () => {
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: comment.isDeleted ? '#6b7280' : '#d1d5db' }}>
                                 {comment.isDeleted ? 'Deleted' : (comment.user?.username || 'User')}
                             </span>
-                            <span style={{ fontSize: '11px', color: '#6b7280' }}>• {getRelativeTime(comment.createdAt)}</span>
+                            <span style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>• {getRelativeTime(comment.createdAt)}</span>
                             {comment.isEdited && !comment.isDeleted && (
-                                <span style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic' }}>(edited)</span>
+                                <span style={{ fontSize: '10px', color: 'var(--ws-text-muted)', fontStyle: 'italic' }}>(edited)</span>
                             )}
                         </div>
                         {!comment.isDeleted && (
                             <div style={{ display: 'flex', gap: '4px' }}>
                                 {isAuthor && (
                                     <button onClick={() => { setEditingDoubt(comment._id); setEditContent(comment.content); }} title="Edit"
-                                        style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
                                         onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}>
                                         <FaEdit />
@@ -1039,7 +1039,7 @@ const ProblemWorkspace = () => {
                                 )}
                                 {canModify && (
                                     <button onClick={() => handleDeleteDoubt(comment._id)} title="Delete"
-                                        style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
                                         onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}>
                                         <FaTrash />
@@ -1047,7 +1047,7 @@ const ProblemWorkspace = () => {
                                 )}
                                 {isAuthenticated && (
                                     <button onClick={() => setReportData({ isOpen: true, contentId: comment._id, contentType: 'Doubt', reportedUserId: comment.user?._id })} title="Report"
-                                        style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
+                                        style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '11px', padding: '3px', transition: 'color 0.2s' }}
                                         onMouseEnter={(e) => e.currentTarget.style.color = '#f59e0b'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}>
                                         <FaFlag />
@@ -1062,16 +1062,16 @@ const ProblemWorkspace = () => {
                         <div style={{ paddingLeft: depth === 0 ? '30px' : '26px', marginBottom: '8px' }}>
                             <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} maxLength={2000}
                                 style={{
-                                    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(59,130,246,0.3)',
-                                    borderRadius: '8px', padding: '8px', color: 'white', fontSize: '13px',
+                                    width: '100%', background: 'var(--ws-card)', border: '1px solid rgba(59,130,246,0.3)',
+                                    borderRadius: '8px', padding: '8px', color: 'var(--ws-text)', fontSize: '13px',
                                     resize: 'vertical', minHeight: '50px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
                                 }} />
                             <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
                                 <button onClick={() => handleEditDoubt(comment._id)} style={{
-                                    padding: '4px 10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+                                    padding: '4px 10px', background: '#2563eb', color: 'var(--ws-text)', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
                                 }}>Save</button>
                                 <button onClick={() => { setEditingDoubt(null); setEditContent(''); }} style={{
-                                    padding: '4px 10px', background: '#374151', color: '#d1d5db', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer'
+                                    padding: '4px 10px', background: '#374151', color: 'var(--ws-text-secondary)', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer'
                                 }}>Cancel</button>
                             </div>
                         </div>
@@ -1137,16 +1137,16 @@ const ProblemWorkspace = () => {
                                         placeholder={`Reply to ${comment.user?.username || 'user'}...`}
                                         maxLength={2000} autoFocus
                                         style={{
-                                            width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '8px', padding: '8px', color: 'white', fontSize: '12px',
+                                            width: '100%', background: 'var(--ws-card)', border: '1px solid var(--ws-border)',
+                                            borderRadius: '8px', padding: '8px', color: 'var(--ws-text)', fontSize: '12px',
                                             resize: 'none', minHeight: '40px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
                                         }} />
                                     <div style={{ display: 'flex', gap: '6px', marginTop: '4px', justifyContent: 'flex-end' }}>
                                         <button onClick={() => { setReplyingTo(null); setReplyContent(''); }} style={{
-                                            padding: '3px 8px', background: '#374151', color: '#d1d5db', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer'
+                                            padding: '3px 8px', background: '#374151', color: 'var(--ws-text-secondary)', border: 'none', borderRadius: '4px', fontSize: '11px', cursor: 'pointer'
                                         }}>Cancel</button>
                                         <button onClick={() => handlePostReply(comment._id)} disabled={postingReply || !replyContent.trim()} style={{
-                                            padding: '3px 8px', background: replyContent.trim() ? '#2563eb' : '#374151', color: 'white', border: 'none',
+                                            padding: '3px 8px', background: replyContent.trim() ? '#2563eb' : '#374151', color: 'var(--ws-text)', border: 'none',
                                             borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: postingReply || !replyContent.trim() ? 'not-allowed' : 'pointer'
                                         }}>{postingReply ? '...' : 'Reply'}</button>
                                     </div>
@@ -1178,16 +1178,16 @@ const ProblemWorkspace = () => {
             minHeight: '100dvh',
             display: 'flex',
             flexDirection: 'column',
-            background: '#111827',
-            color: 'white',
+            background: 'var(--ws-bg)',
+            color: 'var(--ws-text)',
             overflow: 'hidden',
             paddingBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : 0
         }}>
             {/* ═══════════ HEADER ═══════════ */}
             <div ref={headerRef} style={{
                 minHeight: isMobile ? 'auto' : '48px',
-                background: '#1f2937',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--ws-panel)',
+                borderBottom: '1px solid var(--ws-border)',
                 display: 'flex',
                 alignItems: isMobile ? 'stretch' : 'center',
                 justifyContent: isMobile ? 'flex-start' : 'space-between',
@@ -1214,7 +1214,7 @@ const ProblemWorkspace = () => {
                         padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', fontSize: '15px', fontWeight: '800',
                         letterSpacing: '-0.5px',
-                        backgroundImage: 'linear-gradient(135deg, #6366f1, #ec4899)',
+                        backgroundImage: 'linear-gradient(135deg, var(--primary-orange), var(--primary-teal))',
                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
                     }}>
                         AV
@@ -1226,10 +1226,10 @@ const ProblemWorkspace = () => {
                             alignItems: 'center',
                             gap: '5px',
                             padding: '5px 10px',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.12)',
+                            background: 'var(--ws-card)',
+                            border: '1px solid var(--ws-border)',
                             borderRadius: '6px',
-                            color: '#d1d5db',
+                            color: 'var(--ws-text-secondary)',
                             cursor: 'pointer',
                             fontSize: '12px',
                             fontWeight: '600'
@@ -1239,9 +1239,9 @@ const ProblemWorkspace = () => {
                         <FaUserCircle style={{ fontSize: '13px' }} />
                         <span>Profile</span>
                     </button>
-                    <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px', display: isMobile ? 'none' : 'block' }}></div>
+                    <div style={{ width: '1px', height: '24px', background: 'var(--ws-border)', margin: '0 4px', display: isMobile ? 'none' : 'block' }}></div>
                     <button onClick={() => navigate('/coding-platform')} style={{
-                        padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af',
+                        padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ws-text-muted)',
                         display: 'flex', alignItems: 'center', fontSize: '14px'
                     }}>
                         <FaArrowLeft />
@@ -1249,8 +1249,8 @@ const ProblemWorkspace = () => {
 
                     {/* Problem List Button */}
                     <button onClick={() => setShowProblemList(!showProblemList)} style={{
-                        display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#d1d5db', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
+                        display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'var(--ws-card)',
+                        border: '1px solid var(--ws-border)', borderRadius: '6px', color: 'var(--ws-text-secondary)', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
                     }}>
                         <FaList style={{ fontSize: '11px' }} /> Problem List
                     </button>
@@ -1273,7 +1273,7 @@ const ProblemWorkspace = () => {
 
                     {/* Random Button */}
                     <button onClick={handleRandomProblem} style={{
-                        padding: '5px 8px', background: 'transparent', border: 'none', color: '#d1d5db',
+                        padding: '5px 8px', background: 'transparent', border: 'none', color: 'var(--ws-text-secondary)',
                         cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center'
                     }}>
                         <FaRandom />
@@ -1294,22 +1294,22 @@ const ProblemWorkspace = () => {
                     {/* Timer */}
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: '6px',
-                        background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                        background: 'rgba(249, 115, 22, 0.08)', border: '1px solid rgba(249, 115, 22, 0.25)',
                         padding: '4px 10px', borderRadius: '6px'
                     }}>
-                        <FaClock style={{ color: '#3b82f6', fontSize: '12px' }} />
-                        <span style={{ color: '#3b82f6', fontSize: '12px', fontWeight: 'bold', fontFamily: 'monospace' }}>{formatTime(timerSeconds)}</span>
-                        <button onClick={() => setTimerActive(!timerActive)} style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '10px' }}>
+                        <FaClock style={{ color: 'var(--ws-accent)', fontSize: '12px' }} />
+                        <span style={{ color: 'var(--ws-accent)', fontSize: '12px', fontWeight: 'bold', fontFamily: 'monospace' }}>{formatTime(timerSeconds)}</span>
+                        <button onClick={() => setTimerActive(!timerActive)} style={{ background: 'transparent', border: 'none', color: 'var(--ws-accent)', cursor: 'pointer', fontSize: '10px' }}>
                             {timerActive ? '⏸' : '▶'}
                         </button>
-                        <button onClick={() => { setTimerSeconds(0); setTimerActive(false); }} style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '10px' }}>
+                        <button onClick={() => { setTimerSeconds(0); setTimerActive(false); }} style={{ background: 'transparent', border: 'none', color: 'var(--ws-accent)', cursor: 'pointer', fontSize: '10px' }}>
                             ↻
                         </button>
                     </div>
 
                     {/* Language */}
                     <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{
-                        background: '#374151', color: 'white', fontSize: '12px', border: '1px solid #4b5563',
+                        background: 'var(--ws-card)', color: 'var(--ws-text)', fontSize: '12px', border: '1px solid var(--ws-border)',
                         borderRadius: '6px', padding: '4px 10px', outline: 'none', cursor: 'pointer'
                     }}>
                         <option value="javascript">JavaScript</option>
@@ -1319,23 +1319,25 @@ const ProblemWorkspace = () => {
                         <option value="c">C</option>
                     </select>
 
-                    <button onClick={handleLastSubmission} style={{ background: '#374151', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid #4b5563', cursor: 'pointer' }}>
+                    <button onClick={handleLastSubmission} style={{ background: 'var(--ws-card)', color: 'var(--ws-text)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--ws-border)', cursor: 'pointer' }}>
                         Last
                     </button>
-                    <button onClick={handleResetCode} style={{ background: '#dc2626', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer' }}>
+                    <button onClick={handleResetCode} style={{ background: '#ef4444', color: '#ffffff', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
                         Reset
                     </button>
                     <button onClick={handleRun} disabled={isRunning || !isAuthenticated} style={{
-                        background: 'linear-gradient(to right, #2563eb, #3b82f6)', color: 'white', padding: '4px 12px', borderRadius: '6px',
+                        background: 'linear-gradient(to right, #2563eb, #3b82f6)', color: '#ffffff', padding: '4px 12px', borderRadius: '6px',
                         fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', border: 'none',
-                        cursor: (isRunning || !isAuthenticated) ? 'not-allowed' : 'pointer', opacity: (isRunning || !isAuthenticated) ? 0.7 : 1, transition: 'all 0.2s'
+                        cursor: (isRunning || !isAuthenticated) ? 'not-allowed' : 'pointer', opacity: (isRunning || !isAuthenticated) ? 0.7 : 1, transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
                     }}>
                         {isRunning && loadingType === 'run' ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaPlay style={{ fontSize: '9px' }} />} Run
                     </button>
                     <button onClick={handleSubmit} disabled={isRunning || isAdmin || !isAuthenticated} style={{
-                        background: 'linear-gradient(to right, #059669, #14b8a6)', color: 'white', padding: '4px 14px', borderRadius: '6px',
+                        background: 'linear-gradient(135deg, var(--primary-orange, #F97316), #ea6b0a)', color: '#ffffff', padding: '4px 14px', borderRadius: '6px',
                         fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', border: 'none',
-                        cursor: (isRunning || isAdmin || !isAuthenticated) ? 'not-allowed' : 'pointer', opacity: (isRunning || isAdmin || !isAuthenticated) ? 0.7 : 1, transition: 'all 0.2s'
+                        cursor: (isRunning || isAdmin || !isAuthenticated) ? 'not-allowed' : 'pointer', opacity: (isRunning || isAdmin || !isAuthenticated) ? 0.7 : 1, transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(249, 115, 22, 0.35)'
                     }}>
                         {isRunning && loadingType === 'submit' ? <FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> : <FaCheckCircle />} {isAdmin ? 'View Only' : 'Submit'}
                     </button>
@@ -1366,7 +1368,7 @@ const ProblemWorkspace = () => {
                         <span style={{
                             fontSize: '10px',
                             color: getDifficultyColor(problem.difficulty),
-                            background: 'rgba(255,255,255,0.08)',
+                            background: 'var(--ws-tag-bg)',
                             border: '1px solid rgba(255,255,255,0.15)',
                             borderRadius: '999px',
                             padding: '3px 8px',
@@ -1388,27 +1390,27 @@ const ProblemWorkspace = () => {
                     right: isMobile ? '12px' : 'auto',
                     width: isMobile ? 'auto' : '450px',
                     maxHeight: isMobile ? `calc(100dvh - ${headerHeight + 20}px)` : '70vh',
-                    background: '#1f2937', borderRight: '1px solid rgba(255,255,255,0.1)',
-                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--ws-panel)', borderRight: '1px solid var(--ws-border)',
+                    borderBottom: '1px solid var(--ws-border)',
                     zIndex: 200, display: 'flex', flexDirection: 'column',
                     boxShadow: '4px 4px 20px rgba(0,0,0,0.5)'
                 }}>
                     {/* Header */}
-                    <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold', color: 'white', fontSize: '14px' }}>Problem List</span>
-                        <button onClick={() => setShowProblemList(false)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '14px' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--ws-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--ws-text)', fontSize: '14px' }}>Problem List</span>
+                        <button onClick={() => setShowProblemList(false)} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '14px' }}>
                             <FaTimes />
                         </button>
                     </div>
                     {/* Search */}
-                    <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '6px 10px', gap: '8px' }}>
-                            <FaSearch style={{ color: '#6b7280', fontSize: '12px' }} />
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--ws-border-faint)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--ws-card)', borderRadius: '6px', padding: '6px 10px', gap: '8px' }}>
+                            <FaSearch style={{ color: 'var(--ws-text-muted)', fontSize: '12px' }} />
                             <input
                                 value={problemSearchQuery}
                                 onChange={(e) => setProblemSearchQuery(e.target.value)}
                                 placeholder="Search questions"
-                                style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', fontSize: '13px', width: '100%' }}
+                                style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--ws-text)', fontSize: '13px', width: '100%' }}
                             />
                         </div>
                     </div>
@@ -1420,7 +1422,7 @@ const ProblemWorkspace = () => {
                                 onClick={() => { navigate(`/coding-platform/${p._id}`); setShowProblemList(false); }}
                                 style={{
                                     padding: '10px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                    borderBottom: '1px solid var(--ws-border-faint)',
                                     background: isSameProblem(p) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                                     transition: 'background 0.15s'
                                 }}
@@ -1447,7 +1449,7 @@ const ProblemWorkspace = () => {
 
                     <Panel ref={leftPanelRef} defaultSize={isMobile ? mobileLeftPanelDefault : 33} minSize={isMobile ? 24 : 20} collapsible={true}>
                         <div style={{
-                            height: '100%', background: '#1f2937', display: 'flex', flexDirection: 'column',
+                            height: '100%', background: 'var(--ws-panel)', display: 'flex', flexDirection: 'column',
                             ...(expandedPanel === 'left' ? {
                                 position: 'fixed',
                                 top: isMobile ? 0 : 48,
@@ -1455,7 +1457,7 @@ const ProblemWorkspace = () => {
                                 right: 0,
                                 bottom: 0,
                                 zIndex: 250,
-                                background: '#1f2937',
+                                background: 'var(--ws-panel)',
                                 width: '100vw',
                                 maxWidth: '100vw',
                                 height: isMobile ? '100dvh' : 'auto',
@@ -1463,7 +1465,7 @@ const ProblemWorkspace = () => {
                             } : {})
                         }}>
                             {/* Tabs */}
-                            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', background: '#111827', justifyContent: 'space-between', alignItems: 'center', paddingRight: '10px', gap: '8px' }}>
+                            <div style={{ display: 'flex', borderBottom: '1px solid var(--ws-border)', background: 'var(--ws-bg)', justifyContent: 'space-between', alignItems: 'center', paddingRight: '10px', gap: '8px' }}>
                                 <div style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap' }} className="custom-scrollbar">
                                     {['Description', 'Submissions', 'Doubts', 'Editorial', 'Solutions'].map((tab) => (
                                         <button
@@ -1471,8 +1473,8 @@ const ProblemWorkspace = () => {
                                             onClick={() => setActiveTab(tab)}
                                             style={{
                                                 padding: isMobile ? '9px 12px' : '10px 16px', background: 'transparent',
-                                                color: activeTab === tab ? 'white' : '#9ca3af',
-                                                border: 'none', borderBottom: activeTab === tab ? '2px solid #3b82f6' : '2px solid transparent',
+                                                color: activeTab === tab ? 'var(--ws-text)' : 'var(--ws-text-muted)',
+                                                border: 'none', borderBottom: activeTab === tab ? '2px solid var(--ws-accent)' : '2px solid transparent',
                                                 cursor: 'pointer', fontWeight: activeTab === tab ? 'bold' : 'normal',
                                                 fontSize: '12px', transition: 'all 0.2s'
                                             }}
@@ -1481,7 +1483,7 @@ const ProblemWorkspace = () => {
                                         </button>
                                     ))}
                                 </div>
-                                <button onClick={() => toggleExpand('left')} title={expandedPanel === 'left' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                                <button onClick={() => toggleExpand('left')} title={expandedPanel === 'left' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer' }}>
                                     {expandedPanel === 'left' ? <FaCompress /> : <FaExpand />}
                                 </button>
                             </div>
@@ -1490,7 +1492,7 @@ const ProblemWorkspace = () => {
                             {activeTab === 'Description' ? (
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px', position: 'relative' }} className="custom-scrollbar" ref={descriptionScrollRef}>
                                     {/* Title */}
-                                    <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'white', marginBottom: '12px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ws-text)', marginBottom: '12px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         {displayedProblemNumber ? `${displayedProblemNumber}. ` : ''}{problem.title}
                                         {isSolved && <FaCheckCircle style={{ color: '#22c55e', fontSize: '18px' }} title="Solved" />}
                                     </h1>
@@ -1536,16 +1538,16 @@ const ProblemWorkspace = () => {
                                     </div>
 
                                     {/* Description */}
-                                    <div style={{ color: '#d1d5db', lineHeight: '1.7', fontSize: '14px', marginBottom: '28px' }}>
+                                    <div style={{ color: 'var(--ws-text-secondary)', lineHeight: '1.7', fontSize: '14px', marginBottom: '28px' }}>
                                         {problem.description}
                                     </div>
 
                                     {/* Topics Section */}
                                     <div ref={topicsRef} style={{ marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Topics</h3>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '8px' }}>Topics</h3>
                                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                             {(problem.topics && problem.topics.length > 0 ? problem.topics : [problem.topic]).filter(Boolean).map((t, i) => (
-                                                <span key={i} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.08)', color: '#d1d5db' }}>{t}</span>
+                                                <span key={i} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '20px', background: 'var(--ws-tag-bg)', color: 'var(--ws-text-secondary)' }}>{t}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -1553,35 +1555,101 @@ const ProblemWorkspace = () => {
                                     {/* Companies Section */}
                                     {problem.companies && problem.companies.length > 0 && (
                                         <div ref={companiesRef} style={{ marginBottom: '20px' }}>
-                                            <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Companies</h3>
+                                            <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '8px' }}>Companies</h3>
                                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                 {problem.companies.map((c, i) => (
-                                                    <span key={i} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(255,255,255,0.08)', color: '#d1d5db' }}>{c}</span>
+                                                    <span key={i} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '20px', background: 'var(--ws-tag-bg)', color: 'var(--ws-text-secondary)' }}>{c}</span>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Input */}
-                                    <div style={{ marginBottom: '16px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Input</h3>
-                                        <p style={{ color: '#d1d5db', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', margin: 0 }}>
-                                            {problem.inputFormat || "Standard Input"}
-                                        </p>
-                                    </div>
+                                    {/* ── Examples (Input / Output details) ── */}
+                                    {((problem.examples && problem.examples.length > 0) || (problem.sampleTestCases && problem.sampleTestCases.length > 0)) ? (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            {((problem.examples && problem.examples.length > 0) ? problem.examples : problem.sampleTestCases).map((ex, idx) => (
+                                                <div key={idx} style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '8px' }}>
+                                                        Example {idx + 1}:
+                                                    </h3>
+                                                    <div style={{
+                                                        background: 'var(--ws-card)',
+                                                        border: '1px solid var(--ws-border)',
+                                                        borderRadius: '8px',
+                                                        padding: '12px 14px',
+                                                        fontSize: '13px',
+                                                        lineHeight: '1.6'
+                                                    }}>
+                                                        <div style={{ marginBottom: '6px' }}>
+                                                            <span style={{ fontWeight: '700', color: 'var(--ws-label-input)' }}>Input: </span>
+                                                            <code style={{ color: 'var(--ws-code-input)', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '13px', fontWeight: '500' }}>
+                                                                {formatInputDisplay(ex.input, problem.parameters)}
+                                                            </code>
+                                                        </div>
+                                                        <div style={{ marginBottom: ex.explanation ? '6px' : 0 }}>
+                                                            <span style={{ fontWeight: '700', color: 'var(--ws-label-output)' }}>Output: </span>
+                                                            <code style={{ color: 'var(--ws-code-output)', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '13px', fontWeight: '500' }}>
+                                                                {formatOutputDisplay(ex.output)}
+                                                            </code>
+                                                        </div>
+                                                        {ex.explanation && (
+                                                            <div style={{ marginTop: '6px', color: 'var(--ws-text-muted)' }}>
+                                                                <span style={{ fontWeight: '600', color: 'var(--ws-text-secondary)' }}>Explanation: </span>
+                                                                {ex.explanation}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Fallback Input / Output format if no examples or testcases */}
+                                            {problem.inputFormat && (
+                                                <div style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Input</h3>
+                                                    <p style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', fontFamily: 'monospace', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', margin: 0 }}>
+                                                        {problem.inputFormat}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {problem.outputFormat && (
+                                                <div style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Output</h3>
+                                                    <p style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', fontFamily: 'monospace', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', margin: 0 }}>
+                                                        {problem.outputFormat}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
 
-                                    {/* Output */}
-                                    <div style={{ marginBottom: '16px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Output</h3>
-                                        <p style={{ color: '#d1d5db', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', margin: 0 }}>
-                                            {problem.outputFormat || "Standard Output"}
-                                        </p>
-                                    </div>
+                                    {/* Optional Input/Output Format notes if provided alongside examples */}
+                                    {((problem.examples?.length > 0 || problem.sampleTestCases?.length > 0) && (problem.inputFormat || problem.outputFormat)) && (
+                                        <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            {problem.inputFormat && problem.inputFormat !== "Standard Input" && (
+                                                <div>
+                                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--ws-text-muted)', marginBottom: '4px' }}>Input Format</div>
+                                                    <div style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', background: 'var(--ws-card)', padding: '8px 12px', borderRadius: '6px' }}>
+                                                        {problem.inputFormat}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {problem.outputFormat && problem.outputFormat !== "Standard Output" && (
+                                                <div>
+                                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--ws-text-muted)', marginBottom: '4px' }}>Output Format</div>
+                                                    <div style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', background: 'var(--ws-card)', padding: '8px 12px', borderRadius: '6px' }}>
+                                                        {problem.outputFormat}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Constraints */}
                                     <div ref={constraintsRef} style={{ marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Constraints</h3>
-                                        <ul style={{ color: '#d1d5db', fontSize: '13px', paddingLeft: '20px', margin: 0 }}>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Constraints</h3>
+                                        <ul style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', paddingLeft: '20px', margin: 0 }}>
                                             {problem.constraints && problem.constraints.split('\n').map((c, i) => (
                                                 <li key={i} style={{ marginBottom: '4px' }}>{c}</li>
                                             ))}
@@ -1594,7 +1662,7 @@ const ProblemWorkspace = () => {
                                             <div style={{ marginBottom: '24px' }}>
                                                 <div
                                                     onClick={() => setHintsExpanded(!hintsExpanded)}
-                                                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px', color: '#9ca3af', fontSize: '14px' }}
+                                                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px', color: 'var(--ws-text-muted)', fontSize: '14px' }}
                                                 >
                                                     {hintsExpanded ? <FaChevronUp /> : <FaChevronDown />}
                                                     <span>Hints</span>
@@ -1602,7 +1670,7 @@ const ProblemWorkspace = () => {
                                                 {hintsExpanded && (
                                                     <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                         {problem.hints.map((hint, idx) => (
-                                                            <div key={idx} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', fontSize: '13px', color: '#d1d5db' }}>
+                                                            <div key={idx} style={{ background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', fontSize: '13px', color: 'var(--ws-text-secondary)' }}>
                                                                 {hint}
                                                             </div>
                                                         ))}
@@ -1618,14 +1686,14 @@ const ProblemWorkspace = () => {
                                     {/* ═══ FLOATING LIKE/DISLIKE BAR ═══ */}
                                     <div style={{
                                         position: 'sticky', bottom: 0, left: 0, right: 0,
-                                        background: 'linear-gradient(transparent, #1f2937 30%)',
+                                        background: 'linear-gradient(transparent, var(--ws-panel) 30%)',
                                         paddingTop: '20px', paddingBottom: '8px'
                                     }}>
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: '16px',
-                                            background: 'rgba(17,24,39,0.95)', backdropFilter: 'blur(10px)',
+                                            background: 'var(--ws-floating-bg)', backdropFilter: 'blur(10px)',
                                             padding: '8px 16px', borderRadius: '12px',
-                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            border: '1px solid var(--ws-border)',
                                             width: 'fit-content'
                                         }}>
                                             {/* Thumbs Up */}
@@ -1671,7 +1739,7 @@ const ProblemWorkspace = () => {
                                             {/* Active users on this problem */}
                                             <div
                                                 title="Users currently solving this problem"
-                                                style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#9ca3af', fontSize: '12px', fontWeight: '600' }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '7px', color: 'var(--ws-text-muted)', fontSize: '12px', fontWeight: '600' }}
                                             >
                                                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 10px rgba(34,197,94,0.8)' }} />
                                                 {activeUsersCount} Active
@@ -1682,7 +1750,7 @@ const ProblemWorkspace = () => {
                                             {/* Share */}
                                             <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }} style={{
                                                 display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none',
-                                                color: '#9ca3af', cursor: 'pointer', fontSize: '14px', padding: '4px'
+                                                color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '14px', padding: '4px'
                                             }}>
                                                 <FaShareAlt />
                                             </button>
@@ -1694,7 +1762,7 @@ const ProblemWorkspace = () => {
                             ) : activeTab === 'Submissions' ? (
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>My Submissions</h2>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>My Submissions</h2>
                                         <button onClick={() => fetchUserSubmissions(true)} style={{ background: 'transparent', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <FaClock /> Refresh
                                         </button>
@@ -1705,16 +1773,16 @@ const ProblemWorkspace = () => {
                                         </div>
                                     ) : userSubmissions.length > 0 ? (
                                         <div style={{ overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#d1d5db' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--ws-text-secondary)' }}>
                                                 <thead>
-                                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Status</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Language</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Runtime</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Memory</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Test Cases</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Date</th>
-                                                        <th style={{ padding: '12px', color: '#9ca3af', fontWeight: '500' }}>Performance</th>
+                                                    <tr style={{ borderBottom: '1px solid var(--ws-border)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Status</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Language</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Runtime</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Memory</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Test Cases</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Date</th>
+                                                        <th style={{ padding: '12px', color: 'var(--ws-text-muted)', fontWeight: '500' }}>Performance</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1730,7 +1798,7 @@ const ProblemWorkspace = () => {
                                                                 }
                                                             }}
                                                             style={{
-                                                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                                                borderBottom: '1px solid var(--ws-border-faint)',
                                                                 cursor: 'pointer',
                                                                 background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent',
                                                                 transition: 'background 0.15s'
@@ -1744,7 +1812,7 @@ const ProblemWorkspace = () => {
                                                                 </span>
                                                             </td>
                                                             <td style={{ padding: '12px' }}>
-                                                                <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>
+                                                                <span style={{ background: 'var(--ws-border)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>
                                                                     {sub.language}
                                                                 </span>
                                                             </td>
@@ -1761,7 +1829,7 @@ const ProblemWorkspace = () => {
                                                             <td style={{ padding: '12px', color: sub.status === 'accepted' ? '#86efac' : '#fcd34d', fontWeight: 600 }}>
                                                                 {formatTestCaseSummary(sub)}
                                                             </td>
-                                                            <td style={{ padding: '12px', color: '#9ca3af' }}>
+                                                            <td style={{ padding: '12px', color: 'var(--ws-text-muted)' }}>
                                                                 {new Date(sub.createdAt).toLocaleDateString()}
                                                             </td>
                                                             <td style={{ padding: '12px' }}>
@@ -1788,7 +1856,7 @@ const ProblemWorkspace = () => {
                                                                         {performanceSubmissionLoadingId === sub._id ? 'Loading...' : 'Graph'}
                                                                     </button>
                                                                 ) : (
-                                                                    <span style={{ color: '#6b7280', fontSize: '11px' }}>-</span>
+                                                                    <span style={{ color: 'var(--ws-text-muted)', fontSize: '11px' }}>-</span>
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -1797,7 +1865,7 @@ const ProblemWorkspace = () => {
                                             </table>
                                         </div>
                                     ) : (
-                                        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--ws-text-muted)' }}>
                                             <p>No submissions found.</p>
                                         </div>
                                     )}
@@ -1808,11 +1876,11 @@ const ProblemWorkspace = () => {
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
                                     {/* Header + Sort */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Discussion <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'normal' }}>({doubtTotal})</span></h2>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>Discussion <span style={{ fontSize: '13px', color: 'var(--ws-text-muted)', fontWeight: 'normal' }}>({doubtTotal})</span></h2>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <FaSortAmountDown style={{ color: '#6b7280', fontSize: '12px' }} />
+                                            <FaSortAmountDown style={{ color: 'var(--ws-text-muted)', fontSize: '12px' }} />
                                             <select value={doubtSort} onChange={(e) => handleSortChange(e.target.value)} style={{
-                                                background: '#1f2937', color: '#d1d5db', border: '1px solid rgba(255,255,255,0.1)',
+                                                background: 'var(--ws-panel)', color: 'var(--ws-text-secondary)', border: '1px solid var(--ws-border)',
                                                 borderRadius: '6px', padding: '4px 8px', fontSize: '11px', outline: 'none', cursor: 'pointer'
                                             }}>
                                                 <option value="recent">Most Recent</option>
@@ -1824,7 +1892,7 @@ const ProblemWorkspace = () => {
                                     </div>
 
                                     {!discussionsEnabled ? (
-                                        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--ws-text-muted)', background: 'var(--ws-card)', borderRadius: '12px' }}>
                                             <FaExclamationCircle style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.5 }} />
                                             <p style={{ fontSize: '14px' }}>Discussions are currently disabled by admin.</p>
                                         </div>
@@ -1832,7 +1900,7 @@ const ProblemWorkspace = () => {
                                         <>
                                             {/* ── Composer ── */}
                                             {isAuthenticated && (
-                                                <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <div style={{ marginBottom: '20px', background: 'var(--ws-card)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                                                         <FaUserCircle style={{ fontSize: '28px', color: '#4b5563', flexShrink: 0, marginTop: '2px' }} />
                                                         <div style={{ flex: 1 }}>
@@ -1843,8 +1911,8 @@ const ProblemWorkspace = () => {
                                                                 placeholder="Share your thoughts or ask a question..."
                                                                 maxLength={2000}
                                                                 style={{
-                                                                    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                                                    borderRadius: '8px', padding: '10px', color: 'white', fontSize: '13px',
+                                                                    width: '100%', background: 'var(--ws-card)', border: '1px solid var(--ws-border)',
+                                                                    borderRadius: '8px', padding: '10px', color: 'var(--ws-text)', fontSize: '13px',
                                                                     resize: 'vertical', minHeight: '60px', outline: 'none', fontFamily: 'inherit',
                                                                     boxSizing: 'border-box'
                                                                 }}
@@ -1854,7 +1922,7 @@ const ProblemWorkspace = () => {
                                                                 <button onClick={handlePostDoubt} disabled={postingDoubt || !doubtContent.trim()} style={{
                                                                     display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px',
                                                                     background: doubtContent.trim() ? 'linear-gradient(to right, #2563eb, #3b82f6)' : '#374151',
-                                                                    color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px',
+                                                                    color: 'var(--ws-text)', border: 'none', borderRadius: '6px', fontSize: '12px',
                                                                     fontWeight: 'bold', cursor: postingDoubt || !doubtContent.trim() ? 'not-allowed' : 'pointer'
                                                                 }}>
                                                                     <FaPaperPlane style={{ fontSize: '10px' }} /> {postingDoubt ? 'Posting...' : 'Post'}
@@ -1891,7 +1959,7 @@ const ProblemWorkspace = () => {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <div style={{ textAlign: 'center', padding: '50px 20px', color: '#6b7280' }}>
+                                                <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--ws-text-muted)' }}>
                                                     <FaCode style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.3 }} />
                                                     <p style={{ fontSize: '15px', fontWeight: '500' }}>Be the first to comment!</p>
                                                     <p style={{ fontSize: '12px', marginTop: '4px' }}>Share your approach, ask questions, or help others.</p>
@@ -1936,11 +2004,11 @@ const ProblemWorkspace = () => {
                                         /* ── ADMIN EDIT MODE ── */
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Edit Editorial</h2>
+                                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>Edit Editorial</h2>
                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                     <button onClick={() => { setEditorialEditing(false); }} style={{
-                                                        padding: '6px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
-                                                        borderRadius: '8px', color: '#9ca3af', cursor: 'pointer', fontSize: '12px'
+                                                        padding: '6px 14px', background: 'var(--ws-border)', border: '1px solid rgba(255,255,255,0.15)',
+                                                        borderRadius: '8px', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '12px'
                                                     }}>Cancel</button>
                                                     <button onClick={async () => {
                                                         const validApproaches = editorialApproaches.filter(a => a.title.trim() && a.description.trim());
@@ -1956,14 +2024,14 @@ const ProblemWorkspace = () => {
                                                         finally { setEditorialSaving(false); }
                                                     }} disabled={editorialSaving} style={{
                                                         padding: '6px 14px', background: '#3b82f6', border: 'none',
-                                                        borderRadius: '8px', color: 'white', cursor: editorialSaving ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600'
+                                                        borderRadius: '8px', color: 'var(--ws-text)', cursor: editorialSaving ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600'
                                                     }}>{editorialSaving ? 'Saving...' : 'Save & Publish'}</button>
                                                 </div>
                                             </div>
 
                                             {editorialApproaches.map((approach, aIdx) => (
                                                 <div key={aIdx} style={{
-                                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                                    background: 'var(--ws-card)', border: '1px solid rgba(255,255,255,0.08)',
                                                     borderRadius: '12px', padding: '16px', marginBottom: '16px'
                                                 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -1978,29 +2046,29 @@ const ProblemWorkspace = () => {
 
                                                     <input placeholder="Approach title (e.g. Brute Force, Optimal - Two Pointers)" value={approach.title}
                                                         onChange={e => { const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], title: e.target.value }; setEditorialApproaches(u); }}
-                                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px 12px', color: 'white', fontSize: '13px', marginBottom: '10px', outline: 'none', boxSizing: 'border-box' }} />
+                                                        style={{ width: '100%', background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '8px', padding: '8px 12px', color: 'var(--ws-text)', fontSize: '13px', marginBottom: '10px', outline: 'none', boxSizing: 'border-box' }} />
 
                                                     <textarea placeholder="Explain the approach in detail..." value={approach.description} rows={5}
                                                         onChange={e => { const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], description: e.target.value }; setEditorialApproaches(u); }}
-                                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 12px', color: 'white', fontSize: '13px', resize: 'vertical', minHeight: '80px', outline: 'none', fontFamily: 'inherit', marginBottom: '10px', boxSizing: 'border-box' }} />
+                                                        style={{ width: '100%', background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '8px', padding: '10px 12px', color: 'var(--ws-text)', fontSize: '13px', resize: 'vertical', minHeight: '80px', outline: 'none', fontFamily: 'inherit', marginBottom: '10px', boxSizing: 'border-box' }} />
 
                                                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                                                         <input placeholder="Time: O(n)" value={approach.timeComplexity}
                                                             onChange={e => { const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], timeComplexity: e.target.value }; setEditorialApproaches(u); }}
-                                                            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px 10px', color: '#a5f3fc', fontSize: '12px', outline: 'none' }} />
+                                                            style={{ flex: 1, background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '8px', padding: '6px 10px', color: '#a5f3fc', fontSize: '12px', outline: 'none' }} />
                                                         <input placeholder="Space: O(1)" value={approach.spaceComplexity}
                                                             onChange={e => { const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], spaceComplexity: e.target.value }; setEditorialApproaches(u); }}
-                                                            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px 10px', color: '#a5f3fc', fontSize: '12px', outline: 'none' }} />
+                                                            style={{ flex: 1, background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '8px', padding: '6px 10px', color: '#a5f3fc', fontSize: '12px', outline: 'none' }} />
                                                     </div>
 
                                                     <textarea placeholder="Optional code snippet" value={approach.code || ''} rows={4}
                                                         onChange={e => { const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], code: e.target.value }; setEditorialApproaches(u); }}
-                                                        style={{ width: '100%', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 12px', color: '#a5d6ff', fontSize: '12px', fontFamily: 'monospace', resize: 'vertical', minHeight: '60px', outline: 'none', marginBottom: '10px', boxSizing: 'border-box' }} />
+                                                        style={{ width: '100%', background: 'var(--ws-surface)', border: '1px solid var(--ws-border)', borderRadius: '8px', padding: '10px 12px', color: '#a5d6ff', fontSize: '12px', fontFamily: 'monospace', resize: 'vertical', minHeight: '60px', outline: 'none', marginBottom: '10px', boxSizing: 'border-box' }} />
 
                                                     {/* Media section */}
                                                     <div style={{ marginTop: '8px' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                            <span style={{ color: '#9ca3af', fontSize: '12px', fontWeight: '600' }}>📎 Media (Images & Videos)</span>
+                                                            <span style={{ color: 'var(--ws-text-muted)', fontSize: '12px', fontWeight: '600' }}>📎 Media (Images & Videos)</span>
                                                             <button type="button" onClick={() => {
                                                                 const u = [...editorialApproaches];
                                                                 u[aIdx] = { ...u[aIdx], media: [...(u[aIdx].media || []), { type: 'image', url: '', caption: '' }] };
@@ -2015,18 +2083,18 @@ const ProblemWorkspace = () => {
                                                                 <select value={m.type} onChange={e => {
                                                                     const u = [...editorialApproaches]; const media = [...(u[aIdx].media || [])];
                                                                     media[mIdx] = { ...media[mIdx], type: e.target.value }; u[aIdx] = { ...u[aIdx], media }; setEditorialApproaches(u);
-                                                                }} style={{ background: '#1f2937', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px', color: 'white', fontSize: '11px', outline: 'none' }}>
+                                                                }} style={{ background: 'var(--ws-panel)', border: '1px solid var(--ws-border)', borderRadius: '6px', padding: '4px', color: 'var(--ws-text)', fontSize: '11px', outline: 'none' }}>
                                                                     <option value="image">🖼 Image</option>
                                                                     <option value="video">🎬 Video</option>
                                                                 </select>
                                                                 <input placeholder="URL (https://...)" value={m.url} onChange={e => {
                                                                     const u = [...editorialApproaches]; const media = [...(u[aIdx].media || [])];
                                                                     media[mIdx] = { ...media[mIdx], url: e.target.value }; u[aIdx] = { ...u[aIdx], media }; setEditorialApproaches(u);
-                                                                }} style={{ flex: 2, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 8px', color: 'white', fontSize: '11px', outline: 'none' }} />
+                                                                }} style={{ flex: 2, background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '6px', padding: '4px 8px', color: 'var(--ws-text)', fontSize: '11px', outline: 'none' }} />
                                                                 <input placeholder="Caption (optional)" value={m.caption || ''} onChange={e => {
                                                                     const u = [...editorialApproaches]; const media = [...(u[aIdx].media || [])];
                                                                     media[mIdx] = { ...media[mIdx], caption: e.target.value }; u[aIdx] = { ...u[aIdx], media }; setEditorialApproaches(u);
-                                                                }} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 8px', color: 'white', fontSize: '11px', outline: 'none' }} />
+                                                                }} style={{ flex: 1, background: 'var(--ws-card)', border: '1px solid var(--ws-border)', borderRadius: '6px', padding: '4px 8px', color: 'var(--ws-text)', fontSize: '11px', outline: 'none' }} />
                                                                 <button type="button" onClick={() => {
                                                                     const u = [...editorialApproaches]; u[aIdx] = { ...u[aIdx], media: (u[aIdx].media || []).filter((_, i) => i !== mIdx) }; setEditorialApproaches(u);
                                                                 }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>×</button>
@@ -2046,7 +2114,7 @@ const ProblemWorkspace = () => {
                                         /* ── READ-ONLY VIEW ── */
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Editorial</h2>
+                                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>Editorial</h2>
                                                 {isAdmin && (
                                                     <button onClick={() => {
                                                         setEditorialApproaches(
@@ -2063,13 +2131,13 @@ const ProblemWorkspace = () => {
                                             </div>
 
                                             {!editorialPublished && !isAdmin ? (
-                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--ws-text-muted)' }}>
                                                     <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>📝</div>
                                                     <p style={{ fontSize: '15px', fontWeight: '500' }}>Editorial not available yet</p>
                                                     <p style={{ fontSize: '12px', marginTop: '4px' }}>The editorial for this problem hasn't been published.</p>
                                                 </div>
                                             ) : !editorialData?.approaches?.length ? (
-                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+                                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--ws-text-muted)' }}>
                                                     <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.3 }}>📝</div>
                                                     <p style={{ fontSize: '15px', fontWeight: '500' }}>No editorial yet</p>
                                                     {isAdmin && <p style={{ fontSize: '12px', marginTop: '4px' }}>Click "Write Editorial" to add one.</p>}
@@ -2078,7 +2146,7 @@ const ProblemWorkspace = () => {
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                     {editorialData.approaches.map((approach, idx) => (
                                                         <div key={idx} style={{
-                                                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                                            background: 'var(--ws-card)', border: '1px solid rgba(255,255,255,0.08)',
                                                             borderRadius: '12px', padding: '16px', position: 'relative'
                                                         }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -2086,10 +2154,10 @@ const ProblemWorkspace = () => {
                                                                     background: 'rgba(59,130,246,0.15)', color: '#60a5fa', padding: '2px 8px',
                                                                     borderRadius: '6px', fontSize: '11px', fontWeight: '600'
                                                                 }}>Approach {idx + 1}</span>
-                                                                <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'white', margin: 0 }}>{approach.title}</h3>
+                                                                <h3 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--ws-text)', margin: 0 }}>{approach.title}</h3>
                                                             </div>
 
-                                                            <p style={{ color: '#d1d5db', fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
+                                                            <p style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>
                                                                 {approach.description}
                                                             </p>
 
@@ -2110,7 +2178,7 @@ const ProblemWorkspace = () => {
 
                                                             {approach.code && (
                                                                 <pre style={{
-                                                                    background: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
+                                                                    background: 'var(--ws-surface)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px',
                                                                     padding: '12px', overflowX: 'auto', marginBottom: '12px', fontSize: '12px',
                                                                     color: '#a5d6ff', fontFamily: 'monospace', lineHeight: '1.5'
                                                                 }}><code>{approach.code}</code></pre>
@@ -2131,7 +2199,7 @@ const ProblemWorkspace = () => {
                                                                                 </video>
                                                                             )}
                                                                             {m.caption && (
-                                                                                <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.02)', color: '#9ca3af', fontSize: '12px', fontStyle: 'italic' }}>
+                                                                                <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.02)', color: 'var(--ws-text-muted)', fontSize: '12px', fontStyle: 'italic' }}>
                                                                                     {m.caption}
                                                                                 </div>
                                                                             )}
@@ -2143,7 +2211,7 @@ const ProblemWorkspace = () => {
                                                     ))}
 
                                                     {editorialData.publishedBy && (
-                                                        <div style={{ color: '#6b7280', fontSize: '11px', textAlign: 'right', marginTop: '4px' }}>
+                                                        <div style={{ color: 'var(--ws-text-muted)', fontSize: '11px', textAlign: 'right', marginTop: '4px' }}>
                                                             Published by {editorialData.publishedBy.username || 'Admin'}
                                                             {editorialData.publishedAt && ` · ${new Date(editorialData.publishedAt).toLocaleDateString()}`}
                                                         </div>
@@ -2158,15 +2226,15 @@ const ProblemWorkspace = () => {
                             ) : activeTab === 'Solutions' ? (
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: '14px', gap: '10px', flexDirection: isMobile ? 'column' : 'row' }}>
-                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>Community Solutions</h2>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>Community Solutions</h2>
                                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
                                             <select
                                                 value={solutionsSort}
                                                 onChange={(event) => setSolutionsSort(event.target.value)}
                                                 style={{
-                                                    background: '#1f2937',
-                                                    color: '#d1d5db',
-                                                    border: '1px solid rgba(255,255,255,0.12)',
+                                                    background: 'var(--ws-panel)',
+                                                    color: 'var(--ws-text-secondary)',
+                                                    border: '1px solid var(--ws-border)',
                                                     borderRadius: '8px',
                                                     padding: '6px 10px',
                                                     fontSize: '12px',
@@ -2199,12 +2267,12 @@ const ProblemWorkspace = () => {
                                     </div>
 
                                     {fetchingSolutions && publicSolutions.length === 0 ? (
-                                        <div style={{ textAlign: 'center', padding: '36px', color: '#6b7280' }}>
+                                        <div style={{ textAlign: 'center', padding: '36px', color: 'var(--ws-text-muted)' }}>
                                             <FaSpinner style={{ animation: 'spin 1s linear infinite', fontSize: '22px', color: '#60a5fa', marginBottom: '10px' }} />
                                             <div>Loading solutions...</div>
                                         </div>
                                     ) : !Array.isArray(publicSolutions) || publicSolutions.length === 0 ? (
-                                        <div style={{ textAlign: 'center', padding: '36px', color: '#6b7280', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                                        <div style={{ textAlign: 'center', padding: '36px', color: 'var(--ws-text-muted)', background: 'var(--ws-card)', borderRadius: '12px' }}>
                                             <FaCode style={{ fontSize: '30px', marginBottom: '10px', opacity: 0.4 }} />
                                             <p style={{ margin: 0, fontSize: '13px' }}>No accepted public solutions yet for this problem.</p>
                                         </div>
@@ -2236,11 +2304,11 @@ const ProblemWorkspace = () => {
                                                                     <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
                                                                         {getRelativeTime(solution?.createdAt)}
                                                                     </span>
-                                                                    <span style={{ fontSize: '0.7rem', color: '#cbd5e1', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', padding: '2px 8px' }}>
+                                                                    <span style={{ fontSize: '0.7rem', color: '#cbd5e1', background: 'var(--ws-tag-bg)', borderRadius: '999px', padding: '2px 8px' }}>
                                                                         {solution?.language || 'unknown'}
                                                                     </span>
                                                                 </div>
-                                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px', color: '#9ca3af', fontSize: '0.74rem' }}>
+                                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px', color: 'var(--ws-text-muted)', fontSize: '0.74rem' }}>
                                                                     <span>Runtime: {Number(solution?.runtime || 0).toFixed(2)} ms</span>
                                                                     <span>Memory: {Number(solution?.memory || 0).toFixed(2)} MB</span>
                                                                     <span>Tests: {Number(solution?.testCasesPassed || 0)}/{Number(solution?.totalTestCases || 0)}</span>
@@ -2286,7 +2354,7 @@ const ProblemWorkspace = () => {
                                                                     borderRadius: '8px',
                                                                     padding: isMobile ? '10px' : '12px',
                                                                     fontSize: '12px',
-                                                                    color: '#e2e8f0',
+                                                                    color: 'var(--ws-text-secondary)',
                                                                     overflowX: 'auto',
                                                                     whiteSpace: 'pre'
                                                                 }}
@@ -2326,7 +2394,7 @@ const ProblemWorkspace = () => {
 
                                 /* Fallback Tab */
                             ) : (
-                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', flexDirection: 'column' }}>
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ws-text-muted)', flexDirection: 'column' }}>
                                     <FaCode style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.3 }} />
                                     <p>{activeTab} coming soon!</p>
                                 </div>
@@ -2337,7 +2405,7 @@ const ProblemWorkspace = () => {
                     <PanelResizeHandle style={{
                         width: isMobile ? '100%' : '4px',
                         height: isMobile ? '4px' : '100%',
-                        background: 'rgba(255,255,255,0.1)',
+                        background: 'var(--ws-border)',
                         cursor: isMobile ? 'row-resize' : 'col-resize'
                     }} />
 
@@ -2361,7 +2429,7 @@ const ProblemWorkspace = () => {
                                         right: 0,
                                         bottom: 0,
                                         zIndex: 250,
-                                        background: '#1f2937',
+                                        background: 'var(--ws-panel)',
                                         width: '100vw',
                                         maxWidth: '100vw',
                                         height: isMobile ? '100dvh' : 'auto',
@@ -2369,15 +2437,15 @@ const ProblemWorkspace = () => {
                                     } : {})
                                 }}>
                                     <div style={{
-                                        padding: '10px', background: '#1f2937', color: 'white',
+                                        padding: '10px', background: 'var(--ws-panel)', color: 'var(--ws-text)',
                                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                        borderBottom: '1px solid rgba(255,255,255,0.1)'
+                                        borderBottom: '1px solid var(--ws-border)'
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <FaCode className="text-blue-500" />
                                             <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Code Editor</span>
                                         </div>
-                                        <button onClick={() => toggleExpand('editor')} title={expandedPanel === 'editor' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                                        <button onClick={() => toggleExpand('editor')} title={expandedPanel === 'editor' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer' }}>
                                             {expandedPanel === 'editor' ? <FaCompress /> : <FaExpand />}
                                         </button>
                                     </div>
@@ -2386,13 +2454,12 @@ const ProblemWorkspace = () => {
                                             code={code}
                                             setCode={setCode}
                                             language={language}
-                                            theme="vs-dark"
                                         />
                                     </div>
                                 </div>
                             </Panel>
 
-                            <PanelResizeHandle style={{ height: '4px', background: 'rgba(255,255,255,0.1)', cursor: 'row-resize' }} />
+                            <PanelResizeHandle style={{ height: '4px', background: 'var(--ws-border)', cursor: 'row-resize' }} />
 
                             {/* Test Cases / Console Panel */}
                             <Panel
@@ -2403,7 +2470,7 @@ const ProblemWorkspace = () => {
                                 collapsible={true}
                             >
                                 <div style={{
-                                    height: '100%', background: '#111827', display: 'flex', flexDirection: 'column',
+                                    height: '100%', background: 'var(--ws-bg)', display: 'flex', flexDirection: 'column',
                                     ...(expandedPanel === 'console' ? {
                                         position: 'fixed',
                                         top: isMobile ? 0 : 48,
@@ -2411,7 +2478,7 @@ const ProblemWorkspace = () => {
                                         right: 0,
                                         bottom: 0,
                                         zIndex: 250,
-                                        background: '#111827',
+                                        background: 'var(--ws-bg)',
                                         width: '100vw',
                                         maxWidth: '100vw',
                                         height: isMobile ? '100dvh' : 'auto',
@@ -2419,20 +2486,20 @@ const ProblemWorkspace = () => {
                                     } : {})
                                 }}>
                                     <div style={{
-                                        padding: '10px', background: '#1f2937', color: 'white',
+                                        padding: '10px', background: 'var(--ws-panel)', color: 'var(--ws-text)',
                                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                        borderBottom: '1px solid rgba(255,255,255,0.1)'
+                                        borderBottom: '1px solid var(--ws-border)'
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <FaList className="text-green-500" />
                                             <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Test Results</span>
                                         </div>
                                         {submissionResult && (
-                                            <button onClick={() => setSubmissionResult(null)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '11px' }}>
+                                            <button onClick={() => setSubmissionResult(null)} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '11px' }}>
                                                 Clear
                                             </button>
                                         )}
-                                        <button onClick={() => toggleExpand('console')} title={expandedPanel === 'console' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                                        <button onClick={() => toggleExpand('console')} title={expandedPanel === 'console' ? "Restore" : "Maximize"} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer' }}>
                                             {expandedPanel === 'console' ? <FaCompress /> : <FaExpand />}
                                         </button>
                                     </div>
@@ -2442,7 +2509,7 @@ const ProblemWorkspace = () => {
                                                 {submissionResult.error ? (
                                                     <div style={{ color: '#f87171' }}>
                                                         <h3 style={{ fontSize: '13px', fontWeight: 'bold' }}>Error</h3>
-                                                        <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px', whiteSpace: 'pre-wrap', fontSize: '12px' }}>{submissionResult.error}</pre>
+                                                        <pre style={{ background: 'var(--ws-card)', border: '1px solid var(--ws-border)', padding: '10px', borderRadius: '4px', whiteSpace: 'pre-wrap', fontSize: '12px' }}>{submissionResult.error}</pre>
                                                     </div>
                                                 ) : (
                                                     <div>
@@ -2453,7 +2520,7 @@ const ProblemWorkspace = () => {
                                                                 <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '14px' }}>Tests Failed</span>
                                                             )}
                                                             {resultCases.length > 0 && (
-                                                                <span style={{ color: '#9ca3af', fontSize: '12px' }}>
+                                                                <span style={{ color: 'var(--ws-text-muted)', fontSize: '12px' }}>
                                                                     ({passedResultCases}/{resultCases.length} passed)
                                                                 </span>
                                                             )}
@@ -2463,9 +2530,9 @@ const ProblemWorkspace = () => {
                                                                 <div style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 'bold', marginBottom: '4px' }}>
                                                                     First Failed Test Case: #{submissionResult.firstFailedTestCase.testCaseNumber}
                                                                 </div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db', whiteSpace: 'pre-wrap' }}>Input: {formatInputDisplay(submissionResult.firstFailedTestCase.input, problem?.parameters || [])}</div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db' }}>Expected: {formatOutputDisplay(submissionResult.firstFailedTestCase.expectedOutput)}</div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db' }}>Actual: {formatOutputDisplay(submissionResult.firstFailedTestCase.actualOutput)}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>Input: {formatInputDisplay(submissionResult.firstFailedTestCase.input, problem?.parameters || [])}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)' }}>Expected: {formatOutputDisplay(submissionResult.firstFailedTestCase.expectedOutput)}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)' }}>Actual: {formatOutputDisplay(submissionResult.firstFailedTestCase.actualOutput)}</div>
                                                                 {submissionResult.firstFailedTestCase.error && (
                                                                     <div style={{ fontSize: '11px', color: '#f87171', marginTop: '4px' }}>
                                                                         Error: {submissionResult.firstFailedTestCase.error}
@@ -2474,22 +2541,22 @@ const ProblemWorkspace = () => {
                                                             </div>
                                                         )}
                                                         {resultCases.map((res, idx) => (
-                                                            <div key={idx} style={{ marginBottom: '10px', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px' }}>
+                                                            <div key={idx} style={{ marginBottom: '10px', background: 'var(--ws-card)', border: '1px solid var(--ws-border)', padding: '10px', borderRadius: '6px' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                                                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>Case {res.testCaseNumber || (idx + 1)}</span>
+                                                                    <span style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>Case {res.testCaseNumber || (idx + 1)}</span>
                                                                     <span style={{ color: res.passed ? '#22c55e' : '#ef4444', fontSize: '11px' }}>{res.passed ? 'Passed' : 'Failed'}</span>
                                                                 </div>
                                                                 {res.isHidden ? (
-                                                                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                                                                    <div style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>
                                                                         Hidden test case {res.passed ? 'passed' : 'failed'}.
                                                                     </div>
                                                                 ) : (
                                                                     <>
-                                                                        <div style={{ fontSize: '11px', color: '#6b7280', whiteSpace: 'pre-wrap' }}>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--ws-text-muted)', whiteSpace: 'pre-wrap' }}>
                                                                             Input: {formatInputDisplay(res.input, problem?.parameters || [])}
                                                                         </div>
-                                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Expected: {formatOutputDisplay(res.expectedOutput)}</div>
-                                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Actual: {formatOutputDisplay(res.actualOutput)}</div>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>Expected: {formatOutputDisplay(res.expectedOutput)}</div>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>Actual: {formatOutputDisplay(res.actualOutput)}</div>
                                                                     </>
                                                                 )}
                                                                 {res.printedOutput && (
@@ -2510,11 +2577,16 @@ const ProblemWorkspace = () => {
                                         ) : (
                                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                                 {problem.sampleTestCases && problem.sampleTestCases.map((tc, idx) => (
-                                                    <div key={idx} style={{ flex: isMobile ? '1 1 100%' : '1 1 calc(50% - 6px)', minWidth: isMobile ? '0' : '220px', background: 'rgba(17, 24, 39, 0.5)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                                        <div style={{ fontSize: '10px', color: '#9ca3af', marginBottom: '4px', fontWeight: 'bold' }}>Test Case {idx + 1}</div>
-                                                        <div style={{ background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '11px', color: '#d1d5db', whiteSpace: 'pre-wrap' }}>
+                                                    <div key={idx} style={{ flex: isMobile ? '1 1 100%' : '1 1 calc(50% - 6px)', minWidth: isMobile ? '0' : '220px', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', border: '1px solid var(--ws-border)' }}>
+                                                        <div style={{ fontSize: '10px', color: 'var(--ws-text-muted)', marginBottom: '4px', fontWeight: 'bold' }}>Test Case {idx + 1}</div>
+                                                        <div style={{ background: 'var(--ws-input-bg)', padding: '6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>
                                                             {formatInputDisplay(tc.input, problem.parameters)}
                                                         </div>
+                                                        {tc.output !== undefined && tc.output !== null && (
+                                                            <div style={{ marginTop: '4px', background: 'var(--ws-input-bg)', padding: '6px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>
+                                                                <span style={{ color: 'var(--ws-teal)', fontWeight: 'bold' }}>Expected: </span>{formatOutputDisplay(tc.output)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

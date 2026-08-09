@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { algorithmList } from '../data/algorithmsData';
 import './Algorithms.css';
 
@@ -17,9 +16,9 @@ const CATEGORY_ACCENTS = {
 };
 
 const DIFFICULTY_CLASS = {
-    Beginner: 'algo-difficulty-beginner',
-    Intermediate: 'algo-difficulty-intermediate',
-    Advanced: 'algo-difficulty-advanced'
+    Easy: 'algo-difficulty-beginner',
+    Medium: 'algo-difficulty-intermediate',
+    Hard: 'algo-difficulty-advanced'
 };
 
 const getAccentColor = (category) => CATEGORY_ACCENTS[category] || '#64748b';
@@ -27,12 +26,17 @@ const getAccentColor = (category) => CATEGORY_ACCENTS[category] || '#64748b';
 const Algorithms = () => {
     const [searchParams] = useSearchParams();
     const [selectedCategory, setSelectedCategory] = useState('All');
-    const [selectedDifficulty, setSelectedDifficulty] = useState('All');
+    const [selectedDifficulty, setSelectedDifficulty] = useState(() => searchParams.get('difficulty') || 'All');
     const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
 
     useEffect(() => {
         const query = searchParams.get('search') || '';
-        setSearchTerm((prev) => (prev === query ? prev : query));
+        const difficulty = searchParams.get('difficulty') || 'All';
+        const frame = requestAnimationFrame(() => {
+            setSearchTerm((previous) => (previous === query ? previous : query));
+            setSelectedDifficulty((previous) => (previous === difficulty ? previous : difficulty));
+        });
+        return () => cancelAnimationFrame(frame);
     }, [searchParams]);
 
     const categories = useMemo(() => {
@@ -42,7 +46,7 @@ const Algorithms = () => {
 
     const difficulties = useMemo(() => {
         const unique = Array.from(new Set(algorithmList.map((algorithm) => algorithm.difficulty)));
-        const ordered = ['Beginner', 'Intermediate', 'Advanced'];
+        const ordered = ['Easy', 'Medium', 'Hard'];
         return ['All', ...ordered.filter((difficulty) => unique.includes(difficulty))];
     }, []);
 
@@ -70,32 +74,32 @@ const Algorithms = () => {
     return (
         <div className="algo-page-container">
             <header className="algo-page-header">
-                <span className="algo-header-tag">Algorithm Universe</span>
-                <h1 className="algo-page-title">Algorithms Library</h1>
+                <span className="algo-header-tag">Library / Interactive lessons</span>
+                <h1 className="algo-page-title">Learn by stepping through the work.</h1>
                 <p className="algo-page-subtitle">
-                    Expanded catalog with detailed complexity metadata and a strict input limit of 10 elements per problem.
+                    Browse visual explanations, inspect the trade-offs, and open a focused lesson when you are ready to experiment.
                 </p>
                 <div className="algo-stats-grid">
                     <div className="algo-stat-card">
                         <span className="algo-stat-value">{stats.totalAlgorithms}</span>
-                        <span className="algo-stat-label">Total Algorithms</span>
+                        <span className="algo-stat-label">Lessons</span>
                     </div>
                     <div className="algo-stat-card">
                         <span className="algo-stat-value">{stats.totalCategories}</span>
-                        <span className="algo-stat-label">Categories</span>
+                        <span className="algo-stat-label">Topics</span>
                     </div>
                     <div className="algo-stat-card">
                         <span className="algo-stat-value">10</span>
-                        <span className="algo-stat-label">Input Limit</span>
+                        <span className="algo-stat-label">Elements per trace</span>
                     </div>
                     <div className="algo-stat-card">
                         <span className="algo-stat-value">{stats.visibleAlgorithms}</span>
-                        <span className="algo-stat-label">Filtered View</span>
+                        <span className="algo-stat-label">Showing</span>
                     </div>
                 </div>
             </header>
 
-            <section className="algo-toolbar glass-panel">
+            <section className="algo-toolbar" aria-label="Filter algorithm library">
                 <div className="algo-filter-grid">
                     <label className="algo-filter-group">
                         <span className="algo-filter-label">Category</span>
@@ -131,26 +135,21 @@ const Algorithms = () => {
                             type="text"
                             value={searchTerm}
                             onChange={(event) => setSearchTerm(event.target.value)}
-                            placeholder="Search algorithms, category, or description"
+                            placeholder="Search by algorithm, topic, or concept"
                             className="algo-filter-control"
                         />
                     </label>
                 </div>
             </section>
 
-            <motion.div layout className="algo-cards-grid">
-                <AnimatePresence>
+            <div className="algo-cards-grid">
+                <>
                     {filteredAlgorithms.map((algorithm) => {
                         const accentColor = getAccentColor(algorithm.category);
                         const difficultyClass = DIFFICULTY_CLASS[algorithm.difficulty] || 'algo-difficulty-intermediate';
                         return (
-                            <motion.article
-                                layout
+                            <article
                                 key={algorithm.id}
-                                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                                transition={{ duration: 0.18 }}
                                 className="algo-card-item"
                             >
                                 <div className="algo-card-topline" style={{ backgroundColor: accentColor }} />
@@ -173,7 +172,7 @@ const Algorithms = () => {
                                     <p className="algo-card-description">{algorithm.description}</p>
 
                                     <div className="algo-input-limit">
-                                        Input Limit: {algorithm.inputLimit || 10} elements
+                                        Visual trace: {algorithm.inputLimit || 10} elements
                                     </div>
 
                                     <div className="algo-complexity-grid">
@@ -196,14 +195,14 @@ const Algorithms = () => {
                                     </div>
 
                                     <Link to={algorithm.path} className="algo-open-link">
-                                        Open Visualizer
+                                        Open lesson
                                     </Link>
                                 </div>
-                            </motion.article>
+                            </article>
                         );
                     })}
-                </AnimatePresence>
-            </motion.div>
+                </>
+            </div>
 
             {filteredAlgorithms.length === 0 && (
                 <div className="algo-empty-state">

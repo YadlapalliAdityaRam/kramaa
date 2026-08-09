@@ -5,7 +5,6 @@ import './TreeCanvas.css';
 const NODE_RADIUS = 22;
 const FALLBACK_NODE_RADIUS = 22;
 const LEVEL_HEIGHT = 70;
-const MIN_H_SPACING = 55;
 
 const toFiniteNumber = (value, fallback = 0) => {
     const numeric = Number(value);
@@ -13,21 +12,22 @@ const toFiniteNumber = (value, fallback = 0) => {
 };
 
 export const TREE_STATE_COLORS = {
-    default: '#4a5568',
+    default: '#4b5563',
     current: '#8b5cf6',
     visiting: '#06b6d4',
     visited: '#10b981',
-    comparing: '#f59e0b',
+    comparing: '#fbbf24',
     'red-node': '#ef4444',
     'black-node': '#1f2937',
     inserted: '#3b82f6',
     rotated: '#ec4899',
-    swapping: '#f97316',
+    swapping: '#f87171',
+    'root-node': '#38bdf8',
     found: '#22c55e',
     partial: '#d97706'
 };
 
-// Calculate tree layout positions
+// Calculate tree layout positions recursively
 const calculatePositions = (root, width) => {
     if (!root) return {};
     const positions = {};
@@ -55,18 +55,36 @@ const calculatePositions = (root, width) => {
     return positions;
 };
 
-const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
-    if (!treeData) {
-        return <div className="tree-canvas-empty">No tree data</div>;
+function getDepth(node) {
+    if (!node) return 0;
+    const children = node.children || [];
+    const activeChildren = children.length > 0 ? children : [node.left, node.right].filter(Boolean);
+    let maxChildDepth = 0;
+    for (const child of activeChildren) {
+        maxChildDepth = Math.max(maxChildDepth, getDepth(child));
+    }
+    return 1 + maxChildDepth;
+}
+
+const TreeCanvas = ({ treeData, tree, nodes, treeNodes, nodeStates = {}, highlightEdges = [] }) => {
+    // Resolve root node robustly across different caller prop conventions
+    const root = treeData || tree || (Array.isArray(nodes) ? nodes[0] : nodes) || (Array.isArray(treeNodes) ? treeNodes[0] : treeNodes);
+
+    if (!root) {
+        return (
+            <div className="tree-canvas-empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                No binary tree data to display
+            </div>
+        );
     }
 
     const safeNodeRadius = toFiniteNumber(NODE_RADIUS, FALLBACK_NODE_RADIUS);
     const width = 600;
-    const treeDepth = getDepth(treeData);
-    const height = Math.max(250, 60 + treeDepth * LEVEL_HEIGHT + 40);
-    const positions = calculatePositions(treeData, width);
+    const treeDepth = getDepth(root);
+    const height = Math.max(240, 60 + treeDepth * LEVEL_HEIGHT + 30);
+    const positions = calculatePositions(root, width);
 
-    // Collect all nodes and edges
+    // Collect all nodes and edges from root
     const nodesArr = [];
     const edgesArr = [];
 
@@ -82,18 +100,18 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
             traverse(child);
         });
     };
-    traverse(treeData);
+    traverse(root);
 
-    const highlightSet = new Set(highlightEdges.map(e => `${e.from}-${e.to}`));
+    const highlightSet = new Set((highlightEdges || []).map(e => `${e.from}-${e.to}`));
 
     return (
-        <div className="tree-canvas" style={{ overflow: 'hidden', position: 'relative', cursor: 'grab' }}>
+        <div className="tree-canvas" style={{ width: '100%', height: '100%', minHeight: '240px', overflow: 'hidden', position: 'relative', cursor: 'grab' }}>
             <motion.div
                 drag
                 dragConstraints={{ left: -width, right: width, top: -height, bottom: height }}
                 style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
-                <svg viewBox={`0 0 ${width} ${height}`} className="tree-svg" style={{ minWidth: `${width}px`, minHeight: `${height}px` }}>
+                <svg viewBox={`0 0 ${width} ${height}`} className="tree-svg" style={{ width: '100%', height: '100%', minWidth: `${width}px`, minHeight: `${height}px` }}>
                     <defs>
                         <filter id="tree-glow">
                             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -122,11 +140,12 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
                                 y1={from.y}
                                 x2={to.x}
                                 y2={to.y}
-                                stroke={isHighlighted ? '#10b981' : '#374151'}
+                                stroke={isHighlighted ? '#10b981' : '#4b5563'}
                                 strokeWidth={isHighlighted ? 3 : 2}
-                                opacity={isHighlighted ? 1 : 0.5}
+                                strokeDasharray={isHighlighted ? 'none' : 'none'}
+                                opacity={isHighlighted ? 1 : 0.4}
                                 animate={{
-                                    stroke: isHighlighted ? '#10b981' : '#374151',
+                                    stroke: isHighlighted ? '#10b981' : '#4b5563',
                                     strokeWidth: isHighlighted ? 3 : 2
                                 }}
                                 transition={{ duration: 0.3 }}
@@ -164,7 +183,7 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
                                     cy={pos.y}
                                     r={safeNodeRadius}
                                     fill={color}
-                                    stroke={isActive ? color : '#4b5563'}
+                                    stroke={isActive ? color : '#6b7280'}
                                     strokeWidth="2"
                                     filter={isActive ? 'url(#tree-glow)' : 'none'}
                                     animate={{ fill: color }}
@@ -174,9 +193,10 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
                                     x={pos.x}
                                     y={pos.y + 5}
                                     textAnchor="middle"
-                                    fill="white"
-                                    fontSize={node.label && node.label.length > 4 ? '10' : '13'}
-                                    fontWeight="700"
+                                    fill="#ffffff"
+                                    fontSize={node.label && String(node.label).length > 4 ? '10' : '13'}
+                                    fontWeight="800"
+                                    style={{ pointerEvents: 'none' }}
                                 >
                                     {node.label || (node.value !== undefined ? node.value : node.id)}
                                 </text>
@@ -188,16 +208,5 @@ const TreeCanvas = ({ treeData, nodeStates = {}, highlightEdges = [] }) => {
         </div>
     );
 };
-
-function getDepth(node) {
-    if (!node) return 0;
-    const children = node.children || [];
-    const activeChildren = children.length > 0 ? children : [node.left, node.right].filter(Boolean);
-    let maxChildDepth = 0;
-    for (const child of activeChildren) {
-        maxChildDepth = Math.max(maxChildDepth, getDepth(child));
-    }
-    return 1 + maxChildDepth;
-}
 
 export default TreeCanvas;

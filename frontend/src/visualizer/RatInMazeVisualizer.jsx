@@ -1,17 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import DualView from './DualView';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import { generateRatInMazeSteps } from '../algorithms/backtracking/ratInMaze';
 import useGenericAnimation from '../hooks/useGenericAnimation';
-import { generateFallbackCode } from './algorithmFallbacks';
+import { algorithmCodes } from '../data/algorithmCodes';
+import { toast } from 'react-hot-toast';
+import { FaCheck, FaEdit, FaRedo } from 'react-icons/fa';
 import './RatInMazeVisualizer.css';
 
 const RatInMazeVisualizer = () => {
-    const [mazeSize, setMazeSize] = useState(4);
-    const [customMaze, setCustomMaze] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [tempMaze, setTempMaze] = useState(null);
+    const [mazeSize, setMazeSize]               = useState(4);
+    const [customMaze, setCustomMaze]           = useState(null);
+    const [isModalOpen, setIsModalOpen]         = useState(false);
+    const [tempMaze, setTempMaze]               = useState(null);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const defaultMaze = useMemo(() => {
@@ -26,7 +27,6 @@ const RatInMazeVisualizer = () => {
     }, [mazeSize]);
 
     const activeMaze = useMemo(() => customMaze || defaultMaze, [customMaze, defaultMaze]);
-    const gridSize = activeMaze.length;
 
     const steps = useMemo(() => {
         try {
@@ -47,19 +47,17 @@ const RatInMazeVisualizer = () => {
 
     const anim = useGenericAnimation(steps);
 
-    const codeSnippet = useMemo(() => generateFallbackCode({
-        name: 'Rat in a Maze',
-        categoryKey: 'backtracking',
-        language: activeLanguage
-    }), [activeLanguage]);
+    const codeSnippet = algorithmCodes.ratInMaze?.[activeLanguage] || '';
 
     const getActiveLine = () => {
         if (!anim.currentStep) return 1;
-        const t = anim.currentStep.type || '';
-        if (t === 'compare') return 7;
-        if (t === 'swap') return 3;
-        if (t === 'completed') return 11;
-        return 1;
+        switch (anim.currentStep.type) {
+            case 'try': return 10;
+            case 'path': return 15;
+            case 'backtrack': return 18;
+            case 'solution': return 5;
+            default: return 1;
+        }
     };
 
     const currentStep = anim.currentStep;
@@ -86,6 +84,7 @@ const RatInMazeVisualizer = () => {
         }
         setIsModalOpen(false);
         anim.reset();
+        toast.success("Maze configuration saved!");
     };
 
     const renderGrid = () => {
@@ -99,53 +98,44 @@ const RatInMazeVisualizer = () => {
 
         const ratR = currentStep?.r ?? 0;
         const ratC = currentStep?.c ?? 0;
+        const isCompleted = currentStep?.type === 'solution' || currentStep?.type === 'completed';
 
         return (
-            <div className="rat-maze-visualizer">
+            <div className="rat-maze-stage">
                 <div
-                    className="maze-container"
+                    className="rat-grid-board"
                     style={{
-                        gridTemplateColumns: `repeat(${gridSize}, 60px)`,
-                        gridTemplateRows: `repeat(${gridSize}, 60px)`
+                        gridTemplateColumns: `repeat(${grid.length}, minmax(40px, 60px))`,
+                        gridTemplateRows: `repeat(${grid.length}, minmax(40px, 60px))`
                     }}
                 >
                     {grid.map((row, r) =>
                         row.map((cell, c) => {
-                            let statusClass = cell.value === 0 ? 'maze-cell-wall' : 'maze-cell-empty';
-                            if (cell.isPath) statusClass += ' maze-cell-path';
-                            if (cell.isBacktrack) statusClass += ' maze-cell-backtrack';
+                            const isRatHere = ratR === r && ratC === c;
+                            const isStart   = r === 0 && c === 0;
+                            const isEnd     = r === grid.length - 1 && c === grid.length - 1;
+                            const isWall    = cell.value === 0;
+                            const isPath    = cell.isPath;
+                            const isBt      = cell.isBacktrack;
 
-                            const isStart = r === 0 && c === 0;
-                            const isEnd = r === gridSize - 1 && c === gridSize - 1;
-                            if (isStart) statusClass += ' maze-start';
-                            if (isEnd) statusClass += ' maze-end';
+                            let stateClass = 'open';
+                            if (isWall) stateClass = 'wall';
+                            else if (isPath) stateClass = 'path';
+                            else if (isBt)   stateClass = 'backtrack';
 
-                            const hasRat = ratR === r && ratC === c;
+                            if (isStart) stateClass += ' start-node';
+                            if (isEnd)   stateClass += ' end-node';
 
                             return (
-                                <div key={`${r}-${c}`} className={`maze-cell ${statusClass}`}>
-                                    {hasRat && (
-                                        <motion.div
-                                            layoutId="rat"
-                                            className="rat-sprite rat-moving"
-                                            initial={false}
-                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                                        >
-                                            🐀
-                                        </motion.div>
-                                    )}
+                                <div key={`${r}-${c}`} className={`rat-cell ${stateClass}`}>
+                                    {isRatHere && !isCompleted && <span className="rat-icon">🐁</span>}
+                                    {isEnd && isCompleted && <span className="rat-icon">🧀</span>}
+                                    {isStart && !isRatHere && <span className="cell-tag">S</span>}
+                                    {isEnd && !isRatHere && !isCompleted && <span className="cell-tag">E</span>}
                                 </div>
                             );
                         })
                     )}
-                </div>
-
-                <div className="maze-legend">
-                    <div className="legend-item"><div className="legend-box maze-cell-wall"></div> Wall</div>
-                    <div className="legend-item"><div className="legend-box maze-cell-empty"></div> Available</div>
-                    <div className="legend-item"><div className="legend-box maze-cell-path"></div> Path (Safe)</div>
-                    <div className="legend-item"><div className="legend-box maze-cell-backtrack"></div> Backtrack</div>
-                    <div className="legend-item"><span>🐀</span> Rat Position</div>
                 </div>
             </div>
         );
@@ -156,11 +146,12 @@ const RatInMazeVisualizer = () => {
     return (
         <>
             <DualView
-                algorithmName="Rat in a Maze"
+                algorithmName="Rat in a Maze (Backtracking)"
                 code={codeSnippet}
                 activeLine={getActiveLine()}
                 activeLanguage={activeLanguage}
                 onLanguageChange={setActiveLanguage}
+                codeSnippetCategory="backtracking"
                 description={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                         <span className="rim-step-badge">
@@ -181,30 +172,30 @@ const RatInMazeVisualizer = () => {
                             isPlaying={anim.isPlaying}
                             onPlay={anim.play}
                             onPause={anim.pause}
-                            onStepForward={anim.stepForward}
-                            onStepBackward={anim.stepBackward}
+                            onNext={anim.stepForward}
+                            onPrev={anim.stepBackward}
                             onReset={anim.reset}
                             speed={anim.speed}
                             onSpeedChange={anim.setSpeed}
                             currentStep={anim.currentStepIndex}
                             totalSteps={anim.totalSteps}
-                            onScrub={anim.setStep}
+                            onScrub={anim.setIndex}
                             inputType="none"
                         />
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
                             <button className="rim-btn rim-btn-primary" onClick={openEditor}>
-                                🧩 Edit Maze
+                                <FaEdit /> Edit Maze Walls
                             </button>
                         </div>
                     </div>
                 </div>
             </DualView>
 
-            {/* Maze Editor Modal — outside DualView so it doesn't break layout */}
+            {/* Maze Editor Modal */}
             {isModalOpen && (
                 <div className="rim-modal-overlay" onClick={() => setIsModalOpen(false)}>
                     <div className="rim-modal" onClick={e => e.stopPropagation()}>
-                        <h3 className="rim-modal-title">Customize Maze</h3>
+                        <h3 className="rim-modal-title">Customize Maze Grid</h3>
                         <div className="custom-maze-editor">
                             <div className="editor-controls" style={{ marginBottom: '15px' }}>
                                 <label style={{ marginRight: '10px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Grid Size (3-8):</label>
@@ -214,7 +205,7 @@ const RatInMazeVisualizer = () => {
                                     max="8"
                                     value={editorSize}
                                     onChange={(e) => {
-                                        const s = parseInt(e.target.value);
+                                        const s = parseInt(e.target.value, 10);
                                         if (s >= 3 && s <= 8) {
                                             const newM = Array.from({ length: s }, () => Array(s).fill(1));
                                             newM[0][0] = 1; newM[s - 1][s - 1] = 1;
@@ -254,7 +245,7 @@ const RatInMazeVisualizer = () => {
                             </div>
                             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                 <button className="rim-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                <button className="rim-btn rim-btn-primary" onClick={saveCustomMaze}>Save & Run</button>
+                                <button className="rim-btn rim-btn-primary" onClick={saveCustomMaze}><FaCheck /> Save & Run</button>
                             </div>
                         </div>
                     </div>

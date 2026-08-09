@@ -864,3 +864,45 @@
         position: static;
     }
 }
+
+/* ══ Light Theme Overrides ══ */
+[data-theme="light"] .contest-form-wrapper {
+    background: #f8fafc;
+    color: #0f172a;
+}
+[data-theme="light"] .back-button {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #334155;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .back-button:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+[data-theme="light"] .form-section-card {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .form-label {
+    color: #334155;
+}
+[data-theme="light"] .input-field,
+[data-theme="light"] .textarea-field {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #0f172a;
+}
+[data-theme="light"] .preview-panel {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .preview-problem-item {
+    background: #f8fafc;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .preview-problem-name {
+    color: #0f172a;
+}

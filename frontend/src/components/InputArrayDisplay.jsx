@@ -12,9 +12,9 @@ const InputArrayDisplay = ({ arraySnapshot, activeArrayIndex }) => {
                         ? activeArrayIndex.includes(idx)
                         : activeArrayIndex === idx;
 
-                    // Simple processing logic based on the max highlight so far (fallback mostly for single index traversals)
                     const maxActive = Array.isArray(activeArrayIndex) ? Math.max(...activeArrayIndex) : activeArrayIndex;
                     const isProcessing = maxActive !== -1 && idx > maxActive;
+
                     return (
                         <motion.div
                             key={`${idx}-${val}`}
@@ -25,19 +25,20 @@ const InputArrayDisplay = ({ arraySnapshot, activeArrayIndex }) => {
                             transition={{ duration: 0.3 }}
                         >
                             <div style={{
-                                border: isHighlighted ? '2px solid #ef4444' : '1px solid rgba(255,255,255,0.1)',
-                                background: isHighlighted ? 'rgba(239, 68, 68, 0.2)' : (isProcessing ? 'rgba(15,23,42,0.4)' : 'rgba(30,41,59,0.5)'),
-                                color: isHighlighted ? '#fff' : (isProcessing ? '#64748b' : '#cbd5e1'),
+                                border: isHighlighted ? '2px solid #ef4444' : '1px solid var(--surface-border)',
+                                background: isHighlighted ? 'rgba(239, 68, 68, 0.2)' : (isProcessing ? 'var(--surface-bg)' : 'var(--surface-bg-raised)'),
+                                color: isHighlighted ? '#ef4444' : (isProcessing ? 'var(--text-muted)' : 'var(--text-primary)'),
                                 padding: '6px 14px',
-                                borderRadius: '6px',
-                                fontWeight: '600',
+                                borderRadius: '8px',
+                                fontWeight: '700',
                                 minWidth: '40px',
-                                transition: 'all 0.3s ease'
+                                transition: 'all 0.3s ease',
+                                boxShadow: isHighlighted ? '0 0 10px rgba(239,68,68,0.3)' : 'var(--surface-shadow)'
                             }}>
                                 {val}
                             </div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '4px', fontWeight: isHighlighted ? 'bold' : 'normal' }}>
-                                {idx}
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: isHighlighted ? 'bold' : 'normal' }}>
+                                idx: {idx}
                             </div>
                         </motion.div>
                     );

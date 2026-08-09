@@ -1,13 +1,117 @@
-﻿/* Workspace.css - Professional IDE Layout */
+/* ══════════════════════════════════════════════════════════
+   Workspace.css — Problem Workspace IDE
+   Themed to match AlgoVerse / Kramaa design system
+   Primary: --primary-orange (#F97316) + --primary-teal (#14B8A6)
+   ══════════════════════════════════════════════════════════ */
 
+/* ── Dark theme (default) workspace CSS variables ── */
 :root {
-    --ide-header-bg: #252526;
-    --ide-border: #333333;
-    --ide-accent: #007acc;
-    --ide-success: #4ade80;
-    --ide-error: #f87171;
+    /* Backgrounds */
+    --ws-bg:             #0d1117;
+    --ws-panel:          #161b22;
+    --ws-surface:        #0d1117;
+    --ws-card:           rgba(255, 255, 255, 0.04);
+    --ws-card-hover:     rgba(255, 255, 255, 0.07);
+    --ws-code-bg:        rgba(255, 255, 255, 0.05);
+    --ws-input-bg:       rgba(255, 255, 255, 0.05);
+    --ws-tag-bg:         rgba(255, 255, 255, 0.08);
+    --ws-dropdown-bg:    #161b22;
+    --ws-floating-bg:    rgba(17, 24, 39, 0.95);
+
+    /* Text */
+    --ws-text:           #e6edf3;
+    --ws-text-secondary: #c9d1d9;
+    --ws-text-muted:     #7d8590;
+    --ws-text-disabled:  #484f58;
+
+    /* Accents — orange primary, teal secondary */
+    --ws-accent:         #F97316;
+    --ws-accent-light:   #fdba74;
+    --ws-teal:           #14B8A6;
+
+    /* Code block & syntax tokens */
+    --ws-label-input:    #f97316;
+    --ws-code-input:     #fdba74;
+    --ws-label-output:   #14b8a6;
+    --ws-code-output:    #5eead4;
+
+    /* Borders */
+    --ws-border:         rgba(255, 255, 255, 0.09);
+    --ws-border-faint:   rgba(255, 255, 255, 0.05);
+
+    /* IDE internal aliases (used by legacy CSS classes) */
+    --ide-bg:            var(--ws-bg);
+    --ide-header-bg:     var(--ws-panel);
+    --ide-panel-bg:      var(--ws-bg);
+    --ide-console-bg:    var(--ws-bg);
+    --ide-border:        var(--ws-border);
+    --ide-text:          var(--ws-text);
+    --ide-muted:         var(--ws-text-muted);
+    --ide-accent:        var(--ws-accent);
+    --ide-teal:          var(--ws-teal);
+    --ide-success:       #34d399;
+    --ide-error:         #f87171;
 }
 
+/* ── Light theme overrides ── */
+[data-theme="light"],
+[data-theme="light"] .workspace-container {
+    --ws-bg:             #f8fafc;
+    --ws-panel:          #ffffff;
+    --ws-surface:        #ffffff;
+    --ws-card:           #f1f5f9;
+    --ws-card-hover:     #e2e8f0;
+    --ws-code-bg:        #f1f5f9;
+    --ws-input-bg:       #f8fafc;
+    --ws-tag-bg:         rgba(0, 0, 0, 0.06);
+    --ws-dropdown-bg:    #ffffff;
+    --ws-floating-bg:    rgba(255, 255, 255, 0.95);
+
+    --ws-text:           #0f172a;
+    --ws-text-secondary: #334155;
+    --ws-text-muted:     #64748b;
+    --ws-text-disabled:  #94a3b8;
+
+    --ws-accent:         #ea580c;
+    --ws-accent-light:   #c2410c;
+    --ws-teal:           #0d9488;
+
+    /* High-contrast code syntax for light background */
+    --ws-label-input:    #c2410c;
+    --ws-code-input:     #9a3412;
+    --ws-label-output:   #0f766e;
+    --ws-code-output:    #0f766e;
+
+    --ws-border:         rgba(0, 0, 0, 0.1);
+    --ws-border-faint:   rgba(0, 0, 0, 0.05);
+
+    --ide-bg:            var(--ws-bg);
+    --ide-header-bg:     var(--ws-panel);
+    --ide-panel-bg:      var(--ws-surface);
+    --ide-console-bg:    var(--ws-panel);
+    --ide-border:        var(--ws-border);
+    --ide-text:          var(--ws-text);
+    --ide-muted:         var(--ws-text-muted);
+}
+
+
+/* ── Keyframes ── */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ws-glow-pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(249,115,22,0.1); }
+    50%       { box-shadow: 0 0 22px rgba(249,115,22,0.22); }
+}
+
+/* ── Base Container ── */
 .workspace-container {
     display: flex;
     flex-direction: column;
@@ -15,10 +119,10 @@
     background-color: var(--ide-bg);
     color: var(--ide-text);
     overflow: hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Header */
+/* ── Header ── */
 .workspace-header {
     height: 50px;
     background-color: var(--ide-header-bg);
@@ -28,12 +132,13 @@
     justify-content: space-between;
     padding: 0 16px;
     flex-shrink: 0;
+    backdrop-filter: blur(8px);
 }
 
 .workspace-title {
     font-weight: 700;
-    font-size: 1.1rem;
-    background: linear-gradient(to right, #4ade80, #3b82f6);
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, var(--primary-orange,#F97316), var(--primary-teal,#14B8A6));
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -42,75 +147,90 @@
     gap: 12px;
 }
 
+/* ── Difficulty Badges ── */
 .difficulty-badge {
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 500;
+    font-size: 0.72rem;
+    padding: 2px 9px;
+    border-radius: 6px;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .difficulty-easy {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
+    background: rgba(52, 211, 153, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(52,211,153,0.22);
 }
 
 .difficulty-medium {
-    background: rgba(234, 179, 8, 0.15);
-    color: #facc15;
+    background: rgba(251, 191, 36, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.22);
 }
 
 .difficulty-hard {
-    background: rgba(239, 68, 68, 0.15);
+    background: rgba(248, 113, 113, 0.12);
     color: #f87171;
+    border: 1px solid rgba(248,113,113,0.22);
 }
 
+/* ── Header Controls ── */
 .workspace-controls {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
 }
 
 .control-btn {
-    background: transparent;
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--ide-border);
     color: var(--ide-text);
     padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.18s ease;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-family: inherit;
 }
 
 .control-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.18);
     color: #ffffff;
-    border-color: #555;
 }
 
 .btn-run {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: transparent;
+    background: rgba(20, 184, 166, 0.08);
+    border-color: rgba(20,184,166,0.3);
+    color: var(--primary-teal, #14B8A6);
+    font-weight: 600;
+}
+
+.btn-run:hover {
+    background: rgba(20, 184, 166, 0.16);
+    border-color: rgba(20,184,166,0.5);
+    color: #5eead4;
+    box-shadow: 0 0 12px rgba(20,184,166,0.2);
 }
 
 .btn-submit {
-    background: var(--ide-success);
-    /* Fallback */
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-orange,#F97316), #ea6b0a);
+    color: #ffffff;
     border: none;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.82rem;
+    box-shadow: 0 3px 12px rgba(249,115,22,0.28);
 }
 
 .btn-submit:hover {
     filter: brightness(1.1);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 5px 18px rgba(249,115,22,0.42);
 }
 
-/* Editor Header Controls */
 .editor-header-controls-right {
     display: flex;
     align-items: center;
@@ -120,10 +240,10 @@
 .run-submit-group {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-right: 16px;
-    padding-right: 16px;
-    border-right: 1px solid #333;
+    gap: 10px;
+    margin-right: 14px;
+    padding-right: 14px;
+    border-right: 1px solid var(--ide-border);
 }
 
 .secondary-actions {
@@ -132,7 +252,7 @@
     gap: 8px;
 }
 
-/* Layout Body - Reset standard flex as panels handle it */
+/* ── Layout Body ── */
 .workspace-body {
     display: flex;
     flex: 1;
@@ -161,20 +281,20 @@
     flex-direction: column;
 }
 
-/* Resize Handles */
+/* ── Resize Handles ── */
 .resize-handle-horizontal {
     width: 4px;
     background: var(--ide-bg);
     cursor: col-resize;
     transition: background 0.2s;
     position: relative;
-    border-left: 1px solid var(--ide-border);
+    border-left:  1px solid var(--ide-border);
     border-right: 1px solid var(--ide-border);
 }
 
 .resize-handle-horizontal:hover,
 .resize-handle-horizontal:active {
-    background: var(--ide-accent);
+    background: rgba(249,115,22,0.4);
 }
 
 .resize-handle-vertical {
@@ -183,16 +303,16 @@
     cursor: row-resize;
     transition: background 0.2s;
     position: relative;
-    border-top: 1px solid var(--ide-border);
+    border-top:    1px solid var(--ide-border);
     border-bottom: 1px solid var(--ide-border);
 }
 
 .resize-handle-vertical:hover,
 .resize-handle-vertical:active {
-    background: var(--ide-accent);
+    background: rgba(249,115,22,0.35);
 }
 
-/* Tabs */
+/* ── Tabs ── */
 .tabs-header {
     display: flex;
     background: var(--ide-header-bg);
@@ -201,57 +321,64 @@
     flex-shrink: 0;
 }
 
-/* Modern Tab Button Styling */
+.tabs-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+}
+
 .tab-btn-modern {
-    padding: 0 24px;
-    height: 100%;
-    font-size: 1rem;
+    padding: 0 20px;
+    height: 42px;
+    font-size: 0.86rem;
     font-weight: 500;
-    color: #888;
+    color: var(--ide-muted, #7d8590);
     background: transparent;
     border: none;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
     position: relative;
-    transition: all 0.2s ease;
+    transition: color 0.18s ease, border-color 0.18s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 7px;
+    font-family: inherit;
 }
 
 .tab-btn-modern:hover {
-    color: #e0e0e0;
-    background-color: rgba(255, 255, 255, 0.05);
+    color: #e6edf3;
+    background: rgba(255,255,255,0.04);
 }
 
 .tab-btn-modern.active {
-    color: #4ade80;
-    /* Green text for active */
-    background: rgba(74, 222, 128, 0.1);
-    /* Subtle green background */
-    border-bottom: 2px solid #4ade80;
-    /* Green accent line */
+    color: var(--primary-orange, #F97316);
+    background: rgba(249,115,22,0.06);
+    border-bottom-color: var(--primary-orange, #F97316);
+    font-weight: 700;
 }
 
-/* Panel Content */
+/* ── Panel Content ── */
 .panel-content {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
 }
 
-/* Orange Headings for Description */
+/* ── Section Headings inside Description ── */
 .section-heading-orange {
-    color: #f97316;
-    /* Orange-500 */
-    font-size: 1.1rem;
+    color: var(--primary-orange, #F97316);
+    font-size: 1rem;
     font-weight: 700;
     margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid #333;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(249,115,22,0.2);
+    padding-bottom: 0.4rem;
 }
 
-/* Ensure editor container fills panel */
+/* ── Editor Container ── */
 .editor-container {
     width: 100%;
     height: 100%;
@@ -261,18 +388,16 @@
     overflow: hidden;
 }
 
-/* Console Container - remove fixed height, it's now in a panel */
+/* ── Console Container ── */
 .console-container {
     width: 100%;
     height: 100%;
     border-top: none;
-    /* Handled by resize divider */
     display: flex;
     flex-direction: column;
     background: var(--ide-console-bg);
 }
 
-/* Console Specifics */
 .console-header {
     background: var(--ide-header-bg);
     border-bottom: 1px solid var(--ide-border);
@@ -282,170 +407,422 @@
 }
 
 .console-tab {
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--ide-muted, #7d8590);
     cursor: pointer;
     background: transparent;
     border: none;
+    border-bottom: 2px solid transparent;
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: color 0.18s ease;
+    font-family: inherit;
 }
 
+.console-tab:hover { color: #e6edf3; }
+
 .console-tab.active {
-    background: var(--ide-bg);
-    color: #fff;
-    border-top: 2px solid var(--ide-accent);
+    color: var(--primary-teal, #14B8A6);
+    border-bottom-color: var(--primary-teal, #14B8A6);
+    font-weight: 600;
 }
 
 .console-body {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    font-family: 'Fira Code', monospace;
-    font-size: 0.9rem;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    font-size: 0.88rem;
     padding-bottom: 60px;
-    /* Space for footer */
 }
 
+/* ── Result Badges ── */
 .result-badge {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
 }
 
-.result-pass {
-    background-color: var(--ide-success);
-}
+.result-pass { background-color: var(--ide-success, #34d399); }
+.result-fail { background-color: var(--ide-error, #f87171); }
 
-.result-fail {
-    background-color: var(--ide-error);
-}
-
+/* ── Code Block ── */
 .code-block {
-    background: #2d2d2d;
-    padding: 12px;
-    border-radius: 6px;
-    color: #d4d4d4;
-    font-family: 'Fira Code', monospace;
+    background: rgba(22,27,34,0.9);
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--ide-border);
+    color: #e6edf3;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    font-size: 0.85rem;
     white-space: pre-wrap;
+    line-height: 1.6;
 }
 
-/* Timer */
+/* ── Timer ── */
 .timer-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 4px 8px;
-    border-radius: 4px;
-    border: 1px solid var(--ide-border);
+    gap: 7px;
+    background: rgba(249,115,22,0.08);
+    padding: 4px 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(249,115,22,0.25);
 }
 
 .timer-display {
-    font-family: 'Fira Code', monospace;
-    color: #fff;
-    font-weight: 500;
+    font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+    color: var(--primary-orange, #F97316);
+    font-weight: 600;
+    font-size: 0.85rem;
 }
 
-.timer-controls {
-    display: flex;
-    gap: 4px;
-}
+.timer-controls { display: flex; gap: 4px; }
 
 .timer-controls button {
     background: transparent;
     border: none;
-    color: #888;
+    color: var(--ide-muted, #7d8590);
     cursor: pointer;
     display: flex;
     align-items: center;
     padding: 2px;
+    transition: color 0.15s;
 }
 
-.timer-controls button:hover {
-    color: #fff;
+.timer-controls button:hover { color: var(--primary-orange, #F97316); }
+
+/* ── Custom Scrollbars ── */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(249,115,22,0.45); }
+
+/* ── Utility Animations ── */
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-fade-in { animation: fadeIn 0.28s ease-out forwards; }
+
+/* ══════════════════════════════════
+   INLINE STYLE OVERRIDES
+   Target key elements that use hard-coded inline colors
+   These override without touching JSX.
+   ══════════════════════════════════ */
+
+/* Main workspace wrapper - override #111827 bg */
+.workspace-container > div:first-child,
+[style*="background: '#111827'"],
+[style*='background: "#111827"'] {
+    background-color: var(--ide-bg) !important;
 }
 
-/* Scrollbars */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* Header area - override #1f2937 bg */
+[style*="background: '#1f2937'"],
+[style*='background: "#1f2937"'] {
+    background-color: var(--ide-header-bg) !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: var(--ide-bg);
+/* Timer blue → orange */
+[style*="rgba(59, 130, 246, 0.1)"] {
+    background: rgba(249,115,22,0.08) !important;
+    border-color: rgba(249,115,22,0.25) !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 3px;
+/* "AV" brand logo gradient → site gradient */
+[style*="linear-gradient(135deg, #6366f1, #ec4899)"] {
+    background-image: linear-gradient(135deg, var(--primary-orange,#F97316), var(--primary-teal,#14B8A6)) !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555;
+/* Submit button green → orange */
+[style*="linear-gradient(135deg, #10b981"] {
+    background: linear-gradient(135deg, var(--primary-orange,#F97316), #ea6b0a) !important;
 }
 
-/* Spinner */
-.animate-spin {
-    animation: spin 1s linear infinite;
+/* Active/Selected tab indicator green → orange */
+[style*="borderBottom: '2px solid #4ade80'"],
+[style*='borderBottom: "2px solid #4ade80"'] {
+    border-bottom-color: var(--primary-orange, #F97316) !important;
+    color: var(--primary-orange, #F97316) !important;
 }
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
+/* ══ LIGHT THEME ══ */
+[data-theme="light"] .workspace-container {
+    background: #f1f5f9;
+    color: #0f172a;
+    --ide-bg: #f1f5f9;
+    --ide-header-bg: #ffffff;
+    --ide-panel-bg: #f8fafc;
+    --ide-console-bg: #ffffff;
+    --ide-border: rgba(0,0,0,0.09);
+    --ide-text: #0f172a;
+    --ide-muted: #64748b;
+    --ide-surface: rgba(255,255,255,0.95);
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
+[data-theme="light"] .workspace-header {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+[data-theme="light"] .tabs-header {
+    background: #f8fafc;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
 }
 
-
-/* Tabs Container */
-.tabs-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 48px;
-    white-space: nowrap;
+[data-theme="light"] .tab-btn-modern { color: #64748b; }
+[data-theme="light"] .tab-btn-modern:hover { color: #0f172a; background: rgba(0,0,0,0.03); }
+[data-theme="light"] .tab-btn-modern.active {
+    color: var(--primary-orange,#F97316);
+    background: rgba(249,115,22,0.05);
+    border-bottom-color: var(--primary-orange,#F97316);
 }
 
-/* ══ LIGHT THEME OVERRIDES ══ */
-[data-theme="light"] .workspace-container { background: #f8fafc; color: #0f172a; }
-[data-theme="light"] .workspace-header { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
-[data-theme="light"] .header-title { color: #0f172a !important; }
-[data-theme="light"] .workspace-sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.1); }
+[data-theme="light"] .control-btn { background: #ffffff; border-color: rgba(0,0,0,0.1); color: #334155; }
+[data-theme="light"] .control-btn:hover { background: #f1f5f9; color: #0f172a; border-color: rgba(0,0,0,0.18); }
+
+[data-theme="light"] .btn-run {
+    background: rgba(20,184,166,0.07);
+    border-color: rgba(20,184,166,0.3);
+    color: #0e7a6d;
+}
+[data-theme="light"] .btn-run:hover { background: rgba(20,184,166,0.15); }
+
+[data-theme="light"] .btn-submit {
+    background: linear-gradient(135deg, var(--primary-orange,#F97316), #ea6b0a);
+    color: #ffffff;
+}
+
+[data-theme="light"] .resize-handle-horizontal,
+[data-theme="light"] .resize-handle-vertical { background: #e2e8f0; }
+[data-theme="light"] .resize-handle-horizontal:hover,
+[data-theme="light"] .resize-handle-vertical:hover { background: rgba(249,115,22,0.35); }
+
+[data-theme="light"] .console-header { background: #f8fafc; border-bottom: 1px solid rgba(0,0,0,0.07); }
+[data-theme="light"] .console-tab { color: #64748b; }
+[data-theme="light"] .console-tab.active { color: var(--primary-teal,#14B8A6); border-bottom-color: var(--primary-teal,#14B8A6); }
+[data-theme="light"] .console-body { color: #1e293b; }
+
+[data-theme="light"] .code-block { background: #f8fafc; border-color: rgba(0,0,0,0.08); color: #1e293b; }
+[data-theme="light"] .timer-container { background: rgba(249,115,22,0.07); border-color: rgba(249,115,22,0.2); }
+[data-theme="light"] .timer-display { color: #c2410c; }
+[data-theme="light"] .timer-controls button { color: #94a3b8; }
+[data-theme="light"] .timer-controls button:hover { color: #c2410c; }
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(249,115,22,0.4); }
+
+[data-theme="light"] .difficulty-easy   { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.25); }
+[data-theme="light"] .difficulty-medium { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.25); }
+[data-theme="light"] .difficulty-hard   { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.25); }
+
+[data-theme="light"] .section-heading-orange { color: #c2410c; border-bottom-color: rgba(194,65,12,0.2); }
+
+/* Problem description content in light mode */
+[data-theme="light"] .panel-content { color: #1e293b; }
+
+/* Sidebar light */
+[data-theme="light"] .workspace-sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.08); }
 [data-theme="light"] .sidebar-btn { color: #64748b; }
 [data-theme="light"] .sidebar-btn:hover { color: #0f172a; background: rgba(0,0,0,0.04); }
-[data-theme="light"] .sidebar-btn.active { color: #14b8a6; }
-[data-theme="light"] .workspace-content { background: #f8fafc; }
-[data-theme="light"] .panel-header { background: #f1f5f9; border-bottom: 1px solid rgba(0,0,0,0.08); color: #475569; }
-[data-theme="light"] .panel-title { color: #0f172a !important; }
-[data-theme="light"] .problem-description-content { color: #1e293b; background: #ffffff; }
-[data-theme="light"] .problem-description-content h1, [data-theme="light"] .problem-description-content h2, [data-theme="light"] .problem-description-content h3 { color: #0f172a; }
-[data-theme="light"] .problem-description-content code { background: rgba(0,0,0,0.05); color: #0f172a; }
-[data-theme="light"] .problem-description-content pre { background: #f1f5f9; border: 1px solid rgba(0,0,0,0.08); color: #0f172a; }
-[data-theme="light"] .editor-container { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); }
-[data-theme="light"] .console-panel { background: #ffffff; border-top: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
-[data-theme="light"] .test-case-tab { color: #64748b; background: #f8fafc; border: 1px solid rgba(0,0,0,0.08); }
-[data-theme="light"] .test-case-tab.active { color: #0f172a; background: #ffffff; border-bottom-color: transparent; }
-[data-theme="light"] .test-case-content { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-top: none; }
+[data-theme="light"] .sidebar-btn.active { color: var(--primary-orange,#F97316); }
+
+/* Theme selector */
 [data-theme="light"] .theme-selector { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
+
+/* ══════════════════════════════════════════════════════════
+   TARGETED INLINE-STYLE OVERRIDES
+   These override the hardcoded inline colors in ProblemWorkspace.jsx
+   without touching any JSX. CSS attribute selectors are used sparingly;
+   structural child selectors handle the panel/tab areas.
+   ══════════════════════════════════════════════════════════ */
+
+/*
+  The workspace root div uses style={{ background: '#111827' }}
+  We target it by giving it a data-workspace attribute via CSS cascade.
+  Since we can't add attributes, we use the .workspace-container > * strategy.
+*/
+
+/* ── All panels that use background: '#1f2937' or '#111827' ── */
+/* These match the left panel, right panel, header tab bar, problem list overlay, etc. */
+
+/* Left tab bar (contains Description/Submissions/Doubts tabs) */
+.workspace-container [style*="background: '#111827'"],
+.workspace-container [style*='background: "#111827"'],
+.workspace-container [style*="background:'#111827'"] {
+    background-color: var(--ide-bg, #0d1117) !important;
+}
+
+.workspace-container [style*="background: '#1f2937'"],
+.workspace-container [style*='background: "#1f2937"'],
+.workspace-container [style*="background:'#1f2937'"] {
+    background-color: var(--ide-header-bg, #161b22) !important;
+}
+
+.workspace-container [style*="background: '#0d1117'"],
+.workspace-container [style*='background: "#0d1117"'] {
+    background-color: var(--ide-bg, #0d1117) !important;
+}
+
+/* ── Active left-panel tab: blue underline → orange ── */
+/* Tab buttons use borderBottom: '2px solid #3b82f6' inline when active */
+.workspace-container button[style*="2px solid #3b82f6"],
+.workspace-container button[style*='2px solid #3b82f6'] {
+    border-bottom-color: var(--primary-orange, #F97316) !important;
+    color: #ffffff !important;
+}
+
+/* Active topic tag chips in description (rgba(59,130,246,...)) → orange tint */
+.workspace-container [style*="rgba(59,130,246,0.15)"],
+.workspace-container [style*="rgba(59, 130, 246, 0.15)"] {
+    background: rgba(249,115,22,0.12) !important;
+    color: var(--primary-orange, #F97316) !important;
+    border-color: rgba(249,115,22,0.28) !important;
+}
+
+/* Timer container — already targeting the blue border version */
+.workspace-container [style*="rgba(59, 130, 246, 0.1)"],
+.workspace-container [style*="rgba(59,130,246,0.1)"] {
+    background: rgba(249,115,22,0.08) !important;
+    border-color: rgba(249,115,22,0.28) !important;
+}
+
+/* Currently selected problem in problem list (blue highlight → orange) */
+.workspace-container [style*="rgba(59, 130, 246, 0.1)"],
+.workspace-container [style*="rgba(59,130,246,0.1)"] {
+    background: rgba(249,115,22,0.09) !important;
+}
+
+/* "AV" logo gradient override */
+.workspace-container button[style*="linear-gradient(135deg, #6366f1, #ec4899)"] {
+    background-image: linear-gradient(135deg, var(--primary-orange,#F97316), var(--primary-teal,#14B8A6)) !important;
+}
+
+/* Submit button override (green gradient → orange) */
+.workspace-container button[style*="linear-gradient(135deg, #10b981"] {
+    background: linear-gradient(135deg, var(--primary-orange,#F97316), #ea6b0a) !important;
+    box-shadow: 0 3px 14px rgba(249,115,22,0.3) !important;
+}
+.workspace-container button[style*="linear-gradient(135deg, #10b981"]:hover {
+    box-shadow: 0 5px 20px rgba(249,115,22,0.45) !important;
+}
+
+/* ── Problem list dropdown header ── */
+/* The dropdown overlay that says "Problem List" */
+.workspace-container > div > div[style*="zIndex: 200"] {
+    background: var(--ide-header-bg, #161b22) !important;
+    border-color: var(--ide-border) !important;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
+}
+
+/* ── Editor right-panel header ── */
+/* The dark bar above the code editor with language select + run/submit */
+.workspace-container [style*="background: '#1f2937', color: 'white'"],
+.workspace-container [style*='background: "#1f2937", color: "white"'] {
+    background: var(--ide-header-bg, #161b22) !important;
+}
+
+/* ── Code block inside test results ── */
+.workspace-container [style*="background: '#0d1117'"] {
+    background: var(--ide-bg, #0d1117) !important;
+    border-color: var(--ide-border) !important;
+}
+
+/* ══ LIGHT THEME — Override inline hardcoded dark colors ══ */
+[data-theme="light"] .workspace-container [style*="background: '#111827'"],
+[data-theme="light"] .workspace-container [style*='background: "#111827"'] {
+    background-color: #f8fafc !important;
+}
+
+[data-theme="light"] .workspace-container [style*="background: '#1f2937'"],
+[data-theme="light"] .workspace-container [style*='background: "#1f2937"'] {
+    background-color: #ffffff !important;
+}
+
+[data-theme="light"] .workspace-container [style*="background: '#0d1117'"],
+[data-theme="light"] .workspace-container [style*='background: "#0d1117"'] {
+    background-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .workspace-container [style*="color: 'white'"],
+[data-theme="light"] .workspace-container [style*='color: "white"'] {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .workspace-container [style*="color: '#d1d5db'"],
+[data-theme="light"] .workspace-container [style*='color: "#d1d5db"'] {
+    color: #334155 !important;
+}
+
+[data-theme="light"] .workspace-container [style*="color: '#9ca3af'"],
+[data-theme="light"] .workspace-container [style*='color: "#9ca3af"'] {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .workspace-container [style*="color: '#e2e8f0'"],
+[data-theme="light"] .workspace-container [style*='color: "#e2e8f0"'] {
+    color: #1e293b !important;
+}
+
+[data-theme="light"] .workspace-container input[style*="color: 'white'"],
+[data-theme="light"] .workspace-container input[style*='color: "white"'] {
+    color: #0f172a !important;
+}
+
+/* Light: borders with rgba(255,255,255,...) → dark equivalents */
+[data-theme="light"] .workspace-container [style*="1px solid rgba(255,255,255,0.1)"] {
+    border-color: rgba(0,0,0,0.09) !important;
+}
+
+/* Light: description title color */
+[data-theme="light"] .workspace-container h1[style*="color: 'white'"],
+[data-theme="light"] .workspace-container h1[style*='color: "white"'] {
+    color: #0f172a !important;
+}
+
+/* ── Light theme: Modals (SubmissionResultModal & PerformanceGraphModal) ── */
+[data-theme="light"] .bg-gray-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-800\/50,
+[data-theme="light"] [class*="bg-gray-800"] {
+    background-color: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .border-gray-800,
+[data-theme="light"] .border-gray-700 {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .text-gray-200,
+[data-theme="light"] .text-gray-300 {
+    color: #1e293b !important;
+}
+
+[data-theme="light"] .text-gray-400 {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .bg-gray-700 {
+    background-color: #e2e8f0 !important;
+}
+
+/* PerformanceGraphModal container in light mode */
+[data-theme="light"] [style*="background: '#0f172a'"],
+[data-theme="light"] [style*='background: "#0f172a"'] {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] [style*="background: 'rgba(17,24,39,0.65)'"],
+[data-theme="light"] [style*='background: "rgba(17,24,39,0.65)"'] {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+

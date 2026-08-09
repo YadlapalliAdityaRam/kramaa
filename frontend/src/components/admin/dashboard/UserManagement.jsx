@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import api from '../../../utils/api';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaEnvelope, FaShieldAlt, FaTrash, FaUserShield, FaBan, FaSearch } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaTrash, FaUserShield, FaSearch, FaCheckCircle, FaTimesCircle, FaUserCheck, FaUserSlash } from 'react-icons/fa';
 
 const UserManagement = () => {
+    const { user: currentUser } = useSelector((state) => state.auth);
+    const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [filterRole, setFilterRole] = useState('USER');
+    const [filterRole, setFilterRole] = useState('ALL');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isMobile, setIsMobile] = useState(() => (
         typeof window !== 'undefined' ? window.innerWidth <= 768 : false
@@ -23,7 +27,7 @@ const UserManagement = () => {
         setLoading(true);
         try {
             const queryRole = filterRole === 'all' ? 'ALL' : filterRole;
-            let query = `/admin/users?role=${queryRole}`;
+            let query = `/admin/users?role=${queryRole}&limit=100`;
             if (filterStatus !== 'all') {
                 query += `&status=${filterStatus}`;
             }
@@ -43,24 +47,40 @@ const UserManagement = () => {
     }, [filterRole, filterStatus]);
 
     const handleRoleChange = async (userId, newRole) => {
+        if (!isSuperAdmin) {
+            toast.error("Only Super Admins can update roles");
+            return;
+        }
         if (!window.confirm(`Change user role to ${newRole}?`)) return;
         try {
             await api.put(`/admin/users/${userId}/role`, { role: newRole });
             toast.success("User role updated");
             fetchUsers();
         } catch (err) {
-            toast.error("Failed to update role");
+            toast.error(err.response?.data?.message || "Failed to update role");
         }
     };
 
-    const handleDeleteUser = async (userId) => {
-        if (!window.confirm("Are you sure? This action cannot be undone.")) return;
+    const handleDeleteUser = async (targetUser) => {
+        if (targetUser.role === 'SUPER_ADMIN') {
+            toast.error("Super Admin cannot be deleted");
+            return;
+        }
+        if (targetUser.role === 'ADMIN' && !isSuperAdmin) {
+            toast.error("Only Super Admins can delete other Admins");
+            return;
+        }
+
+        if (!window.confirm(
+            `⚠️ Permanently delete user "${targetUser.username}" (${targetUser.email})?\n\nThis will remove the account directly from the database and cannot be undone. Super Admin will be notified.`
+        )) return;
+
         try {
-            await api.delete(`/admin/users/${userId}`);
-            toast.success("User deleted");
+            const res = await api.delete(`/admin/users/${targetUser._id}`);
+            toast.success(res.data?.message || `User "${targetUser.username}" permanently deleted`);
             fetchUsers();
         } catch (err) {
-            toast.error("Failed to delete user");
+            toast.error(err.response?.data?.message || "Failed to delete user");
         }
     };
 
@@ -72,45 +92,56 @@ const UserManagement = () => {
 
     const getRoleBadge = (role) => {
         switch (role) {
-            case 'SUPER_ADMIN': return <span className="bg-purple-900/30 text-purple-300 text-xs px-3 py-1.5 rounded-lg font-bold border-2 border-purple-600/40 shadow-lg shadow-purple-500/20">SUPER ADMIN</span>;
-            case 'ADMIN': return <span className="bg-blue-900/30 text-blue-300 text-xs px-3 py-1.5 rounded-lg font-bold border-2 border-blue-600/40 shadow-lg shadow-blue-500/20">ADMIN</span>;
-            default: return <span className="bg-gray-800/50 text-gray-300 text-xs px-3 py-1.5 rounded-lg font-bold border-2 border-gray-600/40">USER</span>;
+            case 'SUPER_ADMIN': return <span className="sa-badge sa-badge-purple" style={{ fontWeight: 800 }}>SUPER ADMIN</span>;
+            case 'ADMIN': return <span className="sa-badge sa-badge-blue" style={{ fontWeight: 750 }}>ADMIN</span>;
+            default: return <span className="sa-badge" style={{ background: 'var(--sa-pill-inactive)', color: 'var(--sa-text-muted)', border: '1px solid var(--sa-border)' }}>USER</span>;
         }
     };
 
     return (
         <div className="glass-panel">
             <div className="flex justify-between items-center mb-6" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap', gap: isMobile ? '10px' : undefined }}>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FaUserShield className="text-green-400" /> User Management
+                <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--sa-text)', margin: 0 }}>
+                    <FaUserShield style={{ color: '#10b981' }} /> User Management
                 </h2>
-                <div className="flex gap-5" style={{ width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+                <div className="flex gap-3" style={{ width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
                     <div className="relative" style={{ width: isMobile ? '100%' : 'auto' }}>
-                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--sa-text-muted)' }} />
                         <input
                             type="text"
                             placeholder="Search users..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="bg-[#252526] text-white pl-10 pr-4 py-2.5 rounded-lg border border-[#444] text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none w-64 transition-all"
-                            style={{ width: isMobile ? '100%' : undefined }}
+                            className="sa-input"
+                            style={{ paddingLeft: '2.4rem', width: isMobile ? '100%' : '220px' }}
                         />
                     </div>
                     <select
+                        value={filterRole}
+                        onChange={(e) => setFilterRole(e.target.value)}
+                        className="sa-input"
+                        style={{ width: isMobile ? '100%' : '120px', cursor: 'pointer' }}
+                    >
+                        <option value="ALL">All Roles</option>
+                        <option value="USER">User</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="SUPER_ADMIN">Super Admin</option>
+                    </select>
+                    <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="bg-[#252526] text-white px-4 py-2.5 rounded-lg border border-[#444] text-sm outline-none cursor-pointer hover:border-gray-500 transition-all min-w-[140px]"
-                        style={{ width: isMobile ? '100%' : undefined }}
+                        className="sa-input"
+                        style={{ width: isMobile ? '100%' : '130px', cursor: 'pointer' }}
                     >
                         <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="active">Active Only</option>
+                        <option value="inactive">Inactive Only</option>
                     </select>
                 </div>
             </div>
 
             {loading ? (
-                <div className="text-gray-400 text-center py-8">Loading users...</div>
+                <div className="sa-empty-text" style={{ padding: '2rem 0', textAlign: 'center' }}>Loading users...</div>
             ) : (
                 <div className="table-container">
                     <table className="data-table">
@@ -118,45 +149,69 @@ const UserManagement = () => {
                             <tr>
                                 <th>User</th>
                                 <th>Role</th>
+                                <th>Status</th>
                                 <th>Joined</th>
                                 <th className="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredUsers.map(user => (
-                                <tr key={user._id}>
+                            {filteredUsers.map(u => (
+                                <tr key={u._id}>
                                     <td>
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-white flex items-center gap-2">
-                                                <FaUser className="text-gray-500 text-xs" /> {user.username}
+                                            <span className="font-semibold flex items-center gap-2" style={{ color: 'var(--sa-text)' }}>
+                                                <FaUser style={{ color: 'var(--sa-text-muted)', fontSize: '0.75rem' }} /> {u.username}
                                             </span>
-                                            <span className="text-gray-500 text-xs flex items-center gap-2 mt-0.5">
-                                                <FaEnvelope className="text-xs" /> {user.email}
+                                            <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                <FaEnvelope style={{ fontSize: '0.75rem' }} /> {u.email}
                                             </span>
                                         </div>
                                     </td>
-                                    <td>{getRoleBadge(user.role)}</td>
-                                    <td className="text-gray-400 text-sm">
-                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    <td>{getRoleBadge(u.role)}</td>
+                                    <td>
+                                        {u.isActive !== false ? (
+                                            <span className="sa-badge sa-badge-green" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <FaCheckCircle size={10} /> Active
+                                            </span>
+                                        ) : (
+                                            <span className="sa-badge sa-badge-red" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <FaTimesCircle size={10} /> Inactive
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.85rem' }}>
+                                        {new Date(u.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="text-right">
-                                        <div className="flex justify-end gap-5" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-                                            {user.role !== 'SUPER_ADMIN' && (
+                                        <div className="flex justify-end gap-3" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                                            {u.role !== 'SUPER_ADMIN' && (
                                                 <>
-                                                    <select
-                                                        value={user.role}
-                                                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                                                        className="bg-[#111] text-gray-300 text-sm px-3 py-2 rounded-lg border border-[#444] outline-none hover:border-gray-500 transition-all cursor-pointer min-h-[40px]"
-                                                    >
-                                                        <option value="USER">User</option>
-                                                        <option value="ADMIN">Admin</option>
-                                                    </select>
+                                                    {isSuperAdmin ? (
+                                                        <select
+                                                            value={u.role}
+                                                            onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                                                            className="sa-input"
+                                                            style={{ padding: '4px 8px', fontSize: '0.82rem', height: '36px', minWidth: '90px' }}
+                                                        >
+                                                            <option value="USER">User</option>
+                                                            <option value="ADMIN">Admin</option>
+                                                        </select>
+                                                    ) : null}
                                                     <button
-                                                        onClick={() => handleDeleteUser(user._id)}
-                                                        className="text-red-400 hover:text-red-300 px-3 py-2 hover:bg-red-900/30 rounded-lg transition-all border border-transparent hover:border-red-500/50 min-h-[40px] min-w-[40px]"
-                                                        title="Delete User"
+                                                        onClick={() => handleDeleteUser(u)}
+                                                        className="sa-btn sa-btn-danger"
+                                                        style={{
+                                                            padding: '6px 14px',
+                                                            minHeight: '36px',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '6px'
+                                                        }}
+                                                        title="Permanently Delete User from Database"
                                                     >
-                                                        <FaTrash size={16} />
+                                                        <FaTrash size={12} />
+                                                        <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Delete</span>
                                                     </button>
                                                 </>
                                             )}
@@ -166,7 +221,7 @@ const UserManagement = () => {
                             ))}
                             {filteredUsers.length === 0 && (
                                 <tr>
-                                    <td colSpan="4" className="text-center py-8 text-gray-500">No users found matching filters.</td>
+                                    <td colSpan="5" className="sa-empty-text" style={{ textAlign: 'center', padding: '2rem 0' }}>No users found matching filters.</td>
                                 </tr>
                             )}
                         </tbody>

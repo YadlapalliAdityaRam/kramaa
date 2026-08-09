@@ -356,16 +356,16 @@ const ContestProblemView = () => {
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100dvh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="competition-page contest-problem-page contest-state-page" style={{ minHeight: '100dvh', background: 'var(--ws-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
                     <FaClock style={{ fontSize: '60px', color: '#14b8a6', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                    <p style={{ color: '#9ca3af', fontSize: '20px' }}>Loading Question...</p>
+                    <p style={{ color: 'var(--ws-text-muted)', fontSize: '20px' }}>Loading Question...</p>
                 </div>
             </div>
         );
     }
 
-    if (!problem) return <div>Problem not found</div>;
+    if (!problem) return <div className="competition-page contest-problem-page contest-state-page">Problem not found</div>;
 
     const getDifficultyColor = (diff) => {
         switch (diff?.toLowerCase()) {
@@ -388,15 +388,15 @@ const ContestProblemView = () => {
     const formatOutputDisplay = (value) => formatTestCaseOutput(value);
 
     return (
-        <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#111827', color: 'white', overflow: 'hidden', paddingBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : 0 }}>
+        <div className="competition-page contest-problem-page" style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--ws-bg)', color: 'var(--ws-text)', overflow: 'hidden', paddingBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : 0 }}>
             {/* Header */}
             <div style={{
-                height: '48px', background: '#1f2937', borderBottom: '1px solid rgba(255,255,255,0.1)',
+                height: '48px', background: 'var(--ws-panel)', borderBottom: '1px solid var(--ws-border)',
                 display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'flex-start' : 'space-between', padding: isMobile ? '10px 12px' : '0 16px', paddingTop: isMobile ? 'calc(env(safe-area-inset-top, 0px) + 8px)' : 0, flexShrink: 0, flexDirection: isMobile ? 'column' : 'row', minHeight: isMobile ? 'auto' : '48px', gap: isMobile ? '8px' : 0
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: isMobile ? '100%' : 'auto', flexWrap: isMobile ? 'nowrap' : 'wrap', overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? '2px' : 0, WebkitOverflowScrolling: isMobile ? 'touch' : 'auto' }} className={isMobile ? 'custom-scrollbar' : undefined}>
                     <button onClick={() => navigate(`/contest/${contestId}`)} style={{
-                        padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#9ca3af',
+                        padding: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ws-text-muted)',
                         display: 'flex', alignItems: 'center', fontSize: '14px'
                     }}>
                         <FaArrowLeft />
@@ -418,7 +418,7 @@ const ContestProblemView = () => {
                     )}
 
                     <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{
-                        background: '#374151', color: 'white', fontSize: '12px', border: '1px solid #4b5563',
+                        background: 'var(--ws-card)', color: 'var(--ws-text)', fontSize: '12px', border: '1px solid var(--ws-border)',
                         borderRadius: '6px', padding: '4px 10px', outline: 'none', cursor: 'pointer'
                     }}>
                         <option value="javascript">JavaScript</option>
@@ -428,23 +428,25 @@ const ContestProblemView = () => {
                         <option value="c">C</option>
                     </select>
 
-                    <button onClick={handleResetCode} style={{ background: '#dc2626', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer' }}>
+                    <button onClick={handleResetCode} style={{ background: '#ef4444', color: '#ffffff', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
                         Reset
                     </button>
-                    <button onClick={handleExitContest} disabled={isExiting} style={{ background: '#6b7280', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: 'none', cursor: isExiting ? 'not-allowed' : 'pointer', opacity: isExiting ? 0.7 : 1 }}>
+                    <button onClick={handleExitContest} disabled={isExiting} style={{ background: 'var(--ws-card)', color: 'var(--ws-text)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--ws-border)', cursor: isExiting ? 'not-allowed' : 'pointer', opacity: isExiting ? 0.7 : 1 }}>
                         {isExiting ? 'Exiting...' : 'Exit'}
                     </button>
                     <button onClick={handleRun} disabled={isRunning} style={{
-                        background: 'linear-gradient(to right, #2563eb, #3b82f6)', color: 'white', padding: '4px 12px', borderRadius: '6px',
+                        background: 'linear-gradient(to right, #2563eb, #3b82f6)', color: '#ffffff', padding: '4px 12px', borderRadius: '6px',
                         fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', border: 'none',
-                        cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1
+                        cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
+                        boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
                     }}>
                         <FaPlay style={{ fontSize: '9px' }} /> Run
                     </button>
                     <button onClick={handleSubmit} disabled={isRunning} style={{
-                        background: 'linear-gradient(to right, #059669, #14b8a6)', color: 'white', padding: '4px 14px', borderRadius: '6px',
+                        background: 'linear-gradient(135deg, var(--primary-orange, #F97316), #ea6b0a)', color: '#ffffff', padding: '4px 14px', borderRadius: '6px',
                         fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', border: 'none',
-                        cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1
+                        cursor: isRunning ? 'not-allowed' : 'pointer', opacity: isRunning ? 0.7 : 1,
+                        boxShadow: '0 2px 8px rgba(249, 115, 22, 0.35)'
                     }}>
                         <FaCheckCircle /> Submit
                     </button>
@@ -456,17 +458,17 @@ const ContestProblemView = () => {
                 <PanelGroup orientation={isMobile ? "vertical" : "horizontal"} style={{ height: '100%', minHeight: 0 }}>
                     {/* Left Panel: Description & Submissions */}
                     <Panel defaultSize={isMobile ? mobileLeftPanelDefault : 33} minSize={isMobile ? 24 : 20}>
-                        <div style={{ height: '100%', background: '#1f2937', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ height: '100%', background: 'var(--ws-panel)', display: 'flex', flexDirection: 'column' }}>
                             {/* Tabs */}
-                            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', background: '#111827', overflowX: 'auto', whiteSpace: 'nowrap' }} className="custom-scrollbar">
+                            <div style={{ display: 'flex', borderBottom: '1px solid var(--ws-border)', background: 'var(--ws-bg)', overflowX: 'auto', whiteSpace: 'nowrap' }} className="custom-scrollbar">
                                 {['Description', 'Submissions'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         style={{
                                             padding: '10px 16px', background: 'transparent',
-                                            color: activeTab === tab ? 'white' : '#9ca3af',
-                                            border: 'none', borderBottom: activeTab === tab ? '2px solid #3b82f6' : '2px solid transparent',
+                                            color: activeTab === tab ? 'var(--ws-text)' : 'var(--ws-text-muted)',
+                                            border: 'none', borderBottom: activeTab === tab ? '2px solid var(--ws-accent)' : '2px solid transparent',
                                             cursor: 'pointer', fontWeight: activeTab === tab ? 'bold' : 'normal',
                                             fontSize: '12px', transition: 'all 0.2s'
                                         }}
@@ -478,7 +480,7 @@ const ContestProblemView = () => {
 
                             {activeTab === 'Description' ? (
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
-                                    <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>{problem.title}</h1>
+                                    <h1 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--ws-text)', marginBottom: '12px' }}>{problem.title}</h1>
                                     <div style={{ marginBottom: '20px' }}>
                                         <span style={{
                                             fontSize: '12px', padding: '3px 10px', borderRadius: '20px',
@@ -486,44 +488,93 @@ const ContestProblemView = () => {
                                         }}>
                                             {problem.difficulty}
                                         </span>
-                                        <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '10px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--ws-text-muted)', marginLeft: '10px' }}>
                                             {problem.points ? `${problem.points} Points` : ''}
                                         </span>
                                     </div>
-                                    <div style={{ color: '#d1d5db', lineHeight: '1.7', fontSize: '14px', marginBottom: '28px' }}>
+                                    <div style={{ color: 'var(--ws-text-secondary)', lineHeight: '1.7', fontSize: '14px', marginBottom: '28px' }}>
                                         {problem.description}
                                     </div>
 
-                                    <div style={{ marginBottom: '16px' }}>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Input</h3>
-                                        <p style={{ color: '#d1d5db', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', margin: 0 }}>
-                                            {problem.inputFormat}
-                                        </p>
-                                    </div>
-                                    <div style={{ marginBottom: '16px' }}>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Output</h3>
-                                        <p style={{ color: '#d1d5db', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', margin: 0 }}>
-                                            {problem.outputFormat}
-                                        </p>
-                                    </div>
-                                    <div style={{ marginBottom: '20px' }}>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'white', marginBottom: '6px' }}>Constraints</h3>
-                                        <pre style={{ color: '#d1d5db', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '6px', margin: 0, whiteSpace: 'pre-wrap' }}>
-                                            {problem.constraints}
-                                        </pre>
-                                    </div>
+                                    {/* ── Examples (Input / Output details) ── */}
+                                    {((problem.examples && problem.examples.length > 0) || (problem.sampleTestCases && problem.sampleTestCases.length > 0)) ? (
+                                        <div style={{ marginBottom: '24px' }}>
+                                            {((problem.examples && problem.examples.length > 0) ? problem.examples : problem.sampleTestCases).map((ex, idx) => (
+                                                <div key={idx} style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '8px' }}>
+                                                        Example {idx + 1}:
+                                                    </h3>
+                                                    <div style={{
+                                                        background: 'var(--ws-card)',
+                                                        border: '1px solid var(--ws-border)',
+                                                        borderRadius: '8px',
+                                                        padding: '12px 14px',
+                                                        fontSize: '13px',
+                                                        lineHeight: '1.6'
+                                                    }}>
+                                                        <div style={{ marginBottom: '6px' }}>
+                                                            <span style={{ fontWeight: '700', color: 'var(--ws-label-input)' }}>Input: </span>
+                                                            <code style={{ color: 'var(--ws-code-input)', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '13px', fontWeight: '500' }}>
+                                                                {formatTestCaseInput(ex.input, problem.parameters)}
+                                                            </code>
+                                                        </div>
+                                                        <div style={{ marginBottom: ex.explanation ? '6px' : 0 }}>
+                                                            <span style={{ fontWeight: '700', color: 'var(--ws-label-output)' }}>Output: </span>
+                                                            <code style={{ color: 'var(--ws-code-output)', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '13px', fontWeight: '500' }}>
+                                                                {formatTestCaseOutput(ex.output)}
+                                                            </code>
+                                                        </div>
+                                                        {ex.explanation && (
+                                                            <div style={{ marginTop: '6px', color: 'var(--ws-text-muted)' }}>
+                                                                <span style={{ fontWeight: '600', color: 'var(--ws-text-secondary)' }}>Explanation: </span>
+                                                                {ex.explanation}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {problem.inputFormat && (
+                                                <div style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Input</h3>
+                                                    <p style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', fontFamily: 'monospace', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', margin: 0 }}>
+                                                        {problem.inputFormat}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {problem.outputFormat && (
+                                                <div style={{ marginBottom: '16px' }}>
+                                                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Output</h3>
+                                                    <p style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', fontFamily: 'monospace', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', margin: 0 }}>
+                                                        {problem.outputFormat}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {problem.constraints && (
+                                        <div style={{ marginBottom: '20px' }}>
+                                            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--ws-text)', marginBottom: '6px' }}>Constraints</h3>
+                                            <pre style={{ color: 'var(--ws-text-secondary)', fontSize: '13px', fontFamily: 'monospace', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                                {problem.constraints}
+                                            </pre>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }} className="custom-scrollbar">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', margin: 0 }}>My Submissions</h2>
+                                        <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--ws-text)', margin: 0 }}>My Submissions</h2>
                                         <button onClick={fetchUserSubmissions} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '12px' }}>Refresh</button>
                                     </div>
-                                    {fetchingSubmissions ? <div style={{ color: '#9ca3af' }}>Loading...</div> : userSubmissions.length > 0 ? (
+                                    {fetchingSubmissions ? <div style={{ color: 'var(--ws-text-muted)' }}>Loading...</div> : userSubmissions.length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {userSubmissions.map((sub) => (
                                                 <div key={sub._id} style={{
-                                                    background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '6px',
+                                                    background: 'var(--ws-card)', padding: '10px', borderRadius: '6px',
                                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'
                                                 }} onClick={() => { setCode(sub.code); setLanguage(sub.language); }}>
                                                     <div>
@@ -533,20 +584,20 @@ const ContestProblemView = () => {
                                                         <div style={{ fontSize: '11px', color: sub.status === 'accepted' ? '#86efac' : '#fcd34d' }}>
                                                             Test cases: {formatTestCaseSummary(sub)}
                                                         </div>
-                                                        <div style={{ fontSize: '11px', color: '#6b7280' }}>{new Date(sub.createdAt).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--ws-text-muted)' }}>{new Date(sub.createdAt).toLocaleString()}</div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div style={{ color: '#6b7280' }}>No submissions yet.</div>
+                                        <div style={{ color: 'var(--ws-text-muted)' }}>No submissions yet.</div>
                                     )}
                                 </div>
                             )}
                         </div>
                     </Panel>
 
-                    <PanelResizeHandle style={{ width: isMobile ? '100%' : '4px', height: isMobile ? '4px' : '100%', background: 'rgba(255,255,255,0.1)', cursor: isMobile ? 'row-resize' : 'col-resize' }} />
+                    <PanelResizeHandle style={{ width: isMobile ? '100%' : '4px', height: isMobile ? '4px' : '100%', background: 'var(--ws-border)', cursor: isMobile ? 'row-resize' : 'col-resize' }} />
 
                     {/* Right Panel: Editor & Results */}
                     <Panel defaultSize={isMobile ? mobileRightPanelDefault : 67} minSize={isMobile ? 35 : 40}>
@@ -556,34 +607,34 @@ const ContestProblemView = () => {
                                 minSize={isMobile ? 35 : 20}
                                 maxSize={isMobile ? 65 : 85}
                             >
-                                <div style={{ height: '100%', background: '#111827', display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ background: 'rgba(17, 24, 39, 0.5)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '6px 16px', flexShrink: 0 }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#3b82f6', textTransform: 'uppercase' }}>Code Editor</span>
+                                <div style={{ height: '100%', background: 'var(--ws-bg)', display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ background: 'var(--ws-panel)', borderBottom: '1px solid var(--ws-border)', padding: '8px 16px', flexShrink: 0 }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-accent)', textTransform: 'uppercase' }}>Code Editor</span>
                                     </div>
                                     <div style={{ flex: 1, position: 'relative' }}>
-                                        <CodeEditor code={code} setCode={setCode} language={language} theme="vs-dark" />
+                                        <CodeEditor code={code} setCode={setCode} language={language} />
                                     </div>
                                 </div>
                             </Panel>
 
-                            <PanelResizeHandle style={{ height: '4px', background: 'rgba(255,255,255,0.1)', cursor: 'row-resize' }} />
+                            <PanelResizeHandle style={{ height: '4px', background: 'var(--ws-border)', cursor: 'row-resize' }} />
 
                             <Panel
                                 defaultSize={isMobile ? mobileResultsPanelDefault : 50}
                                 minSize={isMobile ? 35 : 20}
                                 maxSize={isMobile ? 65 : 85}
                             >
-                                <div style={{ height: '100%', background: '#1f2937', display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ background: 'rgba(17, 24, 39, 0.5)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '6px 16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#eab308', textTransform: 'uppercase' }}>{submissionResult ? 'Results' : 'Test Cases'}</span>
-                                        {submissionResult && <button onClick={() => setSubmissionResult(null)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: '11px' }}>Clear</button>}
+                                <div style={{ height: '100%', background: 'var(--ws-panel)', display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ background: 'var(--ws-panel)', borderBottom: '1px solid var(--ws-border)', padding: '8px 16px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--ws-teal)', textTransform: 'uppercase' }}>{submissionResult ? 'Results' : 'Test Cases'}</span>
+                                        {submissionResult && <button onClick={() => setSubmissionResult(null)} style={{ background: 'none', border: 'none', color: 'var(--ws-text-muted)', cursor: 'pointer', fontSize: '11px' }}>Clear</button>}
                                     </div>
                                     <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '16px' }} className="custom-scrollbar">
                                         {submissionResult ? (
                                             <div>
                                                 {submissionResult.error ? (
                                                     <div style={{ color: '#f87171', fontSize: '13px' }}>
-                                                        <strong>Error:</strong> <pre style={{ whiteSpace: 'pre-wrap', background: 'rgba(0,0,0,0.3)', padding: '8px', marginTop: '4px' }}>{submissionResult.error}</pre>
+                                                        <strong>Error:</strong> <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--ws-card)', border: '1px solid var(--ws-border)', padding: '8px', marginTop: '4px', borderRadius: '4px' }}>{submissionResult.error}</pre>
                                                     </div>
                                                 ) : (
                                                     <div>
@@ -595,9 +646,9 @@ const ContestProblemView = () => {
                                                                 <div style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 'bold', marginBottom: '4px' }}>
                                                                     First Failed Test Case: #{submissionResult.firstFailedTestCase.testCaseNumber}
                                                                 </div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db', whiteSpace: 'pre-wrap' }}>Input: {formatInputDisplay(submissionResult.firstFailedTestCase.input, problem?.parameters || [])}</div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db' }}>Expected: {formatOutputDisplay(submissionResult.firstFailedTestCase.expectedOutput)}</div>
-                                                                <div style={{ fontSize: '11px', color: '#d1d5db' }}>Actual: {formatOutputDisplay(submissionResult.firstFailedTestCase.actualOutput)}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>Input: {formatInputDisplay(submissionResult.firstFailedTestCase.input, problem?.parameters || [])}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)' }}>Expected: {formatOutputDisplay(submissionResult.firstFailedTestCase.expectedOutput)}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)' }}>Actual: {formatOutputDisplay(submissionResult.firstFailedTestCase.actualOutput)}</div>
                                                                 {submissionResult.firstFailedTestCase.error && (
                                                                     <div style={{ fontSize: '11px', color: '#f87171', marginTop: '4px' }}>
                                                                         Error: {submissionResult.firstFailedTestCase.error}
@@ -606,24 +657,24 @@ const ContestProblemView = () => {
                                                             </div>
                                                         )}
                                                         {submissionResult.testResults?.map((res, i) => (
-                                                            <div key={i} style={{ marginBottom: '8px', background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '4px' }}>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                                                                    <span>Case {res.testCaseNumber || (i + 1)}</span>
-                                                                    <span style={{ color: res.passed ? '#22c55e' : '#ef4444' }}>{res.passed ? 'Passed' : 'Failed'}</span>
+                                                            <div key={i} style={{ marginBottom: '8px', background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', border: '1px solid var(--ws-border)' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--ws-text)' }}>Case {res.testCaseNumber || (i + 1)}</span>
+                                                                    <span style={{ color: res.passed ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '11px' }}>{res.passed ? 'Passed' : 'Failed'}</span>
                                                                 </div>
                                                                 {!res.passed && (
-                                                                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
-                                                                        <div>Expected: {formatOutputDisplay(res.expectedOutput)}</div>
-                                                                        <div>Actual: {formatOutputDisplay(res.actualOutput)}</div>
+                                                                    <div style={{ fontSize: '11px', color: 'var(--ws-text-secondary)', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                        <div><span style={{ color: 'var(--ws-teal)', fontWeight: 'bold' }}>Expected: </span>{formatOutputDisplay(res.expectedOutput)}</div>
+                                                                        <div><span style={{ color: 'var(--ws-accent)', fontWeight: 'bold' }}>Actual: </span>{formatOutputDisplay(res.actualOutput)}</div>
                                                                     </div>
                                                                 )}
                                                                 {res.printedOutput && (
-                                                                    <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
+                                                                    <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '6px', background: 'var(--ws-input-bg)', padding: '4px 8px', borderRadius: '4px' }}>
                                                                         stdout: {res.printedOutput}
                                                                     </div>
                                                                 )}
                                                                 {res.error && (
-                                                                    <div style={{ fontSize: '11px', color: '#f87171', marginTop: '4px' }}>
+                                                                    <div style={{ fontSize: '11px', color: '#f87171', marginTop: '6px', background: 'rgba(239,68,68,0.1)', padding: '6px 8px', borderRadius: '4px', border: '1px solid rgba(239,68,68,0.25)' }}>
                                                                         Error: {res.error}
                                                                     </div>
                                                                 )}
@@ -633,13 +684,18 @@ const ContestProblemView = () => {
                                                 )}
                                             </div>
                                         ) : (
-                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                                 {problem.sampleTestCases?.map((tc, i) => (
-                                                    <div key={i} style={{ background: 'rgba(17, 24, 39, 0.5)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', flex: isMobile ? '1 1 100%' : '1 1 200px' }}>
-                                                        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>Case {i + 1}</div>
-                                                        <div style={{ fontSize: '12px', color: '#d1d5db', fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '6px', whiteSpace: 'pre-wrap' }}>
+                                                    <div key={i} style={{ background: 'var(--ws-card)', padding: '10px', borderRadius: '6px', border: '1px solid var(--ws-border)', flex: isMobile ? '1 1 100%' : '1 1 calc(50% - 6px)', minWidth: isMobile ? '0' : '220px' }}>
+                                                        <div style={{ fontSize: '10px', color: 'var(--ws-text-muted)', marginBottom: '4px', fontWeight: 'bold' }}>Test Case {i + 1}</div>
+                                                        <div style={{ background: 'var(--ws-input-bg)', padding: '6px', borderRadius: '4px', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>
                                                             {formatInputDisplay(tc.input, problem.parameters)}
                                                         </div>
+                                                        {tc.output !== undefined && tc.output !== null && (
+                                                            <div style={{ marginTop: '4px', background: 'var(--ws-input-bg)', padding: '6px', borderRadius: '4px', fontFamily: "'IBM Plex Mono', 'Fira Code', monospace", fontSize: '11px', color: 'var(--ws-text-secondary)', whiteSpace: 'pre-wrap' }}>
+                                                                <span style={{ color: 'var(--ws-teal)', fontWeight: 'bold' }}>Expected: </span>{formatOutputDisplay(tc.output)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

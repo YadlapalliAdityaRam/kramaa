@@ -106,20 +106,22 @@ const CompanyManagement = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 flex items-center gap-3">
-                        Company Management
+                    <h2 className="text-3xl font-extrabold flex items-center gap-3" style={{ color: 'var(--sa-text)' }}>
+                        <FaBuilding style={{ color: '#f97316' }} /> Company Management
                     </h2>
-                    <p className="text-gray-400 mt-2 text-lg">Manage placement companies and recruitment details</p>
+                    <p style={{ color: 'var(--sa-text-muted)', marginTop: '0.4rem', fontSize: '0.95rem' }}>
+                        Manage placement companies, hiring processes, and recruitment details.
+                    </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                     {/* Filter Dropdown */}
                     <div className="relative">
-                        <FaFilter className="absolute left-4 top-3.5 text-gray-500 z-10" />
                         <select
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
-                            className="bg-gray-900/50 border border-gray-700 rounded-xl py-3 pl-10 pr-8 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-inner cursor-pointer appearance-none"
+                            className="sa-input"
+                            style={{ cursor: 'pointer', minWidth: '140px', padding: '0.65rem 1rem' }}
                         >
                             <option value="All">All Types</option>
                             <option value="Product-Based">Product-Based</option>
@@ -128,186 +130,159 @@ const CompanyManagement = () => {
                     </div>
 
                     <div className="relative group flex-1 md:w-64">
-                        <FaSearch className="absolute left-4 top-3.5 text-gray-500 group-focus-within:text-orange-400 transition-colors" />
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--sa-text-muted)' }} />
                         <input
                             type="text"
                             placeholder="Search companies..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-gray-900/50 border border-gray-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-inner"
+                            className="sa-input"
+                            style={{ paddingLeft: '2.4rem', width: '100%' }}
                         />
                     </div>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <button
                         onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all"
+                        className="sa-btn sa-btn-primary"
+                        style={{ padding: '0.65rem 1.25rem', gap: '0.5rem' }}
                     >
-                        <FaPlus /> <span className="hidden sm:inline">Add Company</span>
-                    </motion.button>
+                        <FaPlus /> <span>Add Company</span>
+                    </button>
                 </div>
             </div>
 
-            {/* Stats Overview - Grid adjusted for deeper columns if fewer items */}
+            {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl">
                 {stats.map((stat, index) => (
-                    <motion.div
+                    <div
                         key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 p-6 rounded-2xl hover:border-gray-600 hover:bg-gray-800/60 transition-all group cursor-default"
-                        whileHover={{ y: -5 }}
+                        className="sa-stat-card"
+                        style={{ padding: '1.25rem' }}
                     >
-                        <div className="flex justify-between items-start">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <p className="text-gray-400 text-sm font-semibold uppercase tracking-wider">{stat.label}</p>
-                                <h3 className="text-3xl font-extrabold text-white mt-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-colors">
+                                <p style={{ color: 'var(--sa-text-muted)', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>{stat.label}</p>
+                                <h3 style={{ fontSize: '1.75rem', fontWeight: '850', color: 'var(--sa-text)', margin: '0.4rem 0 0 0' }}>
                                     {stat.value}
                                 </h3>
                             </div>
-                            <div className={`p-4 rounded-xl bg-${stat.color}-500/10 text-${stat.color}-400 group-hover:scale-110 group-hover:bg-${stat.color}-500/20 transition-all duration-300`}>
-                                <stat.icon size={24} />
+                            <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(249, 115, 22, 0.15)', color: '#f97316' }}>
+                                <stat.icon size={22} />
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 ))}
             </div>
 
             {/* Content Area */}
             {filteredCompanies.length === 0 ? (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-24 bg-gray-800/20 rounded-3xl border border-dashed border-gray-700 hover:border-gray-600 transition-colors"
+                <div
+                    className="sa-card"
+                    style={{ textAlign: 'center', padding: '3.5rem 1.5rem', border: '1px dashed var(--sa-border)' }}
                 >
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-700 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                        <FaBuilding className="text-5xl text-gray-500" />
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--sa-pill-inactive)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', color: '#f97316', fontSize: '1.75rem' }}>
+                        <FaBuilding />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">
+                    <h3 style={{ fontSize: '1.3rem', fontWeight: '750', color: 'var(--sa-text)', margin: '0 0 0.4rem 0' }}>
                         {searchTerm ? 'No companies found' : 'No Companies Added Yet'}
                     </h3>
-                    <p className="text-gray-400 max-w-sm mx-auto mb-8 text-lg">
-                        {searchTerm ? 'Try adjusting your search terms' : 'Start building your placement ecosystem by adding your first company.'}
+                    <p style={{ color: 'var(--sa-text-muted)', maxWidth: '360px', margin: '0 auto 1.5rem auto', fontSize: '0.9rem' }}>
+                        {searchTerm ? 'Try adjusting your search terms.' : 'Start building your placement ecosystem by adding your first company.'}
                     </p>
                     {!searchTerm && (
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                        <button
                             onClick={() => setShowModal(true)}
-                            className="px-8 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors inline-flex items-center gap-2 shadow-lg shadow-white/10"
+                            className="sa-btn sa-btn-primary"
+                            style={{ padding: '0.7rem 1.5rem', margin: '0 auto' }}
                         >
                             <FaPlus /> Add Company
-                        </motion.button>
+                        </button>
                     )}
-                </motion.div>
+                </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <AnimatePresence>
                         {filteredCompanies.map((company) => (
-                            <motion.div
+                            <div
                                 key={company._id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                whileHover={{ y: -8, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-                                className="bg-gray-800/60 backdrop-blur-md rounded-2xl border border-gray-700/50 p-6 transition-all group relative overflow-hidden"
+                                className="sa-card"
+                                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1.5rem', margin: 0 }}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                <div className="relative z-10 flex flex-col h-full">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-orange-500/20">
+                                <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #f97316, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', fontWeight: '800', color: '#ffffff', boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)' }}>
                                             {company.name.charAt(0)}
                                         </div>
-                                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold border tracking-wide uppercase ${company.type === 'Product-Based'
-                                                ? 'bg-teal-500/10 text-teal-400 border-teal-500/20'
-                                                : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                                            }`}>
+                                        <span className={`sa-badge ${company.type === 'Product-Based' ? 'sa-badge-green' : 'sa-badge-purple'}`}>
                                             {company.type}
                                         </span>
                                     </div>
 
-                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">{company.name}</h3>
-                                    <p className="text-gray-400 mb-6 line-clamp-2">
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '750', color: 'var(--sa-text)', margin: '0 0 0.4rem 0' }}>{company.name}</h3>
+                                    <p style={{ color: 'var(--sa-text-muted)', fontSize: '0.86rem', margin: '0 0 1.2rem 0' }}>
                                         {company.process?.length || 0} rounds of interview process defined.
                                     </p>
-
-                                    <div className="flex gap-3 mt-auto pt-4 border-t border-gray-700/50">
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => navigate(`/admin/companies/edit/${company._id}`)}
-                                            className="flex-1 py-2.5 bg-gray-700/50 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm flex items-center justify-center gap-2"
-                                        >
-                                            <FaEdit /> Edit
-                                        </motion.button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => handleDelete(company._id)}
-                                            className="flex-1 py-2.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 font-medium transition-colors text-sm flex items-center justify-center gap-2 border border-red-500/10"
-                                        >
-                                            <FaTrash /> Delete
-                                        </motion.button>
-                                    </div>
                                 </div>
-                            </motion.div>
+
+                                <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--sa-border)' }}>
+                                    <button
+                                        onClick={() => navigate(`/admin/companies/edit/${company._id}`)}
+                                        className="sa-btn sa-btn-secondary"
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.55rem 0.8rem', fontSize: '0.84rem' }}
+                                    >
+                                        <FaEdit /> Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(company._id)}
+                                        className="sa-btn sa-btn-danger"
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.55rem 0.8rem', fontSize: '0.84rem' }}
+                                    >
+                                        <FaTrash /> Delete
+                                    </button>
+                                </div>
+                            </div>
                         ))}
                     </AnimatePresence>
                 </div>
             )}
 
-            {/* Add Company Modal - Fixed Structure */}
+            {/* Add Company Modal */}
             <AnimatePresence>
                 {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowModal(false)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg relative z-10 p-8 max-h-[85vh] overflow-y-auto"
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)' }}>
+                        <div
+                            className="sa-card"
+                            style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--sa-border)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex justify-between items-center mb-8 sticky top-0 bg-gray-900 z-10 pb-4 border-b border-gray-800">
-                                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                                    <div className="p-2 bg-orange-500/20 rounded-lg text-orange-400">
-                                        <FaPlus />
-                                    </div>
-                                    Add New Company
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '0.8rem', borderBottom: '1px solid var(--sa-border)' }}>
+                                <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--sa-text)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    <FaBuilding style={{ color: '#f97316' }} /> Add New Company
                                 </h3>
-                                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg">
-                                    <FaTimes size={20} />
+                                <button onClick={() => setShowModal(false)} className="sa-btn sa-btn-secondary" style={{ padding: '0.4rem', minWidth: '32px', minHeight: '32px' }}>
+                                    <FaTimes size={16} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateCompany} className="space-y-6">
+                            <form onSubmit={handleCreateCompany} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Company Name</label>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--sa-text-muted)', marginBottom: '0.35rem' }}>Company Name</label>
                                     <input
                                         type="text"
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                                        className="sa-input"
                                         placeholder="e.g. Google"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Type</label>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--sa-text-muted)', marginBottom: '0.35rem' }}>Type</label>
                                     <select
                                         value={formData.type}
                                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all appearance-none"
+                                        className="sa-input"
+                                        style={{ cursor: 'pointer' }}
                                     >
                                         <option value="Product-Based">Product-Based</option>
                                         <option value="Service-Based">Service-Based</option>
@@ -315,32 +290,34 @@ const CompanyManagement = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-300 mb-2">Display Order</label>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--sa-text-muted)', marginBottom: '0.35rem' }}>Display Order</label>
                                     <input
                                         type="number"
                                         value={formData.order}
                                         onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                                        className="sa-input"
                                     />
                                 </div>
 
-                                <div className="pt-6 flex gap-4">
+                                <div style={{ display: 'flex', gap: '0.8rem', marginTop: '1rem' }}>
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 py-3.5 bg-gray-800 text-white rounded-xl hover:bg-gray-700 font-bold transition-colors"
+                                        className="sa-btn sa-btn-secondary"
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem' }}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl hover:from-orange-600 hover:to-pink-600 font-bold transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40"
+                                        className="sa-btn sa-btn-primary"
+                                        style={{ flex: 1, justifyContent: 'center', padding: '0.75rem' }}
                                     >
                                         Create Company
                                     </button>
                                 </div>
                             </form>
-                        </motion.div>
+                        </div>
                     </div>
                 )}
             </AnimatePresence>

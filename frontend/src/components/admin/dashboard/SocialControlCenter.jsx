@@ -5,44 +5,47 @@ import toast from 'react-hot-toast';
 import api from '../../../utils/api';
 
 const panelStyle = {
-    background: 'var(--card-bg, rgba(15,23,42,0.86))',
-    border: '1px solid var(--card-border, rgba(148,163,184,0.16))',
-    borderRadius: '14px',
-    padding: '16px'
+    background: 'var(--sa-card-bg)',
+    border: '1px solid var(--sa-border)',
+    borderRadius: '16px',
+    padding: '1.25rem',
+    boxShadow: 'var(--sa-shadow)'
 };
 
 const statValueStyle = {
-    fontSize: '1.45rem',
+    fontSize: '1.6rem',
     fontWeight: 800,
-    color: 'var(--text-primary, #f8fafc)',
+    color: 'var(--sa-text)',
     lineHeight: 1.1
 };
 
 const statLabelStyle = {
-    fontSize: '0.8rem',
-    color: 'var(--text-secondary, #cbd5e1)',
-    marginTop: '4px',
-    letterSpacing: '0.01em'
+    fontSize: '0.82rem',
+    color: 'var(--sa-text-muted)',
+    marginTop: '6px',
+    fontWeight: 600
 };
 
 const inputStyle = {
     width: '100%',
-    background: 'rgba(15,23,42,0.78)',
-    border: '1px solid rgba(148,163,184,0.24)',
+    background: 'var(--sa-input-bg)',
+    border: '1px solid var(--sa-input-border)',
     borderRadius: '10px',
-    color: 'var(--text-primary, #f8fafc)',
-    padding: '10px 12px',
-    fontSize: '0.9rem',
-    outline: 'none'
+    color: 'var(--sa-text)',
+    padding: '0.6rem 0.85rem',
+    fontSize: '0.88rem',
+    outline: 'none',
+    boxSizing: 'border-box'
 };
 
 const buttonBase = {
     borderRadius: '10px',
-    border: '1px solid rgba(148,163,184,0.2)',
-    padding: '8px 12px',
-    fontSize: '0.82rem',
+    border: '1px solid var(--sa-border)',
+    padding: '0.55rem 0.9rem',
+    fontSize: '0.84rem',
     fontWeight: 600,
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
 };
 
 const SocialControlCenter = () => {

@@ -1,240 +1,338 @@
-.animation-controls {
+/* ═══════════════════════════════════════════════════════════════════════
+   AnimationControls.css — YouTube Video Player Style Controls
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.yt-player-controls {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    background: var(--bg-surface, #1e1e24);
-    padding: 24px;
-    border-radius: 20px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: var(--surface-shadow);
     width: 100%;
-    color: var(--text-primary, #f3f4f6);
-    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    backdrop-filter: blur(12px);
+    transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-[data-theme="light"] .animation-controls {
-    background: #ffffff;
-    border-color: rgba(0, 0, 0, 0.08);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    color: #1f2937;
+/* ── 1. YouTube Progress Scrubber Bar ───────────────────────────────── */
+.yt-progress-container {
+    width: 100%;
+    padding: 6px 0 10px 0;
+    display: flex;
+    align-items: center;
 }
 
-.ac-top-row {
+.yt-scrubber-input {
+    width: 100%;
+    height: 5px;
+    border-radius: 3px;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: height 0.15s ease;
+}
+
+.yt-scrubber-input:hover {
+    height: 8px;
+}
+
+.yt-scrubber-input::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ff0000;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+}
+
+.yt-scrubber-input:hover::-webkit-slider-thumb {
+    transform: scale(1.35);
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.85);
+}
+
+/* ── 2. YouTube Controls Bar ────────────────────────────────────────── */
+.yt-controls-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
+    padding-top: 4px;
 }
 
-.controls-group {
+.yt-left-controls {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 8px 16px;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 6px;
 }
 
-[data-theme="light"] .controls-group {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.05);
+.yt-right-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.control-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-primary, #f3f4f6);
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
+/* Base button style */
+.yt-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1.1rem;
+    border-radius: 50%;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.control-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.yt-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
 }
-
-.control-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.play-btn {
-    background: #3b82f6;
-    color: white;
-    width: 54px;
-    height: 54px;
-    border: none;
-    font-size: 1.3rem;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-}
-
-.play-btn:hover:not(:disabled) {
-    background: #2563eb;
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.speed-control-group {
-    display: flex;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 30px;
-    padding: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="light"] .speed-control-group {
-    background: rgba(0, 0, 0, 0.04);
-}
-
-.speed-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary, #9ca3af);
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.speed-btn.active {
-    background: #3b82f6;
-    color: white;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.speed-btn:hover:not(.active) {
-    color: var(--text-primary, #f3f4f6);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.scrubber-container {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: rgba(0, 0, 0, 0.15);
-    padding: 12px 20px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-[data-theme="light"] .scrubber-container {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.05);
-}
-
-.step-tracker-badge {
-    background: #10b981;
-    color: #fff;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-.scrubber-input {
-    flex: 1;
-    height: 8px;
-    border-radius: 4px;
-    appearance: none;
-    background: rgba(255, 255, 255, 0.1);
-    outline: none;
-    cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="light"] .scrubber-input {
+[data-theme="light"] .yt-btn:hover:not(:disabled) {
     background: rgba(0, 0, 0, 0.08);
 }
 
-.scrubber-input::-webkit-slider-thumb {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #3b82f6;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+.yt-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
-.scrubber-input::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: #60a5fa;
+.yt-icon-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.45rem;
 }
 
-.ac-manual-input-box {
+.yt-icon-btn.with-text {
+    width: auto;
+    padding: 0 12px;
+    border-radius: 20px;
+    gap: 6px;
+    font-size: 1.25rem;
+}
+
+.yt-btn-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Roboto', 'Inter', sans-serif;
+    letter-spacing: 0.03em;
+}
+
+/* Main YouTube Play / Pause Button */
+.yt-play-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.85rem;
+    color: var(--text-primary);
+}
+
+.yt-play-btn:hover:not(:disabled) {
+    transform: scale(1.12);
+    color: #ff0000;
+}
+
+.yt-play-btn.playing {
+    color: #ff0000;
+}
+
+/* ── 3. Time Display (Step Counter) ─────────────────────────────────── */
+.yt-time-display {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Roboto', 'Fira Code', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    user-select: none;
+}
+
+.yt-step-current {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.yt-step-divider {
+    color: var(--text-muted);
+}
+
+.yt-step-total {
+    color: var(--text-muted);
+}
+
+/* ── 4. YouTube Speed Selector Menu ─────────────────────────────────── */
+.yt-speed-menu {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 20px;
+    padding: 3px 6px;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.yt-speed-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.yt-speed-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.yt-speed-btn.active {
+    background: #ff0000;
+    color: #ffffff;
+}
+
+.yt-speed-btn:hover:not(.active) {
+    color: var(--text-primary);
+    background: var(--surface-bg-raised);
+}
+
+/* ── 5. Input Configuration Box ─────────────────────────────────────── */
+.yt-input-config {
+    width: 100%;
+}
+
+.yt-manual-input-box {
+    display: flex;
+    gap: 10px;
     align-items: center;
     margin-top: 10px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+    border-top: 1px solid var(--surface-border);
+    transition: border-color 0.25s ease;
 }
 
-[data-theme="light"] .ac-manual-input-box {
-    border-top-color: rgba(0, 0, 0, 0.05);
-}
-
-.ac-action-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-    padding: 0 20px;
-    border-radius: 12px;
-    height: 44px;
+.yt-text-input {
+    flex: 1;
+    height: 40px;
+    background: var(--algo-input-bg);
+    border: 1px solid var(--algo-input-border);
+    color: var(--algo-input-text);
+    padding: 0 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
     font-weight: 600;
+    font-family: 'Fira Code', monospace;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.yt-text-input:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.15);
+}
+
+.yt-btn-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.yt-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-size: 0.83rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
 }
 
-[data-theme="light"] .ac-action-btn {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.1);
+.yt-action-btn:hover {
+    transform: translateY(-1px);
 }
 
-.ac-action-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.ac-action-btn.primary {
-    background: #10b981;
-    color: white;
+.yt-action-btn.primary {
+    background: #ff0000;
+    color: #ffffff;
     border: none;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 3px 10px rgba(255, 0, 0, 0.3);
 }
 
-.ac-action-btn.primary:hover {
-    background: #059669;
+.yt-action-btn.primary:hover {
+    background: #cc0000;
+    box-shadow: 0 5px 14px rgba(255, 0, 0, 0.45);
 }
 
+.yt-action-btn.secondary {
+    background: var(--surface-bg);
+    border-color: var(--surface-border);
+    color: var(--text-primary);
+}
+
+.yt-action-btn.secondary:hover {
+    background: var(--surface-bg-raised);
+    border-color: #ff0000;
+    color: #ff0000;
+}
+
+.yt-action-btn.full {
+    width: 100%;
+}
+
+.yt-modal-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--surface-border);
+}
+
+.yt-help-hint {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+/* ── Responsive Breakdown ────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .ac-top-row {
+    .yt-controls-bar {
         flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .yt-left-controls {
+        justify-content: space-between;
+    }
+    .yt-right-controls {
         justify-content: center;
     }
-    .scrubber-container {
-        flex-direction: column-reverse;
-        align-items: stretch;
-    }
-    .step-tracker-badge {
-        text-align: center;
-    }
-    .ac-manual-input-box {
+    .yt-manual-input-box {
         flex-direction: column;
         align-items: stretch;
+    }
+    .yt-btn-row {
+        width: 100%;
+    }
+    .yt-action-btn {
+        flex: 1;
     }
 }

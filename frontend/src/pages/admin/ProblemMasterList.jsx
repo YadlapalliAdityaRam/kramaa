@@ -89,44 +89,48 @@ const ProblemMasterList = () => {
         };
     }, [fetchProblems]);
 
+
     const filteredProblems = problems.filter(p =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.createdBy?.username || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-        <div className="p-6">
+        <div style={{ padding: '0.5rem 0' }}>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="glass-panel p-6 flex flex-col items-center justify-center">
-                    <FaLayerGroup className="text-3xl text-blue-400 mb-2" />
-                    <span className="text-2xl font-bold text-white">{publishedStats.totalProblems || 0}</span>
-                    <span className="text-gray-400 text-sm">Published Problems</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div className="sa-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '1.25rem' }}>
+                    <FaLayerGroup style={{ fontSize: '1.8rem', color: 'var(--sa-accent-blue)', marginBottom: '0.4rem' }} />
+                    <span style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--sa-text)' }}>{publishedStats.totalProblems || 0}</span>
+                    <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.82rem', fontWeight: '600' }}>Published Problems</span>
                 </div>
-                <div className="glass-panel p-6 flex flex-col items-center justify-center bg-green-900/20 border-green-500/30">
-                    <span className="text-3xl font-bold text-green-400 mb-1">{publishedStats?.difficulty?.easy || 0}</span>
-                    <span className="text-gray-400 text-sm uppercase tracking-wider">Easy</span>
+                <div className="sa-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '1.25rem' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#16a34a', marginBottom: '0.2rem' }}>{publishedStats?.difficulty?.easy || 0}</span>
+                    <span className="sa-badge sa-badge-green">Easy</span>
                 </div>
-                <div className="glass-panel p-6 flex flex-col items-center justify-center bg-yellow-900/20 border-yellow-500/30">
-                    <span className="text-3xl font-bold text-yellow-400 mb-1">{publishedStats?.difficulty?.medium || 0}</span>
-                    <span className="text-gray-400 text-sm uppercase tracking-wider">Medium</span>
+                <div className="sa-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '1.25rem' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#d97706', marginBottom: '0.2rem' }}>{publishedStats?.difficulty?.medium || 0}</span>
+                    <span style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.74rem', fontWeight: '700', textTransform: 'uppercase', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>Medium</span>
                 </div>
-                <div className="glass-panel p-6 flex flex-col items-center justify-center bg-red-900/20 border-red-500/30">
-                    <span className="text-3xl font-bold text-red-500 mb-1">{publishedStats?.difficulty?.hard || 0}</span>
-                    <span className="text-gray-400 text-sm uppercase tracking-wider">Hard</span>
+                <div className="sa-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '1.25rem' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#dc2626', marginBottom: '0.2rem' }}>{publishedStats?.difficulty?.hard || 0}</span>
+                    <span className="sa-badge sa-badge-red">Hard</span>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="glass-panel">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white">Problem Master List</h2>
-                    <div className="relative">
-                        <FaSearch className="absolute left-3 top-3 text-gray-500" />
+            <div className="sa-card">
+                <div className="sa-card-header">
+                    <h2 className="sa-card-title">
+                        <FaUserShield style={{ color: 'var(--sa-accent)' }} /> Problem Master List
+                    </h2>
+                    <div style={{ position: 'relative', width: 'min(320px, 100%)' }}>
+                        <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--sa-text-muted)' }} />
                         <input
                             type="text"
                             placeholder="Search by Title or Admin..."
-                            className="bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg border border-gray-700 focus:border-purple-500 outline-none"
+                            className="sa-input"
+                            style={{ paddingLeft: '36px' }}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -134,47 +138,53 @@ const ProblemMasterList = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-10 text-gray-400">Loading master list...</div>
+                    <div className="sa-empty-text">Loading master list...</div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div className="sa-table-container">
+                        <table className="sa-table">
                             <thead>
-                                <tr className="text-gray-400 border-b border-gray-700">
-                                    <th className="p-4 font-medium">Title</th>
-                                    <th className="p-4 font-medium">Difficulty</th>
-                                    <th className="p-4 font-medium">Created By</th>
-                                    <th className="p-4 font-medium">Date</th>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Difficulty</th>
+                                    <th>Created By</th>
+                                    <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredProblems.map(problem => (
-                                    <tr key={problem._id} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
-                                        <td className="p-4 text-white font-medium">{problem.title}</td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-bold ${problem.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                                                problem.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-red-500/20 text-red-400'
-                                                }`}>
+                                    <tr key={problem._id}>
+                                        <td style={{ fontWeight: '600' }}>{problem.title}</td>
+                                        <td>
+                                            <span className={`sa-badge ${problem.difficulty === 'Easy' ? 'sa-badge-green' : problem.difficulty === 'Medium' ? 'sa-badge-purple' : 'sa-badge-red'}`}>
                                                 {problem.difficulty}
                                             </span>
                                         </td>
-                                        <td className="p-4">
+                                        <td>
                                             <button
                                                 onClick={() => navigate(`admin/${problem.createdBy?._id}`)}
-                                                className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                    background: 'transparent', border: 'none', color: 'var(--sa-accent)',
+                                                    cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem'
+                                                }}
                                                 title="View Admin Stats"
                                             >
-                                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-xs">
+                                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: 'var(--sa-accent)' }}>
                                                     {(problem.createdBy?.username || 'U')[0].toUpperCase()}
                                                 </div>
                                                 {problem.createdBy?.username || 'Unknown'}
                                             </button>
                                         </td>
-                                        <td className="p-4 text-gray-500 text-sm">
+                                        <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.82rem' }}>
                                             {new Date(problem.createdAt).toLocaleDateString()}
                                         </td>
                                     </tr>
                                 ))}
+                                {filteredProblems.length === 0 && (
+                                    <tr>
+                                        <td colSpan="4" className="sa-empty-row">No problems found.</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

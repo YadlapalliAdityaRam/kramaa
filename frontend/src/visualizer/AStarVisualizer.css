@@ -1,20 +1,57 @@
-.astar-visualizer {
+/* ═══════════════════════════════════════════════════════════════════════
+   AStarVisualizer.css — Fully Theme-Adaptive (dark & light)
+   All colours use CSS custom properties from :root / [data-theme="light"]
+   defined in index.css. No hardcoded values that would break in light mode.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Root container: centred, full-height column ─────────────────────── */
+#astar-container {
   width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
   min-height: calc(100vh - var(--nav-height, 72px));
-  padding: 18px;
+  padding: 20px clamp(12px, 2vw, 32px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: stretch;
+  gap: 16px;
+  box-sizing: border-box;
+  color: var(--text-primary);
 }
 
+.astar-visualizer {
+  width: 100%;
+}
+
+/* ── Card surface ────────────────────────────────────────────────────── */
 .astar-surface {
-  background: var(--surface-bg, rgba(15, 23, 42, 0.82));
-  border: 1px solid var(--surface-border, rgba(148, 163, 184, 0.2));
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.25);
+  padding: 16px 18px;
+  box-shadow: var(--surface-shadow);
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+/* ── Header bar ─────────────────────────────────────────────────────── */
+.astar-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.astar-header-bar h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
 .astar-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -30,36 +67,46 @@
 }
 
 .astar-toolbar label {
-  font-size: 0.86rem;
-  color: var(--text-secondary, #cbd5e1);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .astar-toolbar input,
 .astar-toolbar select,
 .astar-toolbar textarea {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.7);
-  color: var(--text-primary, #f8fafc);
+  border: 1px solid var(--algo-input-border);
+  background: var(--algo-input-bg);
+  color: var(--algo-input-text);
   border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
+  padding: 7px 10px;
+  font-size: 0.84rem;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
+.astar-toolbar input:focus,
+.astar-toolbar select:focus,
+.astar-toolbar textarea:focus {
+  outline: 2px solid var(--algo-tab-active-color);
+  outline-offset: 1px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
 .astar-btn {
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(15, 23, 42, 0.7);
-  color: var(--text-primary, #f8fafc);
+  border: 1px solid var(--algo-btn-border);
+  background: var(--algo-btn-bg);
+  color: var(--algo-btn-text);
   border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  padding: 8px 13px;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease, background 0.2s ease;
+  transition: transform 0.14s ease, filter 0.14s ease,
+              background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .astar-btn:hover:not(:disabled) {
-  filter: brightness(1.1);
+  filter: var(--algo-btn-hover-filter, brightness(1.12));
   transform: translateY(-1px);
 }
 
@@ -68,95 +115,160 @@
 }
 
 .astar-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.astar-btn.primary {
-  background: #2563eb;
-  border-color: rgba(59, 130, 246, 0.8);
-}
-
-.astar-btn.success {
-  background: #16a34a;
-  border-color: rgba(34, 197, 94, 0.75);
-}
-
-.astar-btn.warning {
-  background: #d97706;
-  border-color: rgba(245, 158, 11, 0.75);
-}
-
-.astar-btn.danger {
-  background: #dc2626;
-  border-color: rgba(239, 68, 68, 0.75);
-}
+/* Colour variants — accent-tinted, always readable in both themes */
+.astar-btn.primary   { background: #2563eb; border-color: rgba(59,130,246,.8); color: #fff; }
+.astar-btn.success   { background: #16a34a; border-color: rgba(34,197,94,.75); color: #fff; }
+.astar-btn.warning   { background: #d97706; border-color: rgba(245,158,11,.75); color: #fff; }
+.astar-btn.danger    { background: #dc2626; border-color: rgba(239,68,68,.75);  color: #fff; }
 
 .astar-btn.active-tool {
-  outline: 2px solid rgba(59, 130, 246, 0.75);
+  outline: 2px solid var(--algo-tab-active-color);
+  background: var(--algo-tab-active-bg);
 }
 
-.astar-status {
-  font-size: 0.9rem;
-  color: var(--text-secondary, #cbd5e1);
-  min-height: 22px;
-}
-
-.astar-error {
-  color: #f87171;
-  font-weight: 600;
-}
-
+/* ── Main two-column layout ──────────────────────────────────────────── */
 .astar-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  width: 100%;
   align-items: start;
+}
+
+/* ── Grid canvas column ──────────────────────────────────────────────── */
+.astar-canvas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .astar-grid-wrap {
   overflow: auto;
   width: 100%;
-  max-height: 72vh;
+  max-height: 66vh;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.26);
-  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid var(--algo-grid-border);
+  background: var(--algo-grid-bg);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 8px;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .astar-svg {
   display: block;
+  margin: 0 auto;
 }
 
-.astar-panel h3 {
+/* ── Side panel ──────────────────────────────────────────────────────── */
+.astar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Tab navigation ──────────────────────────────────────────────────── */
+.astar-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--surface-border);
+  padding-bottom: 8px;
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.astar-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--algo-tab-inactive-color);
+  padding: 6px 10px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.astar-tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-bg-raised);
+}
+
+.astar-tab-btn.active {
+  color: var(--algo-tab-active-color);
+  background: var(--algo-tab-active-bg);
+  border-bottom: 2px solid var(--algo-tab-active-color);
+}
+
+.astar-tab-content h3 {
   margin: 0 0 10px;
-  font-size: 1rem;
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
+/* ── Metrics table rows ──────────────────────────────────────────────── */
 .astar-panel .metric {
   display: flex;
   justify-content: space-between;
-  font-size: 0.86rem;
-  color: var(--text-secondary, #cbd5e1);
-  margin-bottom: 6px;
-}
-
-.astar-panel .formula {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  align-items: center;
   font-size: 0.84rem;
-  color: var(--text-secondary, #cbd5e1);
-  line-height: 1.4;
+  color: var(--text-secondary);
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--surface-border);
 }
 
+.astar-panel .metric strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* ── Formula box ─────────────────────────────────────────────────────── */
+.astar-panel .formula {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--algo-panel-formula-bg);
+  border: 1px solid var(--surface-border);
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* ── Trace steps ─────────────────────────────────────────────────────── */
+.trace-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.trace-step {
+  font-size: 0.79rem;
+  background: var(--algo-trace-step-bg);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid var(--algo-trace-step-border);
+  color: var(--text-secondary);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* ── Legend ──────────────────────────────────────────────────────────── */
 .astar-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
-  font-size: 0.75rem;
-  color: var(--text-muted, #94a3b8);
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  justify-content: center;
+  margin-top: 10px;
 }
 
 .astar-legend-item {
@@ -169,109 +281,96 @@
   width: 12px;
   height: 12px;
   border-radius: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--surface-border);
+  flex-shrink: 0;
 }
 
+/* ── Custom input grid ───────────────────────────────────────────────── */
 .astar-custom-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
-.astar-custom-grid .full {
-  grid-column: 1 / -1;
-}
-
+.astar-custom-grid .full { grid-column: 1 / -1; }
+.astar-custom-grid label { display: block; margin-bottom: 4px; font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; }
+.astar-custom-grid textarea { min-height: 90px; resize: vertical; width: 100%; }
+.astar-custom-grid input,
+.astar-custom-grid select,
 .astar-custom-grid textarea {
-  min-height: 120px;
-  resize: vertical;
+  background: var(--algo-input-bg);
+  border: 1px solid var(--algo-input-border);
+  color: var(--algo-input-text);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.84rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
+/* ── Status bar ──────────────────────────────────────────────────────── */
+.astar-status-bar { width: 100%; }
+
+.astar-status {
+  font-size: 0.87rem;
+  color: var(--algo-status-text);
+  transition: color 0.2s ease;
+}
+
+.astar-error {
+  color: var(--algo-error-text);
+  font-weight: 600;
+  margin-top: 4px;
+  transition: color 0.2s ease;
+}
+
+/* ── SVG Cell States ─────────────────────────────────────────────────── */
 .cell {
-  transition: fill 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+  transition: fill 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+  cursor: pointer;
 }
 
-.cell-empty {
-  fill: rgba(148, 163, 184, 0.16);
-}
-
-.cell-wall {
-  fill: #0b1020;
-}
-
-.cell-open {
-  fill: #2563eb;
-  filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.95));
-}
-
-.cell-closed {
-  fill: #94a3b8;
-  opacity: 0.7;
-}
-
+/* Empty cell uses the theme variable so light mode gets a light fill */
+.cell-empty  { fill: var(--algo-cell-empty); }
+.cell-wall   { fill: var(--algo-cell-wall); }
+.cell-open   { fill: #2563eb; filter: drop-shadow(0 0 4px rgba(37,99,235,.85)); }
+.cell-closed { fill: #64748b; opacity: 0.62; }
 .cell-current {
   fill: #facc15;
-  animation: pulse-current 0.85s ease-in-out infinite alternate;
+  animation: astar-pulse-current 0.85s ease-in-out infinite alternate;
+}
+.cell-path  { fill: #22c55e; filter: drop-shadow(0 0 5px rgba(34,197,94,.8)); }
+.cell-start { fill: #22c55e; }
+.cell-goal  { fill: #ef4444; }
+.cell-ripple { animation: astar-ripple-expand 0.4s ease-out; }
+
+@keyframes astar-pulse-current {
+  from { transform: scale(1);    }
+  to   { transform: scale(0.94); }
 }
 
-.cell-path {
-  fill: #22c55e;
-  filter: drop-shadow(0 0 4px rgba(34, 197, 94, 0.8));
+@keyframes astar-ripple-expand {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1;   }
 }
 
-.cell-start {
-  fill: #22c55e;
-}
-
-.cell-goal {
-  fill: #ef4444;
-}
-
-.cell-ripple {
-  animation: ripple-expand 0.45s ease-out;
-}
-
-@keyframes pulse-current {
-  from { transform: scale(1); }
-  to { transform: scale(0.96); }
-}
-
-@keyframes ripple-expand {
-  0% { opacity: 0.8; }
-  100% { opacity: 1; }
-}
-
+/* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 1040px) {
   .astar-layout {
     grid-template-columns: 1fr;
   }
-
-  .astar-panel {
-    order: 2;
-  }
+  .astar-grid-wrap { max-height: 55vh; }
 }
 
 @media (max-width: 760px) {
-  .astar-visualizer {
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .astar-surface {
-    padding: 10px;
-    border-radius: 12px;
-  }
-
-  .astar-custom-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .astar-toolbar label {
-    font-size: 0.8rem;
-  }
-
-  .astar-btn {
-    padding: 7px 10px;
-    font-size: 0.8rem;
-  }
+  #astar-container { padding: 10px; gap: 10px; }
+  .astar-surface   { padding: 10px; border-radius: 12px; }
+  .astar-custom-grid { grid-template-columns: 1fr; }
+  .astar-toolbar label { font-size: 0.78rem; }
+  .astar-btn { padding: 7px 9px; font-size: 0.79rem; }
 }
+
+/* ── Light-theme overrides for SVG elements that need explicit changes ── */
+[data-theme="light"] .cell-closed { fill: #94a3b8; opacity: 0.55; }
+[data-theme="light"] .astar-grid-wrap { background: var(--algo-grid-bg); }

@@ -6,16 +6,16 @@ import useGenericAnimation from "../hooks/useGenericAnimation";
 import { generateCountingSortSteps } from "../algorithms/sorting/countingSort";
 import { algorithmCodes } from "../data/algorithmCodes";
 import { toast } from "react-hot-toast";
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import { FaRandom, FaCheck, FaRedo } from "react-icons/fa";
 import "./CountingSortVisualizer.css";
 
+const DEFAULT_ARRAY = [4, 2, 2, 8, 3, 3, 1];
+
 const CountingSortVisualizer = () => {
-    const defaultArray = [4, 2, 2, 8, 3, 3, 1];
-    const [array, setArray] = useState(defaultArray);
-    const [inputValue, setInputValue] = useState(defaultArray.join(", "));
-    const [maxRange, setMaxRange] = useState(9);
+    const [array, setArray]               = useState(DEFAULT_ARRAY);
+    const [inputValue, setInputValue]     = useState(DEFAULT_ARRAY.join(", "));
     const [activeLanguage, setActiveLanguage] = useState("javascript");
-    const [steps, setSteps] = useState([]);
+    const [steps, setSteps]               = useState([]);
 
     const {
         currentStep,
@@ -27,8 +27,7 @@ const CountingSortVisualizer = () => {
         stepForward,
         stepBackward,
         setSpeed,
-        speed
-    ,
+        speed,
         setIndex
     } = useGenericAnimation(steps);
 
@@ -39,17 +38,16 @@ const CountingSortVisualizer = () => {
 
     const handleGenerateRandom = () => {
         const size = 8;
-        const max = Math.min(Math.max(parseInt(maxRange) || 9, 5), 20);
-        const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * max));
+        const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 9) + 1);
         setArray(newArray);
         setInputValue(newArray.join(", "));
         reset();
-        toast.success(`Generated random array with range 0-${max - 1}`);
+        toast.success(`Generated ${size} numbers (range 1-9)!`);
     };
 
     const handleCustomInput = () => {
         const values = inputValue.split(",")
-            .map(v => parseInt(v.trim()))
+            .map(v => parseInt(v.trim(), 10))
             .filter(v => !isNaN(v));
 
         if (values.length < 3) {
@@ -57,67 +55,35 @@ const CountingSortVisualizer = () => {
             return;
         }
         if (values.length > 15) {
-            toast.error("Maximum 15 numbers allowed for clear visualization.");
+            toast.error("Maximum 15 numbers allowed.");
             return;
         }
-
-        const maxVal = Math.max(...values);
-        const minVal = Math.min(...values);
-        if (maxVal - minVal > 20) {
-            toast.error("Range of values (Max - Min) should not exceed 20.");
+        if (values.some(v => v < 0 || v > 15)) {
+            toast.error("Counting sort visualizer accepts numbers between 0 and 15.");
             return;
         }
 
         setArray(values);
         reset();
-        toast.success("Array updated!");
+        toast.success("Custom array updated!");
     };
 
-    const codeSnippet = algorithmCodes.countingSort?.[activeLanguage] || "";
-
-    const renderArray = (title, data, activeIdx, extraClass = "") => (
-        <div className={`counting-section ${extraClass}`}>
-            <div className="counting-section-header">
-                <span className="counting-section-title">{title}</span>
-            </div>
-            <div className="counting-array-display">
-                <AnimatePresence mode="popLayout">
-                    {data?.map((val, idx) => {
-                        const isActive = Array.isArray(activeIdx) ? activeIdx.includes(idx) : activeIdx === idx;
-                        return (
-                            <motion.div
-                                key={`${title}-${idx}-${val}`}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.5 }}
-                                className={`counting-element ${isActive ? 'counting-active' : ''} ${val === null ? 'counting-empty' : ''}`}
-                            >
-                                {val !== null ? val : ""}
-                                <span className="counting-idx-label">{idx + (title === "Count Array (Frequency Table)" ? Math.min(...array) : 0)}</span>
-                            </motion.div>
-                        );
-                    })}
-                </AnimatePresence>
-            </div>
-        </div>
-    );
-
-    const getActiveLine = (step) => {
-        if (!step) return 0;
-        switch (step.type) {
-            case 'start': return 1;
-            case 'count': return 11;
-            case 'prefix-sum-start': return 15;
-            case 'prefix-sum': return 16;
-            case 'output-start': return 21;
-            case 'output-place': return 22;
-            case 'final': return 26;
-            default: return 0;
+    const getActiveLine = (snapshot) => {
+        if (!snapshot) return 0;
+        switch (snapshot.type) {
+            case 'init':             return 4;
+            case 'count-increment': return 8;
+            case 'accumulate-start':return 11;
+            case 'accumulate':      return 12;
+            case 'output-place':    return 17;
+            case 'complete':        return 21;
+            default:                return 0;
         }
     };
 
-    const stats = currentStep?.stats || { comparisons: 0, swaps: 0, phase: 'Initializing' };
+    const codeSnippet = algorithmCodes.countingSort?.[activeLanguage] || "";
+    const stepData    = currentStep || {};
+    const { counts, output, activeInputIdx, activeCountIdx, activeOutputIdx, description } = stepData;
 
     return (
         <DualView
@@ -128,73 +94,105 @@ const CountingSortVisualizer = () => {
             onLanguageChange={setActiveLanguage}
             codeSnippetCategory="sorting"
             description={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                    <span className="badge badge-primary">Linear Sort</span>
-                    <span className="description-text">
-                        {currentStep?.description || "Press Play to start Counting Sort."}
+                <div className="cnt-desc-wrapper">
+                    <span className="cnt-badge">Non-Comparison Sort O(N + K)</span>
+                    <span className="cnt-desc-text">
+                        {description || "Press Play to observe non-comparison frequency counting sorting elements in linear time."}
                     </span>
                 </div>
             }
         >
-            <div className="counting-layout">
-                {/* Stats */}
-                <div className="counting-dashboard">
-                    <div className="counting-card">
-                        <div className="counting-card-title">Algorithm Metrics</div>
-                        <div className="counting-stats-grid">
-                            <div className="counting-stat-item">
-                                <span className="counting-stat-label">Phase</span>
-                                <span className="counting-stat-value" style={{ color: 'var(--accent-color)' }}>{stats.phase}</span>
-                            </div>
-                            <div className="counting-stat-item">
-                                <span className="counting-stat-label">Array Size (n)</span>
-                                <span className="counting-stat-value">{array.length}</span>
-                            </div>
-                            <div className="counting-stat-item">
-                                <span className="counting-stat-label">Range (k)</span>
-                                <span className="counting-stat-value">{Math.max(...array) - Math.min(...array) + 1}</span>
-                            </div>
+            <div className="cnt-visualizer-wrapper">
+
+                {/* ── Top Input Panel ──────────────────────────────────────── */}
+                <div className="cnt-input-panel">
+                    <div className="cnt-input-group">
+                        <label className="cnt-input-label">Custom Array (0-15):</label>
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCustomInput()}
+                            placeholder="e.g. 4, 2, 2, 8, 3"
+                            className="cnt-text-input"
+                        />
+                        <button onClick={handleCustomInput} className="cnt-btn cnt-btn-primary">
+                            <FaCheck /> Apply
+                        </button>
+                    </div>
+
+                    <div className="cnt-btn-group">
+                        <button onClick={handleGenerateRandom} className="cnt-btn cnt-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => { setArray(DEFAULT_ARRAY); setInputValue(DEFAULT_ARRAY.join(", ")); reset(); }} className="cnt-btn cnt-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Main Canvas Stage: Input, Frequency Count, Output Arrays ── */}
+                <div className="cnt-canvas-wrapper">
+                    
+                    {/* 1. Input Array */}
+                    <div className="cnt-array-card">
+                        <div className="cnt-card-header">Input Array <code>arr</code></div>
+                        <div className="cnt-pills-row">
+                            {array.map((val, idx) => (
+                                <div
+                                    key={`in-${idx}`}
+                                    className={`cnt-pill ${activeInputIdx === idx ? 'active-in' : ''}`}
+                                >
+                                    <span className="cnt-val">{val}</span>
+                                    <span className="cnt-idx">[{idx}]</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
 
-                {/* Input Array */}
-                {renderArray("Input Array", currentStep?.arraySnapshot || array, currentStep?.activeIndices)}
-
-                <div className="flow-indicator">
-                    {currentStep?.type?.includes('count') ? <FaArrowDown style={{ color: '#3b82f6' }} /> :
-                        currentStep?.type?.includes('output') ? <FaArrowUp style={{ color: '#10b981' }} /> : null}
-                </div>
-
-                {/* Count Array */}
-                <div className={`counting-section ${currentStep?.countActiveIndex !== null ? 'counting-count-active' : ''}`}>
-                    <div className="counting-section-header">
-                        <span className="counting-section-title">Count Array / Frequency Table</span>
+                    {/* 2. Frequency Count Array */}
+                    <div className="cnt-array-card">
+                        <div className="cnt-card-header">Frequency Count Array <code>count</code></div>
+                        <div className="cnt-pills-row">
+                            {(counts || []).map((cnt, val) => (
+                                <div
+                                    key={`cnt-${val}`}
+                                    className={`cnt-pill cnt-pill-count ${activeCountIdx === val ? 'active-cnt' : ''}`}
+                                >
+                                    <span className="cnt-val">{cnt}</span>
+                                    <span className="cnt-idx">val: {val}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="counting-array-display">
-                        {currentStep?.countArray?.map((val, idx) => (
-                            <div
-                                key={`count-${idx}`}
-                                className={`counting-element ${currentStep.countActiveIndex === idx ? 'counting-count-active' : ''}`}
-                                style={{ background: 'rgba(59, 130, 246, 0.05)', borderColor: currentStep.countActiveIndex === idx ? '#3b82f6' : 'rgba(59, 130, 246, 0.3)' }}
-                            >
-                                {val}
-                                <span className="counting-idx-label">{idx + Math.min(...array)}</span>
-                            </div>
-                        ))}
+
+                    {/* 3. Sorted Output Array */}
+                    <div className="cnt-array-card">
+                        <div className="cnt-card-header">Sorted Output Array <code>output</code></div>
+                        <div className="cnt-pills-row">
+                            {Array.from({ length: array.length }).map((_, idx) => {
+                                const val = output ? output[idx] : undefined;
+                                const isFilled = val !== undefined && val !== null;
+
+                                return (
+                                    <div
+                                        key={`out-${idx}`}
+                                        className={`cnt-pill cnt-pill-out ${activeOutputIdx === idx ? 'active-out' : ''} ${isFilled ? 'filled' : 'empty'}`}
+                                    >
+                                        <span className="cnt-val">{isFilled ? val : '-'}</span>
+                                        <span className="cnt-idx">[{idx}]</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
+
                 </div>
 
-                <div className="flow-indicator">
-                    {currentStep?.type?.includes('output') ? <FaArrowDown style={{ color: '#10b981' }} /> : null}
-                </div>
-
-                {/* Output Array */}
-                {renderArray("Output Sorted Array", currentStep?.outputArray, currentStep?.outputActiveIndex, "output-section")}
-
-                {/* Controls */}
-                <div className="cs-controls-wrapper" style={{ width: '100%', marginTop: '20px' }}>
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="cnt-controls-wrapper">
                     <AnimationControls
+                        inputType="none"
                         onNext={stepForward}
                         onPrev={stepBackward}
                         onPlay={play}
@@ -206,35 +204,9 @@ const CountingSortVisualizer = () => {
                         currentStep={currentStepIndex}
                         totalSteps={steps.length}
                         onScrub={setIndex}
-                        inputType="none"
                     />
                 </div>
 
-                {/* Custom Inputs */}
-                <div className="counting-inputs">
-                    <div className="counting-input-group" style={{ flex: 1 }}>
-                        <label className="counting-stat-label">Custom Elements</label>
-                        <input
-                            className="counting-input"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                        />
-                    </div>
-                    <div className="counting-input-group">
-                        <label className="counting-stat-label">Max Value</label>
-                        <input
-                            className="counting-input"
-                            type="number"
-                            value={maxRange}
-                            onChange={(e) => setMaxRange(e.target.value)}
-                            style={{ width: '80px' }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', alignSelf: 'flex-end' }}>
-                        <button className="counting-btn counting-btn-primary" onClick={handleCustomInput}>Update</button>
-                        <button className="counting-btn counting-btn-secondary" onClick={handleGenerateRandom}>Random</button>
-                    </div>
-                </div>
             </div>
         </DualView>
     );

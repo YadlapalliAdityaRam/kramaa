@@ -12,7 +12,6 @@ const emitSuperAdminRefresh = (appOrReq, payload = {}) => {
     const app = appOrReq?.app || appOrReq;
     const io = app?.get?.('io');
     if (!io) return;
-
     const sections = normalizeSections(payload.sections);
 
     io.to(SUPER_ADMIN_ROOM).emit(SUPER_ADMIN_REFRESH_EVENT, {

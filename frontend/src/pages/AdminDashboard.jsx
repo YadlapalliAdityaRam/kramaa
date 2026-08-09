@@ -56,7 +56,7 @@ const AdminDashboard = () => {
                             fontWeight: 700,
                             letterSpacing: '0.08em',
                             textTransform: 'uppercase',
-                            color: '#94a3b8',
+                            color: 'var(--sa-text-muted, #94a3b8)',
                             marginBottom: '8px'
                         }}
                     >
@@ -66,17 +66,14 @@ const AdminDashboard = () => {
                         id="admin-mobile-nav"
                         value={activeTabId}
                         onChange={(event) => navigate(`/admin/${event.target.value}`)}
+                        className="sa-input"
                         style={{
                             width: '100%',
                             minHeight: '42px',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.14)',
-                            background: 'rgba(15,23,42,0.78)',
-                            color: '#e2e8f0',
                             fontSize: '0.9rem',
                             fontWeight: 600,
-                            padding: '9px 12px',
-                            outline: 'none'
+                            padding: '9px 12px'
                         }}
                     >
                         {tabs.map((tab) => (
@@ -88,12 +85,18 @@ const AdminDashboard = () => {
                 </div>
             ) : (
                 <div
+                    className="sa-nav-wrapper"
                     style={{
                         display: 'flex',
-                        gap: '12px',
-                        marginBottom: '20px',
-                        overflowX: 'auto',
-                        paddingBottom: '8px'
+                        flexWrap: 'wrap',
+                        gap: '6px',
+                        padding: '6px',
+                        borderRadius: '999px',
+                        background: 'var(--sa-pill-inactive, rgba(255,255,255,0.06))',
+                        border: '1px solid var(--sa-border, rgba(255,255,255,0.08))',
+                        marginBottom: '2.5rem',
+                        maxWidth: '100%',
+                        justifyContent: 'center'
                     }}
                 >
                     {tabs.map((tab) => (
@@ -101,15 +104,18 @@ const AdminDashboard = () => {
                             key={tab.id}
                             to={tab.id}
                             style={({ isActive }) => ({
-                                padding: '9px 14px',
+                                padding: '8px 18px',
                                 borderRadius: '999px',
                                 textDecoration: 'none',
-                                fontSize: '0.88rem',
+                                fontSize: '0.84rem',
                                 fontWeight: 700,
+                                letterSpacing: '0.02em',
                                 whiteSpace: 'nowrap',
-                                color: isActive ? '#ffffff' : '#cbd5e1',
-                                border: isActive ? '1px solid rgba(99,102,241,0.55)' : '1px solid rgba(148,163,184,0.22)',
-                                background: isActive ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'rgba(15,23,42,0.55)'
+                                transition: 'all 0.2s ease',
+                                color: isActive ? '#ffffff' : 'var(--sa-pill-text, #94a3b8)',
+                                border: isActive ? '1px solid #4f46e5' : '1px solid transparent',
+                                background: isActive ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                                boxShadow: isActive ? '0 4px 14px rgba(79, 70, 229, 0.35)' : 'none'
                             })}
                         >
                             {tab.label}

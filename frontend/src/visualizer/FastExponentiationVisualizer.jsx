@@ -5,14 +5,14 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateFastExpSteps } from '../algorithms/math/fastExponentiation';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { FaArrowUp, FaBolt, FaLayerGroup } from 'react-icons/fa';
+import { FaCheck, FaInfoCircle, FaRedo } from 'react-icons/fa';
 import './FastExponentiationVisualizer.css';
 
 const FastExponentiationVisualizer = () => {
-    const [inputs, setInputs] = useState({ base: 3, exp: 13 });
+    const [inputs, setInputs]         = useState({ base: 3, exp: 13 });
     const [tempInputs, setTempInputs] = useState({ base: 3, exp: 13 });
     const [activeLanguage, setActiveLanguage] = useState('javascript');
-    const [showAnalogy, setShowAnalogy] = useState(false);
+    const [showAnalogy, setShowAnalogy] = useState(true);
 
     const steps = useMemo(
         () => generateFastExpSteps(inputs.base, inputs.exp),
@@ -35,11 +35,11 @@ const FastExponentiationVisualizer = () => {
 
     const handleApply = () => {
         if (tempInputs.base < 1 || tempInputs.exp < 0) {
-            toast.error("Please enter a positive base and non-negative exponent.");
+            toast.error("Please enter positive base and non-negative exponent.");
             return;
         }
-        if (tempInputs.exp > 1000) {
-            toast.error("Exponent too large for visualization (max 1000).");
+        if (tempInputs.exp > 500) {
+            toast.error("Exponent max 500 for visualization.");
             return;
         }
         setInputs(tempInputs);
@@ -50,107 +50,138 @@ const FastExponentiationVisualizer = () => {
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'info': return 10;
-            case 'check-bit': return 16;
-            case 'multiply': return 18;
-            case 'square': return 31;
-            case 'completed': return 38;
-            default: return 0;
+            case 'info':      return 6;
+            case 'check-bit': return 7;
+            case 'multiply':  return 8;
+            case 'square':    return 10;
+            case 'completed': return 14;
+            default:          return 0;
         }
     };
 
+    const codeSnippet = algorithmCodes.fastExponentiation?.[activeLanguage] || '';
+    const stepData    = currentStep || {};
+
     return (
         <DualView
-            algorithmName="Fast Exponentiation (Binary)"
-            code={algorithmCodes.fastExponentiation?.[activeLanguage] || ''}
+            algorithmName="Fast Exponentiation (Binary Exponentiation)"
+            code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Binary Exponentiation reduces the number of multiplications using the binary power rule."}
+            codeSnippetCategory="math"
+            description={
+                <div className="fe-desc-wrapper">
+                    <span className="fe-badge">Repeated Squaring O(log N)</span>
+                    <span className="fe-desc-text">
+                        {currentStep?.description || "Press Play to compute powers in O(log N) steps using binary power rule."}
+                    </span>
+                </div>
+            }
         >
-            <div className="fast-exp-container">
-                <div className="fast-exp-input-bar">
-                    <div className="exp-input-group">
-                        <label>Base:</label>
+            <div className="fe-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="fe-input-panel">
+                    <div className="fe-input-group">
+                        <label className="fe-input-label">Base (x):</label>
                         <input
                             type="number"
+                            min="1"
                             value={tempInputs.base}
-                            onChange={(e) => setTempInputs({ ...tempInputs, base: parseInt(e.target.value) || 0 })}
+                            onChange={(e) => setTempInputs({ ...tempInputs, base: parseInt(e.target.value, 10) || 0 })}
+                            className="fe-number-input"
                         />
                     </div>
-                    <div className="exp-input-group">
-                        <label>Exponent:</label>
+
+                    <div className="fe-input-group">
+                        <label className="fe-input-label">Exponent (n):</label>
                         <input
                             type="number"
+                            min="0"
                             value={tempInputs.exp}
-                            onChange={(e) => setTempInputs({ ...tempInputs, exp: parseInt(e.target.value) || 0 })}
+                            onChange={(e) => setTempInputs({ ...tempInputs, exp: parseInt(e.target.value, 10) || 0 })}
+                            className="fe-number-input"
                         />
                     </div>
-                    <button className="apply-btn" onClick={handleApply}>Start</button>
-                    <button className="analogy-btn" onClick={() => setShowAnalogy(!showAnalogy)}>
-                        {showAnalogy ? 'Hide Analogy' : 'Show Analogy'}
-                    </button>
+
+                    <div className="fe-btn-group">
+                        <button onClick={handleApply} className="fe-btn fe-btn-primary">
+                            <FaCheck /> Calculate
+                        </button>
+                        <button onClick={() => setShowAnalogy(!showAnalogy)} className="fe-btn fe-btn-outline">
+                            <FaInfoCircle /> {showAnalogy ? 'Hide Analogy' : 'Show Analogy'}
+                        </button>
+                        <button onClick={() => { setInputs({ base: 3, exp: 13 }); setTempInputs({ base: 3, exp: 13 }); reset(); }} className="fe-btn fe-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="fe-legend">
+                        <div className="fe-leg-item"><span className="fe-dot blue"></span> Current Base</div>
+                        <div className="fe-leg-item"><span className="fe-dot yellow"></span> Active Bit (1)</div>
+                        <div className="fe-leg-item"><span className="fe-dot green"></span> Running Result</div>
+                    </div>
                 </div>
 
+                {/* Stair Doubling Analogy Callout */}
                 {showAnalogy && (
-                    <div className="fast-exp-analogy-panel">
+                    <div className="fe-analogy-panel">
                         <h4>🧗 The Stair Doubling Analogy</h4>
-                        <p>Imagine you have to climb 1,000 stairs. Instead of taking 1,000 tiny steps, what if you could <strong>double your power</strong> with every leap?</p>
-                        <p>Fast Exponentiation squares the base in every step. This means you reach huge powers (like a million) in just 20 "double-leaps" instead of doing a million tiny multiplications!</p>
+                        <p>
+                            Instead of performing 1,000 separate multiplications (3 × 3 × 3...), we <strong>square the base</strong> in every step: 3¹ → 3² → 3⁴ → 3⁸!
+                        </p>
+                        <p>
+                            By looking at the binary representation of the exponent, we only multiply the running result when the binary bit is <code>1</code>!
+                        </p>
                     </div>
                 )}
 
-                <div className="fast-exp-visual-area">
-                    <div className="binary-panel">
-                        <h5>Binary Decomposition (LSB to MSB)</h5>
-                        <div className="bits-row">
-                            {currentStep?.bits.map((bit, i) => (
-                                <div key={i} className={`bit-box ${currentStep?.bitIdx === i ? 'active-bit' : ''} ${i < (currentStep?.bitIdx || 0) ? 'passed-bit' : ''}`}>
-                                    <div className="bit-val">{bit}</div>
-                                    <div className="bit-pos">2^{i}</div>
-                                </div>
-                            ))}
+                {/* ── Main Canvas Stage: Binary Bits & State Metrics ──────── */}
+                <div className="fe-canvas-wrapper">
+                    
+                    {/* Binary Bits Row */}
+                    <div className="fe-bits-card">
+                        <div className="fe-card-title">Binary Representation of Exponent ({inputs.exp})</div>
+                        <div className="fe-bits-row">
+                            {(stepData.bits || []).map((bit, idx) => {
+                                const isCurrent = stepData.bitIdx === idx;
+                                const isPassed  = idx < (stepData.bitIdx || 0);
+
+                                let bitClass = 'default';
+                                if (isCurrent) bitClass = 'active';
+                                else if (isPassed) bitClass = 'passed';
+
+                                return (
+                                    <div key={idx} className={`fe-bit-cell ${bitClass}`}>
+                                        <span className="bit-val">{bit}</span>
+                                        <span className="bit-pos">2^{idx}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className="variables-display">
-                        <div className={`var-card base-card ${currentStep?.type === 'square' ? 'anim-square' : ''}`}>
-                            <div className="var-label"><FaLayerGroup /> Current Power (Base²)</div>
-                            <div className="var-val">{currentStep?.base}</div>
+                    {/* State Metrics Grid */}
+                    <div className="fe-metrics-row">
+                        <div className="fe-metric-box">
+                            <span className="m-lbl">Current Base (x)</span>
+                            <span className="m-val blue">{stepData.currentBase ?? inputs.base}</span>
                         </div>
-
-                        <div className="var-card exp-card">
-                            <div className="var-label"><FaArrowUp /> Remaining Exponent</div>
-                            <div className="var-val">{currentStep?.exp}</div>
+                        <div className="fe-metric-box">
+                            <span className="m-lbl">Running Result</span>
+                            <span className="m-val green">{stepData.result ?? 1}</span>
                         </div>
-
-                        <div className={`var-card result-card ${currentStep?.type === 'multiply' ? 'anim-multiply' : ''} ${currentStep?.type === 'completed' ? 'anim-completed' : ''}`}>
-                            <div className="var-label"><FaBolt /> Running Result</div>
-                            <div className="var-val">{currentStep?.result}</div>
+                        <div className="fe-metric-box">
+                            <span className="m-lbl">Remaining Exponent</span>
+                            <span className="m-val yellow">{stepData.currentExponent ?? inputs.exp}</span>
                         </div>
                     </div>
+
                 </div>
 
-                <div className="fast-exp-footer">
-                    <div className="fast-exp-complexity">
-                        <div className="comp-item">
-                            <span className="label">Time:</span>
-                            <span className="val">O(log exp)</span>
-                        </div>
-                        <div className="comp-item">
-                            <span className="label">Space:</span>
-                            <span className="val">O(1)</span>
-                        </div>
-                    </div>
-                    <div className="fast-exp-legend">
-                        <div className="leg-item"><span className="dot purple"></span> Active Bit</div>
-                        <div className="leg-item"><span className="dot blue"></span> Squaring</div>
-                        <div className="leg-item"><span className="dot green"></span> Multiplying</div>
-                        <div className="leg-item"><span className="dot gray"></span> No Op</div>
-                    </div>
-                </div>
-
-                <div className="fast-exp-controls-wrapper">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="fe-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -166,6 +197,7 @@ const FastExponentiationVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

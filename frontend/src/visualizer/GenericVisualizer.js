@@ -29,7 +29,6 @@ import {
     normalizeCategoryKey,
     pathToSlug,
     resolveAlgorithmTargetDefault,
-    resolveDefaultTarget,
     sanitizeArrayInput
 } from './algorithmFallbacks';
 import { buildAlgorithmOverview } from './algorithmOverview';
@@ -324,7 +323,7 @@ const CORE_ALGORITHM_REGISTRY = {
     'graphs/dijkstra': {
         name: "Dijkstra's Algorithm",
         canvasType: 'graph',
-        generator: (graph, startNode) => generateDijkstraSteps(graph, startNode),
+        generator: (graph, startNode) => generateDijkstraSteps(graph?.nodes || [], graph?.edges || [], startNode),
         defaultData: defaultWeightedGraph,
         codeKey: 'dijkstra'
     },
@@ -588,7 +587,7 @@ const CORE_ALGORITHM_REGISTRY = {
     'graphs/topological-sort': {
         name: 'Topological Sort',
         canvasType: 'graph',
-        generator: (graph, startNode) => generateTopologicalSortSteps(graph, startNode),
+        generator: (graph) => generateTopologicalSortSteps(graph?.nodes || [], graph?.edges || []),
         defaultData: defaultGraph,
         codeKey: 'topologicalSort'
     },
@@ -602,7 +601,7 @@ const CORE_ALGORITHM_REGISTRY = {
     'graphs/kosaraju': {
         name: "Kosaraju's Algorithm",
         canvasType: 'graph',
-        generator: (graph, startNode) => generateKosarajuSteps(graph, startNode),
+        generator: (graph) => generateKosarajuSteps(graph?.nodes || [], graph?.edges || []),
         defaultData: defaultGraph,
         codeKey: 'kosaraju'
     }
@@ -612,7 +611,7 @@ const buildFallbackConfig = (algorithmMeta) => {
     const slug = pathToSlug(algorithmMeta.path);
     const categoryKey = normalizeCategoryKey(slug.split('/')[0]);
     const canvasType = getCanvasTypeForCategory(categoryKey);
-    const fallbackCodeKey = `fallback_${slug.replace(/[\/-]/g, '_')}`;
+    const fallbackCodeKey = `fallback_${slug.replace(/[-/]/g, '_')}`;
 
     if (canvasType === 'array') {
         return {
@@ -949,7 +948,7 @@ const VisualizerEngine = ({ config, slug }) => {
                     />
                 );
 
-            case 'graph':
+            case 'graph': {
                 const graphData = customGraph || config.defaultData || {};
                 return (
                     <GraphCanvas
@@ -960,6 +959,7 @@ const VisualizerEngine = ({ config, slug }) => {
                         distanceTable={step?.distanceTable || null}
                     />
                 );
+            }
 
             case 'string':
                 return (

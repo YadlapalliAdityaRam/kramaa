@@ -5,6 +5,7 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateFractionalKnapsackSteps } from '../algorithms/greedy/fractionalKnapsack';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
+import { FaCheck, FaRandom, FaRedo } from 'react-icons/fa';
 import './FractionalKnapsackVisualizer.css';
 
 const DEFAULT_ITEMS = [
@@ -17,12 +18,10 @@ const DEFAULT_ITEMS = [
 const DEFAULT_CAPACITY = 50;
 
 const FractionalKnapsackVisualizer = () => {
-    const [items, setItems] = useState(DEFAULT_ITEMS);
-    const [capacity, setCapacity] = useState(DEFAULT_CAPACITY);
-    const [inputStr, setInputStr] = useState(
-        DEFAULT_ITEMS.map(it => `${it.weight}:${it.value}`).join(', ')
-    );
-    const [capStr, setCapStr] = useState(String(DEFAULT_CAPACITY));
+    const [items, setItems]               = useState(DEFAULT_ITEMS);
+    const [capacity, setCapacity]         = useState(DEFAULT_CAPACITY);
+    const [inputStr, setInputStr]         = useState(DEFAULT_ITEMS.map(it => `${it.weight}:${it.value}`).join(', '));
+    const [capStr, setCapStr]             = useState(String(DEFAULT_CAPACITY));
     const [activeLanguage, setActiveLanguage] = useState('javascript');
 
     const steps = useMemo(
@@ -31,24 +30,31 @@ const FractionalKnapsackVisualizer = () => {
     );
 
     const {
-        currentStep, currentStepIndex, isPlaying,
-        play, pause, reset, stepForward, stepBackward,
-        setIndex, speed, setSpeed
+        currentStep,
+        currentStepIndex,
+        isPlaying,
+        play,
+        pause,
+        reset,
+        stepForward,
+        stepBackward,
+        setIndex,
+        speed,
+        setSpeed
     } = useGenericAnimation(steps);
 
     const handleApply = () => {
         try {
             const pairs = inputStr.split(',').map(s => s.trim()).filter(s => s !== '');
             if (pairs.length === 0) throw new Error('Need at least one item.');
-            if (pairs.length > 10) throw new Error('Maximum 10 items.');
+            if (pairs.length > 8) throw new Error('Maximum 8 items.');
 
-            const newItems = pairs.map((pair, idx) => {
+            const newItems = pairs.map((pair) => {
                 const parts = pair.split(':');
                 if (parts.length !== 2) throw new Error(`Invalid format "${pair}". Use weight:value.`);
                 const w = parseFloat(parts[0].trim());
                 const v = parseFloat(parts[1].trim());
-                if (isNaN(w) || isNaN(v)) throw new Error(`Non-numeric values in "${pair}".`);
-                if (w <= 0 || v <= 0) throw new Error(`Weight and value must be positive in "${pair}".`);
+                if (isNaN(w) || isNaN(v) || w <= 0 || v <= 0) throw new Error(`Weight and value must be positive numbers.`);
                 return { weight: w, value: v };
             });
 
@@ -64,209 +70,149 @@ const FractionalKnapsackVisualizer = () => {
         }
     };
 
+    const handleRandomize = () => {
+        const count = 5;
+        const newItems = Array.from({ length: count }, () => ({
+            weight: Math.floor(Math.random() * 25) + 5,
+            value: Math.floor(Math.random() * 80) + 20
+        }));
+        const newCap = Math.floor(Math.random() * 40) + 30;
+
+        setItems(newItems);
+        setCapacity(newCap);
+        setInputStr(newItems.map(it => `${it.weight}:${it.value}`).join(', '));
+        setCapStr(String(newCap));
+        reset();
+        toast.success('Generated random items and capacity!');
+    };
+
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'init': return 2;
-            case 'sort': return 4;
-            case 'consider': return 8;
-            case 'take-full': return 10;
-            case 'take-fraction': return 13;
-            case 'skip': return 8;
-            case 'completed': return 17;
-            default: return 0;
+            case 'init':          return 2;
+            case 'sort':          return 2;
+            case 'consider':      return 6;
+            case 'take-full':     return 8;
+            case 'take-fraction': return 11;
+            case 'skip':          return 7;
+            case 'completed':     return 15;
+            default:              return 0;
         }
     };
 
-    // Compute max weight for bar scaling
-    const maxWeight = useMemo(() => {
-        if (!currentStep?.items) return 1;
-        return Math.max(...currentStep.items.map(it => it.weight), 1);
-    }, [currentStep]);
-
-    const codeSnippet = algorithmCodes.fractionalKnapsack?.[activeLanguage] || algorithmCodes.knapsack?.[activeLanguage] || '';
-
-    const fillPercent = currentStep ? ((capacity - currentStep.remainingCapacity) / capacity) * 100 : 0;
+    const codeSnippet = algorithmCodes.fractionalKnapsack?.[activeLanguage] || '';
+    const stepData    = currentStep || {};
+    const fillPercent = currentStep ? Math.min(100, Math.max(0, ((capacity - currentStep.remainingCapacity) / capacity) * 100)) : 0;
 
     return (
         <DualView
-            algorithmName="Fractional Knapsack (Greedy)"
+            algorithmName="Fractional Knapsack (Greedy Value Density)"
             code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || 'Configure items and press Solve.'}
+            codeSnippetCategory="greedy"
+            description={
+                <div className="fk-desc-wrapper">
+                    <span className="fk-badge">Greedy Ratio Sorting O(N log N)</span>
+                    <span className="fk-desc-text">
+                        {currentStep?.description || 'Press Play to fill knapsack greedily by value/weight ratio.'}
+                    </span>
+                </div>
+            }
         >
-            <div className="fk-container">
-                {/* Input Bar */}
-                <div className="fk-input-bar">
-                    <div className="fk-inputs">
-                        <div className="fk-input-group">
-                            <span className="fk-label">Items (weight:value):</span>
-                            <input
-                                type="text"
-                                className="fk-array-input"
-                                value={inputStr}
-                                onChange={(e) => setInputStr(e.target.value)}
-                                placeholder="10:60, 20:100, 30:120"
-                            />
-                        </div>
-                        <div className="fk-input-group fk-cap-group">
-                            <span className="fk-label">Capacity:</span>
-                            <input
-                                type="text"
-                                className="fk-cap-input"
-                                value={capStr}
-                                onChange={(e) => setCapStr(e.target.value)}
-                                placeholder="50"
-                            />
-                        </div>
+            <div className="fk-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="fk-input-panel">
+                    <div className="fk-input-group">
+                        <label className="fk-input-label">Items (w:v):</label>
+                        <input
+                            type="text"
+                            value={inputStr}
+                            onChange={(e) => setInputStr(e.target.value)}
+                            placeholder="10:60, 20:100"
+                            className="fk-text-input"
+                        />
                     </div>
-                    <button className="cs-btn cs-btn-primary" onClick={handleApply}>Solve</button>
+
+                    <div className="fk-input-group">
+                        <label className="fk-input-label">Capacity:</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={capStr}
+                            onChange={(e) => setCapStr(e.target.value)}
+                            className="fk-number-input"
+                        />
+                    </div>
+
+                    <div className="fk-btn-group">
+                        <button onClick={handleApply} className="fk-btn fk-btn-primary">
+                            <FaCheck /> Solve
+                        </button>
+                        <button onClick={handleRandomize} className="fk-btn fk-btn-secondary">
+                            <FaRandom /> Random
+                        </button>
+                        <button onClick={() => { setItems(DEFAULT_ITEMS); setCapacity(DEFAULT_CAPACITY); setInputStr(DEFAULT_ITEMS.map(it => `${it.weight}:${it.value}`).join(', ')); setCapStr(String(DEFAULT_CAPACITY)); reset(); }} className="fk-btn fk-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="fk-legend">
+                        <div className="fk-leg-item"><span className="fk-dot yellow"></span> Considering</div>
+                        <div className="fk-leg-item"><span className="fk-dot green"></span> Full Taken</div>
+                        <div className="fk-leg-item"><span className="fk-dot blue"></span> Fraction Taken</div>
+                    </div>
                 </div>
 
-                {/* Main Visualization */}
-                <div className="fk-main-area">
-                    {/* Left: Items bar chart */}
-                    <div className="fk-items-panel">
-                        <div className="fk-panel-title">Items (sorted by ratio)</div>
-                        <div className="fk-items-list">
-                            {currentStep?.items?.map((item, idx) => {
-                                const barWidth = (item.weight / maxWeight) * 100;
-                                const isActive = currentStep.currentIndex === idx;
-                                return (
-                                    <div key={item.originalIndex} className={`fk-item-row ${isActive ? 'fk-active' : ''}`}>
-                                        <div className="fk-item-label">{item.label}</div>
-                                        <div className="fk-item-bar-track">
-                                            <div
-                                                className={`fk-item-bar state-${item.state}`}
-                                                style={{
-                                                    width: `${barWidth}%`,
-                                                    backgroundColor: item.state === 'pending' ? '#334155' : item.color,
-                                                    opacity: item.state === 'skipped' ? 0.3 : 1
-                                                }}
-                                            >
-                                                <span className="fk-bar-text">
-                                                    w={item.weight} v=${item.value}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="fk-item-ratio">
-                                            {item.ratio.toFixed(2)}
-                                        </div>
+                {/* ── Main Canvas Stage: Sack Fill Meter & Items Grid ──────── */}
+                <div className="fk-canvas-wrapper">
+                    
+                    {/* Capacity Fill Meter */}
+                    <div className="fk-meter-card">
+                        <div className="meter-header">
+                            <span>Knapsack Capacity Fill</span>
+                            <span className="meter-stats">
+                                {stepData.totalValue !== undefined ? stepData.totalValue.toFixed(1) : 0} Value / {capacity - (stepData.remainingCapacity ?? capacity)} of {capacity} W
+                            </span>
+                        </div>
+                        <div className="meter-track">
+                            <div className="meter-bar" style={{ width: `${fillPercent}%` }}></div>
+                        </div>
+                    </div>
+
+                    {/* Items Grid Cards */}
+                    <div className="fk-items-grid">
+                        {(stepData.items || items).map((item, idx) => {
+                            const ratio = (item.value / item.weight).toFixed(2);
+                            const takenAmt = stepData.takenMap?.[idx] || 0;
+                            const isCurrent = stepData.currentItemIndex === idx;
+
+                            let cardClass = 'default';
+                            if (isCurrent) cardClass = 'considering';
+                            if (takenAmt === 1) cardClass = 'full';
+                            else if (takenAmt > 0) cardClass = 'fraction';
+
+                            return (
+                                <div key={idx} className={`fk-item-card ${cardClass}`}>
+                                    <div className="item-header">Item {idx + 1}</div>
+                                    <div className="item-details">
+                                        <span>Weight: <strong>{item.weight}</strong></span>
+                                        <span>Value: <strong>{item.value}</strong></span>
+                                        <span className="ratio">Ratio: <strong>{ratio}</strong></span>
                                     </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Legend */}
-                        <div className="fk-legend">
-                            <div className="fk-legend-item"><div className="fk-legend-dot" style={{ background: '#334155' }}></div>Pending</div>
-                            <div className="fk-legend-item"><div className="fk-legend-dot" style={{ background: '#f59e0b' }}></div>Considering</div>
-                            <div className="fk-legend-item"><div className="fk-legend-dot" style={{ background: '#10b981' }}></div>Taken (Full)</div>
-                            <div className="fk-legend-item"><div className="fk-legend-dot" style={{ background: '#8b5cf6' }}></div>Partial</div>
-                            <div className="fk-legend-item"><div className="fk-legend-dot fk-dot-skipped" style={{ background: '#64748b' }}></div>Skipped</div>
-                        </div>
+                                    <div className="item-taken">
+                                        Taken: <strong>{(takenAmt * 100).toFixed(0)}%</strong>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    {/* Right: Knapsack gauge + result */}
-                    <div className="fk-right-panel">
-                        {/* Knapsack Gauge */}
-                        <div className="fk-gauge-card">
-                            <div className="fk-gauge-title">Knapsack ({capacity}kg)</div>
-                            <div className="fk-gauge-container">
-                                <div className="fk-gauge-track">
-                                    {currentStep?.knapsackItems?.map((kItem, idx) => {
-                                        const segHeight = (kItem.weightTaken / capacity) * 100;
-                                        return (
-                                            <div
-                                                key={kItem.originalIndex}
-                                                className="fk-gauge-segment"
-                                                style={{
-                                                    height: `${segHeight}%`,
-                                                    backgroundColor: kItem.color,
-                                                    opacity: kItem.fraction < 1 ? 0.7 : 1
-                                                }}
-                                                title={`${kItem.label}: ${kItem.weightTaken.toFixed(1)}kg`}
-                                            >
-                                                {segHeight > 8 && (
-                                                    <span className="fk-seg-label">{kItem.label}</span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    {/* Empty space */}
-                                    {currentStep && currentStep.remainingCapacity > 0 && (
-                                        <div
-                                            className="fk-gauge-empty"
-                                            style={{ height: `${(currentStep.remainingCapacity / capacity) * 100}%` }}
-                                        >
-                                            <span className="fk-empty-label">{currentStep.remainingCapacity.toFixed(1)}kg free</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="fk-gauge-markers">
-                                    <span>0</span>
-                                    <span>{Math.round(capacity / 2)}</span>
-                                    <span>{capacity}</span>
-                                </div>
-                            </div>
-                            <div className="fk-gauge-stats">
-                                <div className="fk-stat">
-                                    <span className="fk-stat-label">Used</span>
-                                    <span className="fk-stat-value">{currentStep ? (capacity - currentStep.remainingCapacity).toFixed(1) : 0}kg</span>
-                                </div>
-                                <div className="fk-stat">
-                                    <span className="fk-stat-label">Value</span>
-                                    <span className="fk-stat-value fk-stat-highlight">${currentStep?.totalValue?.toFixed(1) || '0'}</span>
-                                </div>
-                                <div className="fk-stat">
-                                    <span className="fk-stat-label">Fill</span>
-                                    <span className="fk-stat-value">{fillPercent.toFixed(0)}%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Result Table */}
-                        {currentStep?.knapsackItems?.length > 0 && (
-                            <div className="fk-result-card">
-                                <div className="fk-result-title">Items Taken</div>
-                                <table className="fk-result-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Fraction</th>
-                                            <th>Weight</th>
-                                            <th>Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {currentStep.knapsackItems.map(kItem => (
-                                            <tr key={kItem.originalIndex}>
-                                                <td>
-                                                    <span className="fk-dot-inline" style={{ background: kItem.color }}></span>
-                                                    {kItem.label}
-                                                </td>
-                                                <td>{(kItem.fraction * 100).toFixed(0)}%</td>
-                                                <td>{kItem.weightTaken.toFixed(1)}kg</td>
-                                                <td>${kItem.valueTaken.toFixed(1)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colSpan="2"><strong>Total</strong></td>
-                                            <td><strong>{(capacity - currentStep.remainingCapacity).toFixed(1)}kg</strong></td>
-                                            <td><strong>${currentStep.totalValue.toFixed(1)}</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
-                {/* Animation Controls */}
+                {/* ── YouTube Video Player Controls ────────────────────── */}
                 <div className="fk-controls-wrapper">
                     <AnimationControls
                         inputType="none"
@@ -283,6 +229,7 @@ const FractionalKnapsackVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

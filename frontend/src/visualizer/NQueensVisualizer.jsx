@@ -1,37 +1,32 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import DualView from './DualView';
 import AnimationControls from '../components/animation-controls/AnimationControls';
 import { generateNQueensSteps } from '../algorithms/backtracking/nQueens';
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { algorithmCodes } from '../data/algorithmCodes';
-import { algorithmLineMaps } from '../data/algorithmLineMaps';
 import { toast } from 'react-hot-toast';
+import { FaPlay, FaRedo, FaTrashAlt, FaStepForward, FaStepBackward } from 'react-icons/fa';
 import './NQueensVisualizer.css';
 
 const NQueensVisualizer = () => {
-    const [n, setN] = useState(8);
-    const [fixedQueens, setFixedQueens] = useState([]);
-    const [mode, setMode] = useState('interactive'); // 'interactive' | 'solving'
-    const [sizeModalOpen, setSizeModalOpen] = useState(false);
-    const [tempN, setTempN] = useState(8);
+    const [n, setN]                           = useState(8);
+    const [fixedQueens, setFixedQueens]       = useState([]);
+    const [mode, setMode]                     = useState('interactive');
+    const [activeLanguage, setActiveLanguage] = useState('javascript');
 
-    // Generate steps for the current config
     const steps = useMemo(() => {
         if (mode === 'solving') {
             return generateNQueensSteps(n, fixedQueens);
         }
-        // In interactive mode, show a single placeholder step
         return [{
             type: 'info', indices: [], sortedIndices: [],
-            description: `Click cells to place queens, then press Solve.`,
+            description: `Click any tile on the chessboard to place/remove queens. Press Solve to start backtracking.`,
             arraySnapshot: new Array(n * n).fill(0)
         }];
     }, [n, fixedQueens, mode]);
 
     const anim = useGenericAnimation(steps);
 
-    // Find all solution step indices for navigation
     const solutionIndices = useMemo(() => {
         return steps.map((s, i) => s.isSolution ? i : -1).filter(i => i >= 0);
     }, [steps]);
@@ -41,16 +36,18 @@ const NQueensVisualizer = () => {
         return idx >= 0 ? idx + 1 : 0;
     }, [solutionIndices, anim.currentStepIndex]);
 
-    const activeLanguage = 'javascript';
-    const codeSnippet = algorithmCodes.nQueens?.[activeLanguage] || '// Code not available';
-    const map = algorithmLineMaps.nQueens?.[activeLanguage];
+    const codeSnippet = algorithmCodes.nQueens?.[activeLanguage] || '';
 
     const getActiveLine = () => {
-        if (!anim.currentStep || !map) return 0;
-        return map[anim.currentStep.type] || map.info || 1;
+        if (!anim.currentStep) return 0;
+        switch (anim.currentStep.type) {
+            case 'place':     return 9;
+            case 'backtrack': return 15;
+            case 'solution':  return 4;
+            default:          return 1;
+        }
     };
 
-    // Toggle queen on click (interactive mode only)
     const handleCellClick = useCallback((row, col) => {
         if (mode !== 'interactive') return;
         setFixedQueens(prev => {
@@ -60,7 +57,6 @@ const NQueensVisualizer = () => {
         });
     }, [mode]);
 
-    // Validate fixed queens don't attack each other
     const hasConflict = useMemo(() => {
         for (let i = 0; i < fixedQueens.length; i++) {
             for (let j = i + 1; j < fixedQueens.length; j++) {
@@ -73,7 +69,6 @@ const NQueensVisualizer = () => {
         return false;
     }, [fixedQueens]);
 
-    // Get attacked cells from current fixed queens (for highlighting)
     const attackedCells = useMemo(() => {
         if (mode !== 'interactive') return new Set();
         const cells = new Set();
@@ -87,14 +82,13 @@ const NQueensVisualizer = () => {
                 if (row - i >= 0 && col + i < n) cells.add(`${row - i}-${col + i}`);
             }
         });
-        // Remove queen positions themselves from "attacked" highlighting
         fixedQueens.forEach(({ row, col }) => cells.delete(`${row}-${col}`));
         return cells;
     }, [fixedQueens, n, mode]);
 
     const handleSolve = () => {
         if (hasConflict) {
-            toast.error('Invalid configuration! Some queens are attacking each other.');
+            toast.error('Invalid placement! Fixed queens attack each other.');
             return;
         }
         setMode('solving');
@@ -102,231 +96,232 @@ const NQueensVisualizer = () => {
 
     const handleReset = () => {
         setMode('interactive');
-        setFixedQueens([]);
         anim.reset();
     };
 
     const handleClearQueens = () => {
-        if (mode === 'solving') setMode('interactive');
         setFixedQueens([]);
+        setMode('interactive');
+        anim.reset();
     };
 
     const goToNextSolution = () => {
-        const next = solutionIndices.find(i => i > anim.currentStepIndex);
-        if (next !== undefined) anim.setStep(next);
-        else toast('No more solutions ahead.', { icon: '📭' });
+        const nextSol = solutionIndices.find(idx => idx > anim.currentStepIndex);
+        if (nextSol !== undefined) {
+            anim.setIndex(nextSol);
+        } else if (solutionIndices.length > 0) {
+            anim.setIndex(solutionIndices[0]);
+        }
     };
 
     const goToPrevSolution = () => {
-        const prev = [...solutionIndices].reverse().find(i => i < anim.currentStepIndex);
-        if (prev !== undefined) anim.setStep(prev);
-        else toast('No earlier solutions.', { icon: '📭' });
+        const prevSols = solutionIndices.filter(idx => idx < anim.currentStepIndex);
+        if (prevSols.length > 0) {
+            anim.setIndex(prevSols[prevSols.length - 1]);
+        } else if (solutionIndices.length > 0) {
+            anim.setIndex(solutionIndices[solutionIndices.length - 1]);
+        }
     };
 
-    // Render the board
-    const renderBoard = () => {
-        const boardSize = n;
-        const snapshot = mode === 'solving' ? (anim.currentStep?.arraySnapshot || []) : null;
-        const activeIndices = anim.currentStep?.indices || [];
-
-        return (
-            <div className="nq-viz">
-                <div
-                    className="nq-board"
-                    style={{
-                        gridTemplateColumns: `repeat(${boardSize}, 1fr)`,
-                        width: `min(${Math.min(boardSize * 52, 420)}px, 90vw)`,
-                        height: `min(${Math.min(boardSize * 52, 420)}px, 90vw)`
-                    }}
-                >
-                    {Array.from({ length: boardSize * boardSize }).map((_, idx) => {
-                        const r = Math.floor(idx / boardSize);
-                        const c = idx % boardSize;
-                        const isLight = (r + c) % 2 === 0;
-
-                        // Determine queen state
-                        const isFixed = fixedQueens.some(q => q.row === r && q.col === c);
-                        let hasDynamicQueen = false;
-                        let hasQueenFromSnapshot = false;
-
-                        if (mode === 'solving' && snapshot) {
-                            const val = snapshot[idx];
-                            if (val === 95) hasQueenFromSnapshot = true; // fixed
-                            if (val === 90) { hasDynamicQueen = true; hasQueenFromSnapshot = true; }
-                        }
-
-                        const showQueen = mode === 'interactive' ? isFixed : hasQueenFromSnapshot;
-                        const isActive = mode === 'solving' && activeIndices.includes(idx);
-                        const isBacktracking = mode === 'solving' && anim.currentStep?.type === 'swap' && isActive;
-                        const isConflictCell = mode === 'solving' && anim.currentStep?.type === 'swap' && isActive;
-                        const isPlacing = mode === 'solving' && anim.currentStep?.type === 'compare' && isActive;
-                        const isAttacked = mode === 'interactive' && attackedCells.has(`${r}-${c}`) && !isFixed;
-
-                        return (
-                            <div
-                                key={idx}
-                                className={`nq-cell ${isLight ? 'nq-light' : 'nq-dark'}
-                                    ${isActive ? 'nq-active' : ''}
-                                    ${isBacktracking ? 'nq-backtrack' : ''}
-                                    ${isPlacing ? 'nq-placing' : ''}
-                                    ${isAttacked ? 'nq-attacked' : ''}
-                                    ${mode === 'interactive' ? 'nq-clickable' : ''}`}
-                                onClick={() => handleCellClick(r, c)}
-                            >
-                                <AnimatePresence>
-                                    {showQueen && (
-                                        <motion.div
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0, opacity: 0 }}
-                                            className={`nq-queen ${isFixed && mode === 'solving' ? 'nq-queen-fixed' : ''} ${hasDynamicQueen ? 'nq-queen-dynamic' : ''} ${isFixed && mode === 'interactive' ? 'nq-queen-user' : ''}`}
-                                        >
-                                            ♛
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
+    const stepData = anim.currentStep || {};
+    const snapshot = stepData.arraySnapshot || [];
+    const queenCount = mode === 'solving' ? snapshot.filter(val => val > 0).length : fixedQueens.length;
+    const colHeaders = Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i));
 
     return (
         <DualView
-            algorithmName={`N-Queens Solver (N=${n})`}
-            description={anim.currentStep?.description || 'Click cells to place queens, then press Solve.'}
+            algorithmName="N-Queens Problem (Backtracking)"
             code={codeSnippet}
             activeLine={getActiveLine()}
             activeLanguage={activeLanguage}
-            onLanguageChange={() => { }}
-        >
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
-                {/* Status Bar */}
-                <div className="nq-status-bar">
-                    <span className="nq-mode-badge">
-                        {mode === 'interactive' ? '🖱️ Interactive Mode' : '⚙️ Solving...'}
+            onLanguageChange={setActiveLanguage}
+            codeSnippetCategory="backtracking"
+            description={
+                <div className="nq-desc-wrapper">
+                    <span className="nq-badge">{n}×{n} Chessboard</span>
+                    <span className="nq-desc-text">
+                        {stepData.description || 'Click tiles to place queens, then press Solve.'}
                     </span>
-                    {fixedQueens.length > 0 && (
-                        <span className="nq-fixed-count">🔒 {fixedQueens.length} fixed queen{fixedQueens.length > 1 ? 's' : ''}</span>
-                    )}
-                    {hasConflict && (
-                        <span className="nq-conflict-badge">⚠️ Queens attacking each other!</span>
-                    )}
-                    {mode === 'solving' && solutionIndices.length > 0 && (
-                        <span className="nq-solution-badge">
-                            {currentSolutionNum > 0
-                                ? `Solution ${currentSolutionNum} of ${solutionIndices.length}`
-                                : `${solutionIndices.length} solution${solutionIndices.length > 1 ? 's' : ''} found`}
-                        </span>
-                    )}
-                    {mode === 'solving' && solutionIndices.length === 0 && anim.currentStepIndex === steps.length - 1 && (
-                        <span className="nq-no-solution-badge">❌ No solutions found</span>
-                    )}
+                </div>
+            }
+        >
+            <div className="nq-visualizer-wrapper">
+
+                {/* Top Input Control Panel */}
+                <div className="nq-input-panel">
+                    <div className="nq-input-group">
+                        <label className="nq-input-label">Board Size:</label>
+                        <select
+                            value={n}
+                            onChange={(e) => {
+                                const newN = parseInt(e.target.value, 10);
+                                setN(newN);
+                                setFixedQueens([]);
+                                setMode('interactive');
+                                anim.reset();
+                            }}
+                            className="nq-select-input"
+                        >
+                            <option value={4}>4 × 4</option>
+                            <option value={5}>5 × 5</option>
+                            <option value={6}>6 × 6</option>
+                            <option value={7}>7 × 7</option>
+                            <option value={8}>8 × 8</option>
+                        </select>
+                    </div>
+
+                    <div className="nq-btn-group">
+                        {mode === 'interactive' ? (
+                            <>
+                                <button className="nq-btn nq-btn-primary" onClick={handleSolve} disabled={hasConflict}>
+                                    <FaPlay /> Solve
+                                </button>
+                                <button className="nq-btn nq-btn-outline" onClick={handleClearQueens}>
+                                    <FaTrashAlt /> Clear
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button className="nq-btn nq-btn-secondary" onClick={goToPrevSolution}>
+                                    <FaStepBackward /> Prev Sol
+                                </button>
+                                <button className="nq-btn nq-btn-secondary" onClick={goToNextSolution}>
+                                    Next Sol <FaStepForward />
+                                </button>
+                                <button className="nq-btn nq-btn-outline" onClick={handleReset}>
+                                    <FaRedo /> Editor
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="nq-legend">
+                        <div className="nq-leg-item"><span className="nq-dot gold"></span> Queen</div>
+                        <div className="nq-leg-item"><span className="nq-dot yellow"></span> Testing</div>
+                        <div className="nq-leg-item"><span className="nq-dot red"></span> Conflict</div>
+                        <div className="nq-leg-item"><span className="nq-dot green"></span> Solution</div>
+                    </div>
                 </div>
 
-                {/* Board */}
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {renderBoard()}
+                {/* Main Stage: Stats & Chessboard Grid */}
+                <div className="nq-canvas-wrapper">
+                    
+                    {/* Metrics Header */}
+                    <div className="nq-stats-row">
+                        <div className="nq-stat-card">
+                            <span className="stat-lbl">Placed Queens</span>
+                            <span className="stat-val gold">{queenCount} / {n}</span>
+                        </div>
+                        <div className="nq-stat-card">
+                            <span className="stat-lbl">Total Solutions</span>
+                            <span className="stat-val green">{solutionIndices.length}</span>
+                        </div>
+                        {currentSolutionNum > 0 && (
+                            <div className="nq-stat-card">
+                                <span className="stat-lbl">Viewing Solution</span>
+                                <span className="stat-val purple">#{currentSolutionNum}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Chessboard Container with Left Row Labels & Top Col Labels */}
+                    <div className="nq-board-container">
+                        <div className="nq-board-layout">
+
+                            {/* Left Row Labels (1, 2, 3...) */}
+                            <div className="nq-row-labels" style={{ gridTemplateRows: `repeat(${n}, minmax(38px, 54px))` }}>
+                                {Array.from({ length: n }).map((_, r) => (
+                                    <span key={`r-${r}`} className="nq-coord-label">{r + 1}</span>
+                                ))}
+                            </div>
+
+                            {/* Right Section: Top Col Labels (A, B, C...) + N x N Grid */}
+                            <div className="nq-board-right">
+                                <div className="nq-col-labels" style={{ gridTemplateColumns: `repeat(${n}, minmax(38px, 54px))` }}>
+                                    {colHeaders.map(ch => (
+                                        <span key={ch} className="nq-coord-label">{ch}</span>
+                                    ))}
+                                </div>
+
+                                <div
+                                    className="nq-chessboard"
+                                    style={{
+                                        gridTemplateColumns: `repeat(${n}, minmax(38px, 54px))`,
+                                        gridTemplateRows: `repeat(${n}, minmax(38px, 54px))`
+                                    }}
+                                >
+                                    {Array.from({ length: n * n }).map((_, idx) => {
+                                        const r = Math.floor(idx / n);
+                                        const c = idx % n;
+                                        const isDark = (r + c) % 2 === 1;
+
+                                        let hasQueen = false;
+                                        let isCurrentCell = false;
+                                        let isConflict = false;
+                                        let isAttacked = attackedCells.has(`${r}-${c}`);
+                                        let isSolutionCell = false;
+
+                                        if (mode === 'interactive') {
+                                            hasQueen = fixedQueens.some(q => q.row === r && q.col === c);
+                                            if (hasQueen && hasConflict) {
+                                                isConflict = fixedQueens.some(q =>
+                                                    (q.row !== r || q.col !== c) &&
+                                                    (q.row === r || q.col === c || Math.abs(q.row - r) === Math.abs(q.col - c))
+                                                );
+                                            }
+                                        } else {
+                                            hasQueen = snapshot[idx] > 0;
+                                            isCurrentCell = stepData.indices && stepData.indices.includes(idx);
+                                            isConflict = (stepData.type === 'conflict' || stepData.type === 'backtrack') && isCurrentCell;
+                                            isSolutionCell = stepData.isSolution && hasQueen;
+                                        }
+
+                                        let tileClass = isDark ? 'tile-dark' : 'tile-light';
+                                        if (isConflict) tileClass += ' tile-conflict';
+                                        else if (isCurrentCell) tileClass += ' tile-current';
+                                        else if (isSolutionCell) tileClass += ' tile-solution';
+                                        else if (isAttacked) tileClass += ' tile-attacked';
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`nq-tile ${tileClass} ${mode === 'interactive' ? 'interactive' : ''}`}
+                                                onClick={() => handleCellClick(r, c)}
+                                                title={`Row ${r + 1}, Col ${colHeaders[c]}`}
+                                            >
+                                                {hasQueen && <span className="nq-queen-icon">👑</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
 
-                {/* Legend */}
-                <div className="nq-legend">
-                    <div className="nq-legend-item"><span className="nq-leg-dot nq-leg-gold"></span> Fixed Queen</div>
-                    <div className="nq-legend-item"><span className="nq-leg-dot nq-leg-green"></span> Placed (safe)</div>
-                    <div className="nq-legend-item"><span className="nq-leg-dot nq-leg-red"></span> Conflict / Backtrack</div>
-                    <div className="nq-legend-item"><span className="nq-leg-dot nq-leg-attack"></span> Attacked Cell</div>
-                </div>
-
-                {/* Controls */}
-                <div className="nq-controls-bar">
-                    {mode === 'solving' && (
+                {/* YouTube Video Player Controls */}
+                {mode === 'solving' && (
+                    <div className="nq-controls-wrapper">
                         <AnimationControls
                             isPlaying={anim.isPlaying}
                             onPlay={anim.play}
                             onPause={anim.pause}
-                            onStepForward={anim.stepForward}
-                            onStepBackward={anim.stepBackward}
+                            onNext={anim.stepForward}
+                            onPrev={anim.stepBackward}
                             onReset={anim.reset}
                             speed={anim.speed}
                             onSpeedChange={anim.setSpeed}
                             currentStep={anim.currentStepIndex}
-                            totalSteps={anim.totalSteps}
-                            onScrub={anim.setStep}
+                            totalSteps={steps.length}
+                            onScrub={anim.setIndex}
                             inputType="none"
                         />
-                    )}
-
-                    <div className="nq-action-row">
-                        {mode === 'interactive' && (
-                            <>
-                                <button className="nq-btn nq-btn-primary" onClick={handleSolve} disabled={hasConflict}>
-                                    ▶️ Solve
-                                </button>
-                                <button className="nq-btn" onClick={handleClearQueens}>
-                                    🧹 Clear Queens
-                                </button>
-                                <button className="nq-btn" onClick={() => { setTempN(n); setSizeModalOpen(true); }}>
-                                    📐 Board Size: {n}
-                                </button>
-                            </>
-                        )}
-                        {mode === 'solving' && (
-                            <>
-                                <button className="nq-btn" onClick={goToPrevSolution}>⏮ Prev Solution</button>
-                                <button className="nq-btn" onClick={goToNextSolution}>Next Solution ⏭</button>
-                                <button className="nq-btn nq-btn-danger" onClick={handleReset}>🔄 Reset Board</button>
-                            </>
-                        )}
                     </div>
-                </div>
+                )}
+
             </div>
-
-            {/* Size Modal */}
-            {sizeModalOpen && (
-                <div className="nq-modal-overlay" onClick={() => setSizeModalOpen(false)}>
-                    <div className="nq-modal" onClick={e => e.stopPropagation()}>
-                        <h3>Select Board Size</h3>
-                        <div className="nq-size-buttons">
-                            {[4, 5, 6, 7, 8].map(sz => (
-                                <button
-                                    key={sz}
-                                    className={`nq-size-btn ${tempN === sz ? 'nq-size-active' : ''}`}
-                                    onClick={() => setTempN(sz)}
-                                >
-                                    {sz}×{sz}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Preview grid */}
-                        <div className="nq-preview-grid" style={{ gridTemplateColumns: `repeat(${tempN}, 32px)` }}>
-                            {Array.from({ length: tempN * tempN }).map((_, idx) => {
-                                const r = Math.floor(idx / tempN);
-                                const c = idx % tempN;
-                                return (
-                                    <div key={idx} className={`nq-preview-cell ${(r + c) % 2 === 0 ? 'nq-prev-light' : 'nq-prev-dark'}`}>
-                                        <span className="nq-prev-coord">{r},{c}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="nq-modal-actions">
-                            <button className="nq-btn" onClick={() => setSizeModalOpen(false)}>Cancel</button>
-                            <button className="nq-btn nq-btn-primary" onClick={() => {
-                                setN(tempN);
-                                setFixedQueens([]);
-                                setMode('interactive');
-                                setSizeModalOpen(false);
-                            }}>
-                                Apply {tempN}×{tempN}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </DualView>
     );
 };

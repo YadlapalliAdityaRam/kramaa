@@ -1,21 +1,51 @@
-.gcd-container {
-    padding: 20px;
+/* ═══════════════════════════════════════════════════════════════════════
+   EuclideanGcdVisualizer.css — Theme-Adaptive & Redesigned Layout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.gcd-visualizer-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    color: #e2e8f0;
     height: 100%;
+    min-height: 560px;
+    gap: 12px;
 }
 
-.gcd-input-bar {
+.gcd-desc-wrapper {
     display: flex;
     align-items: center;
-    gap: 15px;
-    background: rgba(30, 41, 59, 0.6);
-    padding: 12px 20px;
-    border-radius: 12px;
-    border: 1px solid #334155;
+    gap: 12px;
     flex-wrap: wrap;
+}
+
+.gcd-badge {
+    font-size: 0.8rem;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 3px 10px;
+    border-radius: 6px;
+    color: #10b981;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.gcd-desc-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Input Panel */
+.gcd-input-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .gcd-input-group {
@@ -24,283 +54,223 @@
     gap: 8px;
 }
 
-.gcd-input-group label {
-    font-size: 0.85rem;
-    color: #94a3b8;
-}
-
-.gcd-input-group input {
-    width: 80px;
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.apply-btn,
-.analogy-btn {
-    padding: 8px 16px;
-    background: #3b82f6;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.apply-btn:hover {
-    background: #2563eb;
-}
-
-.analogy-btn {
-    background: #475569;
-}
-
-.analogy-btn:hover {
-    background: #334155;
-}
-
-.gcd-analogy-panel {
-    background: rgba(99, 102, 241, 0.1);
-    border-left: 4px solid #6366f1;
-    padding: 16px 20px;
-    border-radius: 8px;
-    animation: slideDown 0.3s ease-out;
-}
-
-.gcd-analogy-panel h4 {
-    margin: 0 0 8px 0;
-    color: #818cf8;
-}
-
-.gcd-analogy-panel p {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: #cbd5e1;
-    margin: 4px 0;
-}
-
-.gcd-visual-area {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
-    background: rgba(15, 23, 42, 0.4);
-    border-radius: 16px;
-    padding: 24px;
-    min-height: 350px;
-}
-
-.gcd-flow-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 40px;
-}
-
-.gcd-value-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.gcd-box {
-    width: 90px;
-    height: 90px;
-    background: #1e293b;
-    border: 2px solid #334155;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-
-.box-label {
-    font-size: 0.65rem;
-    color: #64748b;
-    text-transform: uppercase;
-    font-weight: 800;
-    margin-top: -5px;
-}
-
-.box-val {
-    font-size: 1.8rem;
-    font-weight: 800;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.gcd-op-symbol {
-    font-size: 1.5rem;
-    color: #64748b;
-    font-weight: 800;
-}
-
-.state-a {
-    border-color: #f59e0b;
-    color: #f59e0b;
-}
-
-.state-b {
-    border-color: #3b82f6;
-    color: #3b82f6;
-}
-
-.state-remainder {
-    border-color: #10b981;
-    color: #10b981;
-}
-
-.gcd-equation-detail {
-    font-size: 1.2rem;
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(30, 41, 59, 0.5);
-    padding: 10px 20px;
-    border-radius: 30px;
-    color: #94a3b8;
-}
-
-.highlight-rem {
-    color: #10b981;
-    font-weight: bold;
-}
-
-.gcd-history-panel {
-    background: rgba(15, 23, 42, 0.6);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    border: 1px solid #334155;
-}
-
-.gcd-history-panel h5 {
-    margin: 0;
-    color: #94a3b8;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-}
-
-.history-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-}
-
-.history-item {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    color: #cbd5e1;
-    padding: 4px 8px;
-    border-left: 2px solid #334155;
-}
-
-.history-item strong {
-    color: #10b981;
-}
-
-.history-item.result {
-    border-left-color: #a855f7;
-    background: rgba(168, 85, 247, 0.1);
-    color: #d8b4fe;
-    font-size: 1rem;
-    padding: 8px;
-}
-
-.history-item.result strong {
-    color: #a855f7;
-}
-
-/* Footer & Legend (Floyd style) */
-.gcd-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(15, 23, 42, 0.6);
-    padding: 16px 24px;
-    border-radius: 12px;
-    border: 1px solid #334155;
-}
-
-.gcd-complexity {
-    display: flex;
-    gap: 24px;
-}
-
-.comp-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.comp-item .label {
-    font-size: 0.7rem;
-    color: #64748b;
-    text-transform: uppercase;
-}
-
-.comp-item .val {
+.gcd-input-label {
+    font-size: 0.8rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+.gcd-number-input {
+    width: 80px;
+    background: var(--algo-input-bg);
+    border: 1px solid var(--algo-input-border);
+    border-radius: 8px;
+    color: var(--algo-input-text);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.gcd-number-input:focus { border-color: #10b981; }
+
+.gcd-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gcd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease;
+    white-space: nowrap;
+}
+.gcd-btn:hover { transform: translateY(-1px); }
+
+.gcd-btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+}
+
+.gcd-btn-secondary {
+    background: var(--surface-bg);
+    color: var(--text-secondary);
+    border-color: var(--surface-border);
+}
+
+.gcd-btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--surface-border);
 }
 
 .gcd-legend {
     display: flex;
-    gap: 16px;
-    font-size: 0.85rem;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    background: var(--surface-bg);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--surface-border);
 }
 
-.leg-item {
+.gcd-leg-item {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #94a3b8;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
-.dot {
+.gcd-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+    flex-shrink: 0;
+}
+.gcd-dot.blue   { background: #38bdf8; }
+.gcd-dot.purple { background: #c084fc; }
+.gcd-dot.green  { background: #10b981; }
+
+/* Analogy Card */
+.gcd-analogy-panel {
+    background: rgba(16, 185, 129, 0.08);
+    border-left: 4px solid #10b981;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.86rem;
+    color: var(--text-primary);
+    animation: slideDown 0.25s ease;
+}
+.gcd-analogy-panel h4 {
+    margin: 0 0 6px 0;
+    color: #10b981;
+    font-size: 0.92rem;
+}
+.gcd-analogy-panel p {
+    margin: 0 0 6px 0;
+    color: var(--text-secondary);
 }
 
-.dot.yellow {
-    background: #f59e0b;
+/* Canvas Stage */
+.gcd-canvas-wrapper {
+    flex: 1;
+    min-height: 280px;
+    background: var(--algo-grid-bg);
+    border: 1px solid var(--algo-grid-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    gap: 20px;
+    overflow-x: auto;
+    transition: background 0.25s ease, border-color 0.25s ease;
 }
 
-.dot.blue {
-    background: #3b82f6;
+.gcd-boxes-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.dot.green {
-    background: #10b981;
+.gcd-card-box {
+    min-width: 90px;
+    height: 80px;
+    background: var(--surface-bg-raised);
+    border: 1.5px solid var(--surface-border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 
-.dot.purple {
-    background: #a855f7;
+.box-lbl {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
 }
 
-/* Animations placeholder - can be refined later */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+.box-val {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.box-a { border-color: #38bdf8; }
+.box-a .box-val { color: #38bdf8; }
+
+.box-b { border-color: #c084fc; }
+.box-b .box-val { color: #c084fc; }
+
+.box-rem { border-color: #fbbf24; }
+.box-rem .box-val { color: #fbbf24; }
+
+.gcd-card-box.active-update {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+.gcd-card-box.active-swap {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.35);
+}
+
+.gcd-op-symbol {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+}
+
+.gcd-result-banner {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid #10b981;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    color: #10b981;
+    font-weight: 700;
+    animation: slideDown 0.3s ease;
+}
+.gcd-result-banner strong {
+    font-size: 1.3rem;
+    font-family: 'Fira Code', monospace;
 }
 
 .gcd-controls-wrapper {
-    margin-top: auto;
+    flex-shrink: 0;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .gcd-input-panel { flex-direction: column; align-items: stretch; }
+    .gcd-legend      { margin-left: 0; flex-wrap: wrap; }
 }

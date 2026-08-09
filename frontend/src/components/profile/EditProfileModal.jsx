@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUser, FaGraduationCap, FaShareAlt, FaLock, FaTimes, FaCamera } from 'react-icons/fa';
 import api from '../../utils/api';
@@ -207,6 +207,53 @@ const EditProfileModal = ({ isOpen, onClose, profileData, onUpdate }) => {
                             {activeTab === 'basic' && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <h3 style={{ margin: '0 0 16px', color: '#60a5fa' }}>Basic Information</h3>
+
+                                    {/* Profile Picture Upload Section */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', border: '2px solid #60a5fa' }}>
+                                            {profileData?.user?.avatar && profileData.user.avatar !== 'default-avatar.png' ? (
+                                                <img src={profileData.user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <FaUser size={32} style={{ marginTop: '6px' }} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: '600', color: 'var(--text-primary, white)', fontSize: '0.95rem', marginBottom: '4px' }}>Profile Picture</div>
+                                            <label
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                    padding: '6px 14px', borderRadius: '8px', background: 'rgba(96,165,250,0.15)',
+                                                    color: '#60a5fa', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer',
+                                                    border: '1px solid rgba(96,165,250,0.3)', transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <FaCamera /> Choose Image
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    style={{ display: 'none' }}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        const formData = new FormData();
+                                                        formData.append('avatar', file);
+                                                        try {
+                                                            const res = await api.post('/profiles/avatar', formData, {
+                                                                headers: { 'Content-Type': 'multipart/form-data' }
+                                                            });
+                                                            toast.success('Profile picture updated!');
+                                                            if (onUpdate && res.data?.user) {
+                                                                onUpdate({ ...profileData, user: { ...profileData?.user, avatar: res.data.avatar } });
+                                                            }
+                                                        } catch (err) {
+                                                            toast.error(err.response?.data?.message || 'Failed to upload photo');
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
                                     <div style={{ display: 'grid', gridTemplateColumns: twoColumnGrid, gap: '16px' }}>
                                         <InputGroup label="Full Name">
                                             <Input name="fullName" value={formData.fullName} onChange={handleChange} placeholder="e.g. John Doe" />

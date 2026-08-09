@@ -1,34 +1,14 @@
-import React from 'react';
 import './LoadingScreen.css';
 
-const LoadingScreen = ({ message = 'Loading...' }) => {
-    return (
-        <div className="loading-screen">
-            {/* Background orbs */}
-            <div className="ls-orb ls-orb-1" />
-            <div className="ls-orb ls-orb-2" />
-
-            <div className="ls-content">
-                {/* Animated rings */}
-                <div className="ls-spinner">
-                    <div className="ls-ring ls-ring-outer" />
-                    <div className="ls-ring ls-ring-middle" />
-                    <div className="ls-ring ls-ring-inner" />
-                    {/* Krama logo / K letter */}
-                    <div className="ls-logo">K</div>
-                </div>
-
-                {/* Progress dots */}
-                <div className="ls-dots">
-                    <span className="ls-dot" />
-                    <span className="ls-dot" />
-                    <span className="ls-dot" />
-                </div>
-
-                <p className="ls-message">{message}</p>
-            </div>
+const LoadingScreen = ({ message = 'Preparing your workspace' }) => (
+    <div className="loading-screen" role="status" aria-live="polite">
+        <div className="ls-content">
+            {/* Opacity belongs to ls-content; the nested mark owns the bounce transform so the two animations do not conflict. */}
+            <div className="ls-mark-layer" aria-hidden="true"><div className="ls-mark">K</div></div>
+            <div className="ls-progress" aria-hidden="true"><span /></div>
+            <p className="ls-message">{message}</p>
         </div>
-    );
-};
+    </div>
+);
 
 export default LoadingScreen;

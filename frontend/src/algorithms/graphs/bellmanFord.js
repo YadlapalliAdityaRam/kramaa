@@ -1,4 +1,4 @@
-import { buildAdjList } from './graphData';
+import { buildAdjList } from './graphData.js';
 
 export const generateBellmanFordSteps = (graph, startNode) => {
     const steps = [];
@@ -214,6 +214,7 @@ export const generateBellmanFordSteps = (graph, startNode) => {
         for (const [node, parent] of Object.entries(prev)) {
             if (parent) {
                 edgeStates[`${parent}-${node}`] = 'shortest-edge';
+                edgeStates[`${node}-${parent}`] = 'shortest-edge';
             }
         }
 

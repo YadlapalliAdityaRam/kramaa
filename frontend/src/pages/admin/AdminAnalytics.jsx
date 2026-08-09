@@ -122,6 +122,7 @@ const AdminAnalytics = () => {
         return { label: 'SCHEDULED', className: 'bg-yellow-500/20 text-yellow-400' };
     };
 
+
     // Chart Data Preparation
     const statusData = [
         { name: 'Active', value: problemStats.statusDistribution.active, color: '#22c55e' }, // Green
@@ -142,98 +143,97 @@ const AdminAnalytics = () => {
     ].filter(d => d.value > 0);
 
     return (
-        <div className="p-6">
+        <div style={{ padding: '0.5rem 0' }}>
             <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
+                style={{ marginBottom: '1.8rem' }}
             >
                 <button
-                    onClick={() => navigate('/superadmin/problems')} // Back to master list
-                    className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
+                    onClick={() => navigate('/super-admin/problems')}
+                    className="sa-btn sa-btn-secondary"
+                    style={{ marginBottom: '1rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}
                 >
-                    <FaArrowLeft /> Back to List
+                    <FaArrowLeft /> Back to Master List
                 </button>
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
-                        {admin.username[0].toUpperCase()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
+                    <div style={{
+                        width: '64px', height: '64px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.6rem', fontWeight: '800', color: '#ffffff',
+                        boxShadow: '0 4px 16px rgba(168, 85, 247, 0.35)'
+                    }}>
+                        {(admin?.username || 'A')[0].toUpperCase()}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-white">{admin.username}</h1>
-                        <p className="text-gray-400">{admin.email} • Joined {new Date(admin.createdAt).toLocaleDateString()}</p>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '0 0 0.2rem 0', color: 'var(--sa-text)' }}>{admin?.username}</h1>
+                        <p style={{ color: 'var(--sa-text-muted)', fontSize: '0.88rem', margin: 0 }}>
+                            {admin?.email} • Joined {new Date(admin?.createdAt).toLocaleDateString()}
+                        </p>
                     </div>
                 </div>
             </motion.div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="glass-panel p-6 border-l-4 border-blue-500">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-400 text-sm uppercase tracking-wider">Total Problems</p>
-                            <h3 className="text-3xl font-bold text-white mt-1">{problemStats.total}</h3>
-                        </div>
-                        <FaBrain className="text-blue-500 text-2xl" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.8rem' }}>
+                <div className="sa-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem' }}>
+                    <div>
+                        <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Problems</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--sa-text)', marginTop: '0.2rem' }}>{problemStats.total}</div>
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }}>
+                        <FaBrain style={{ fontSize: '1.5rem' }} />
                     </div>
                 </div>
-                <div className="glass-panel p-6 border-l-4 border-purple-500">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-400 text-sm uppercase tracking-wider">Completed Contests</p>
-                            <h3 className="text-3xl font-bold text-white mt-1">{contestStats.completed} / {contestStats.total}</h3>
-                        </div>
-                        <FaTrophy className="text-purple-500 text-2xl" />
+
+                <div className="sa-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem' }}>
+                    <div>
+                        <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed Contests</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--sa-text)', marginTop: '0.2rem' }}>{contestStats.completed} / {contestStats.total}</div>
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}>
+                        <FaTrophy style={{ fontSize: '1.5rem' }} />
                     </div>
                 </div>
-                <div className="glass-panel p-6 border-l-4 border-green-500">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-400 text-sm uppercase tracking-wider">Active Rate</p>
-                            <h3 className="text-3xl font-bold text-white mt-1">
-                                {problemStats.total > 0
-                                    ? Math.round((problemStats.statusDistribution.active / problemStats.total) * 100)
-                                    : 0}%
-                            </h3>
+
+                <div className="sa-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem' }}>
+                    <div>
+                        <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Rate</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '800', color: '#16a34a', marginTop: '0.2rem' }}>
+                            {problemStats.total > 0
+                                ? Math.round((problemStats.statusDistribution.active / problemStats.total) * 100)
+                                : 0}%
                         </div>
-                        <FaCheckCircle className="text-green-500 text-2xl" />
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>
+                        <FaCheckCircle style={{ fontSize: '1.5rem' }} />
                     </div>
                 </div>
-                <div className="glass-panel p-6 border-l-4 border-yellow-500">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-gray-400 text-sm uppercase tracking-wider">Total Participants</p>
-                            <h3 className="text-3xl font-bold text-white mt-1">{contestStats.totalParticipants}</h3>
-                        </div>
-                        <FaMedal className="text-yellow-500 text-2xl" />
+
+                <div className="sa-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem' }}>
+                    <div>
+                        <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Participants</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '800', color: '#d97706', marginTop: '0.2rem' }}>{contestStats.totalParticipants}</div>
+                    </div>
+                    <div style={{ padding: '0.75rem', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+                        <FaMedal style={{ fontSize: '1.5rem' }} />
                     </div>
                 </div>
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="glass-panel p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Problem Status & Difficulty</h3>
-                    <div className="h-64 flex">
-                        <MeasuredChart className="w-1/2 min-w-0 h-full">
-                            {({ width, height }) => (
-                                <PieChart width={width} height={height}>
-                                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value">
-                                        {statusData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                                    <Legend />
-                                </PieChart>
-                            )}
-                        </MeasuredChart>
-                        <MeasuredChart className="w-1/2 min-w-0 h-full">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.2rem', marginBottom: '1.8rem' }}>
+                <div className="sa-card">
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 1rem 0', color: 'var(--sa-text)' }}>Problem Distribution</h3>
+                    <div style={{ height: '220px', display: 'flex', alignItems: 'center' }}>
+                        <MeasuredChart className="w-full h-full">
                             {({ width, height }) => (
                                 <BarChart width={width} height={height} data={difficultyData}>
-                                    <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} />
-                                    <YAxis stroke="#9ca3af" fontSize={12} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} cursor={{ fill: 'transparent' }} />
-                                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                    <XAxis dataKey="name" stroke="var(--sa-text-muted)" fontSize={12} tickLine={false} />
+                                    <YAxis stroke="var(--sa-text-muted)" fontSize={12} tickLine={false} />
+                                    <Tooltip contentStyle={{ background: 'var(--sa-card-bg)', borderColor: 'var(--sa-border)', borderRadius: '8px', color: 'var(--sa-text)' }} />
+                                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                                         {difficultyData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
                                         ))}
@@ -244,115 +244,116 @@ const AdminAnalytics = () => {
                     </div>
                 </div>
 
-                <div className="glass-panel p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Contest Status Overview</h3>
-                    <div className="h-64 flex justify-center items-center">
-                        {contestStats.total > 0 ? (
-                            <MeasuredChart className="w-full h-full min-w-0">
-                                {({ width, height }) => (
-                                    <PieChart width={width} height={height}>
-                                    <Pie data={contestStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" label>
+                <div className="sa-card">
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: '0 0 1rem 0', color: 'var(--sa-text)' }}>Contest Status Breakdown</h3>
+                    <div style={{ height: '220px', display: 'flex', alignItems: 'center' }}>
+                        <MeasuredChart className="w-full h-full">
+                            {({ width, height }) => (
+                                <PieChart width={width} height={height}>
+                                    <Pie data={contestStatusData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={4} dataKey="value">
                                         {contestStatusData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell key={`cell-contest-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                                    <Legend verticalAlign="bottom" height={36} />
+                                    <Tooltip contentStyle={{ background: 'var(--sa-card-bg)', borderColor: 'var(--sa-border)', borderRadius: '8px', color: 'var(--sa-text)' }} />
+                                    <Legend formatter={(val) => <span style={{ color: 'var(--sa-text)', fontSize: '0.8rem' }}>{val}</span>} />
                                 </PieChart>
-                                )}
-                            </MeasuredChart>
-                        ) : (
-                            <p className="text-gray-500">No contests created yet</p>
-                        )}
+                            )}
+                        </MeasuredChart>
                     </div>
                 </div>
             </div>
 
-            {/* Detailed Tables */}
-            <div className="glass-panel p-0 overflow-hidden">
-                <div className="flex border-b border-gray-700">
+            {/* Sub-Tabs: Problems vs Contests */}
+            <div className="sa-card">
+                <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--sa-border)', paddingBottom: '0.8rem', marginBottom: '1rem' }}>
                     <button
-                        className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'problems' ? 'bg-purple-600/20 text-purple-400 border-b-2 border-purple-500' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                         onClick={() => setActiveTab('problems')}
+                        style={{
+                            padding: '8px 18px', borderRadius: '999px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', border: 'none',
+                            background: activeTab === 'problems' ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'var(--sa-pill-inactive)',
+                            color: activeTab === 'problems' ? '#ffffff' : 'var(--sa-text-muted)'
+                        }}
                     >
-                        Problems List ({problemStats.list.length})
+                        Problems Created ({problemStats.total})
                     </button>
                     <button
-                        className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'contests' ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                         onClick={() => setActiveTab('contests')}
+                        style={{
+                            padding: '8px 18px', borderRadius: '999px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', border: 'none',
+                            background: activeTab === 'contests' ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'var(--sa-pill-inactive)',
+                            color: activeTab === 'contests' ? '#ffffff' : 'var(--sa-text-muted)'
+                        }}
                     >
-                        Contests List ({contestStats.list.length})
+                        Contests Managed ({contestStats.total})
                     </button>
                 </div>
 
-                <div className="p-6">
-                    {activeTab === 'problems' ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-400 border-b border-gray-700 text-sm">
-                                        <th className="pb-3 px-2">Title</th>
-                                        <th className="pb-3 px-2">Difficulty</th>
-                                        <th className="pb-3 px-2">Status</th>
-                                        <th className="pb-3 px-2">Created</th>
+                {activeTab === 'problems' ? (
+                    <div className="sa-table-container">
+                        <table className="sa-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Difficulty</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(problemStats.list || []).map((p) => (
+                                    <tr key={p._id}>
+                                        <td style={{ fontWeight: '600' }}>{p.title}</td>
+                                        <td>
+                                            <span className={`sa-badge ${p.difficulty === 'Easy' ? 'sa-badge-green' : p.difficulty === 'Medium' ? 'sa-badge-purple' : 'sa-badge-red'}`}>
+                                                {p.difficulty}
+                                            </span>
+                                        </td>
+                                        <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.82rem' }}>
+                                            {new Date(p.createdAt).toLocaleDateString()}
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {problemStats.list.map(p => (
-                                        <tr key={p._id} className="border-b border-gray-800 hover:bg-white/5 text-sm">
-                                            <td className="py-3 px-2 text-white font-medium">{p.title}</td>
-                                            <td className="py-3 px-2">
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${p.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                                                    p.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                        'bg-red-500/20 text-red-400'
-                                                    }`}>{p.difficulty}</span>
-                                            </td>
-                                            <td className="py-3 px-2">
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${p.isPublished ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                                                    {p.isPublished ? 'Active' : 'Pending'}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-2 text-gray-500">{new Date(p.createdAt).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))}
-                                    {problemStats.list.length === 0 && (
-                                        <tr><td colSpan="4" className="text-center py-6 text-gray-500">No problems found</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-400 border-b border-gray-700 text-sm">
-                                        <th className="pb-3 px-2">Title</th>
-                                        <th className="pb-3 px-2">Participants</th>
-                                        <th className="pb-3 px-2">Status</th>
-                                        <th className="pb-3 px-2">Date</th>
+                                ))}
+                                {(!problemStats.list || problemStats.list.length === 0) && (
+                                    <tr>
+                                        <td colSpan="3" className="sa-empty-row">No problems created by this admin.</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {contestStats.list.map(c => (
-                                        <tr key={c._id} className="border-b border-gray-800 hover:bg-white/5 text-sm">
-                                            <td className="py-3 px-2 text-white font-medium">{c.title}</td>
-                                            <td className="py-3 px-2">{c.participantCount ?? c.participantsCount ?? 0}</td>
-                                            <td className="py-3 px-2">
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${formatContestStatus(c.status).className}`}>
-                                                    {formatContestStatus(c.status).label}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-2 text-gray-500">{new Date(c.startTime).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))}
-                                    {contestStats.list.length === 0 && (
-                                        <tr><td colSpan="4" className="text-center py-6 text-gray-500">No contests found</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="sa-table-container">
+                        <table className="sa-table">
+                            <thead>
+                                <tr>
+                                    <th>Contest Title</th>
+                                    <th>Status</th>
+                                    <th>Start Time</th>
+                                    <th>Participants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(contestStats.list || []).map((c) => (
+                                    <tr key={c._id}>
+                                        <td style={{ fontWeight: '600' }}>{c.title}</td>
+                                        <td>
+                                            <span className="sa-badge sa-badge-blue">{c.status || 'SCHEDULED'}</span>
+                                        </td>
+                                        <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.82rem' }}>
+                                            {new Date(c.startTime).toLocaleString()}
+                                        </td>
+                                        <td style={{ fontWeight: '600' }}>{c.participantCount || 0}</td>
+                                    </tr>
+                                ))}
+                                {(!contestStats.list || contestStats.list.length === 0) && (
+                                    <tr>
+                                        <td colSpan="4" className="sa-empty-row">No contests managed by this admin.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -99,17 +99,17 @@ const SystemHealth = () => {
                         padding: '12px'
                     }}
                 >
-                    <div className="sa-card" style={{ width: '100%', maxWidth: '500px', border: '1px solid #ef4444' }}>
+                    <div className="sa-card" style={{ width: '100%', maxWidth: '500px', border: '1px solid #ef4444', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                         <div className="sa-card-header">
                             <h2 className="sa-card-title" style={{ color: '#ef4444' }}>
                                 <FaShieldAlt /> CONFIRM EMERGENCY ACTION
                             </h2>
                         </div>
-                        <p style={{ color: 'white', marginBottom: '1rem' }}>
-                            You are about to execute: <strong>{pendingAction}</strong>
+                        <p style={{ color: 'var(--sa-text)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                            You are about to execute: <strong style={{ color: '#ef4444' }}>{pendingAction}</strong>
                         </p>
-                        <form onSubmit={handleConfirmEmergency} className="sa-form-group" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <label style={{ color: '#ccc', fontSize: '0.9rem' }}>Reason (Required)</label>
+                        <form onSubmit={handleConfirmEmergency} className="sa-form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                            <label style={{ color: 'var(--sa-text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Reason (Required)</label>
                             <input
                                 type="text"
                                 className="sa-input"
@@ -119,7 +119,7 @@ const SystemHealth = () => {
                                 autoFocus
                             />
 
-                            <label style={{ color: '#ccc', fontSize: '0.9rem', marginTop: '1rem' }}>Confirm Password</label>
+                            <label style={{ color: 'var(--sa-text-muted)', fontSize: '0.85rem', fontWeight: '600', marginTop: '0.6rem' }}>Confirm Password</label>
                             <input
                                 type="password"
                                 className="sa-input"
@@ -131,8 +131,8 @@ const SystemHealth = () => {
                             <div
                                 style={{
                                     display: 'flex',
-                                    gap: '1rem',
-                                    marginTop: '1.5rem',
+                                    gap: '0.8rem',
+                                    marginTop: '1.2rem',
                                     justifyContent: 'flex-end',
                                     flexWrap: isMobile ? 'wrap' : 'nowrap'
                                 }}
@@ -140,15 +140,15 @@ const SystemHealth = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="sa-btn"
-                                    style={{ background: '#333', color: '#ccc', width: isMobile ? '100%' : 'auto' }}
+                                    className="sa-btn sa-btn-secondary"
+                                    style={{ width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     className="sa-btn sa-btn-danger"
-                                    style={{ width: isMobile ? '100%' : 'auto' }}
+                                    style={{ width: isMobile ? '100%' : 'auto', justifyContent: 'center' }}
                                 >
                                     CONFIRM ACTION
                                 </button>
@@ -158,66 +158,75 @@ const SystemHealth = () => {
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', color: '#4ade80' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+                    <div style={{ padding: '0.75rem', background: 'rgba(34, 197, 94, 0.15)', borderRadius: '12px', color: '#16a34a' }}>
                         <FaHeartbeat size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>System Status</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.status || 'Unknown'}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--sa-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>System Status</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--sa-text)' }}>{stats?.health?.status || 'Unknown'}</div>
                     </div>
                 </div>
-                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', color: '#60a5fa' }}>
+                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+                    <div style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '12px', color: '#3b82f6' }}>
                         <FaUsers size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Active Users</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{Number(stats?.users?.total || 0)}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--sa-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Active Users</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--sa-text)' }}>{Number(stats?.users?.total || 0)}</div>
                     </div>
                 </div>
-                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '8px', color: '#c084fc' }}>
+                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+                    <div style={{ padding: '0.75rem', background: 'rgba(168, 85, 247, 0.15)', borderRadius: '12px', color: '#a855f7' }}>
                         <FaServer size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>System Load</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.systemLoad || '-'}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--sa-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>System Load</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--sa-text)' }}>{stats?.health?.systemLoad || '-'}</div>
                     </div>
                 </div>
-                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', color: '#f87171' }}>
+                <div className="sa-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+                    <div style={{ padding: '0.75rem', background: 'rgba(239, 68, 68, 0.15)', borderRadius: '12px', color: '#ef4444' }}>
                         <FaExclamationTriangle size={24} />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Error Rate (24h)</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{stats?.health?.errorRate || '-'}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--sa-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Error Rate (24h)</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--sa-text)' }}>{stats?.health?.errorRate || '-'}</div>
                     </div>
                 </div>
             </div>
 
-            <div className="sa-card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                <div className="sa-card-header">
-                    <h2 className="sa-card-title" style={{ color: '#f87171' }}>
-                        <FaShieldAlt /> EMERGENCY ZONE
-                    </h2>
+            <div className="sa-card" style={{ border: '1px solid rgba(239, 68, 68, 0.35)', padding: '1.5rem' }}>
+                <div className="sa-card-header" style={{ marginBottom: '0.6rem' }}>
+                    <h3 className="sa-card-title" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaShieldAlt /> System Emergency Actions
+                    </h3>
                 </div>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                    These actions are irreversible or have major impact. <span style={{ color: '#f87171', fontWeight: 'bold' }}>Reason and Password Confirmation Required.</span>
+                <p style={{ color: 'var(--sa-text-muted)', fontSize: '0.88rem', margin: '0 0 1.2rem 0' }}>
+                    Trigger immediate security responses. These actions require password confirmation and are recorded in the audit log.
                 </p>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
                     <button
                         onClick={() => initiateEmergency('MAINTENANCE_MODE')}
                         className="sa-btn sa-btn-danger"
+                        style={{ padding: '0.65rem 1.2rem' }}
                     >
-                        Enable Maintenance Mode
+                        Trigger Maintenance Mode
                     </button>
                     <button
-                        onClick={() => initiateEmergency('PAUSE_CONTESTS')}
+                        onClick={() => initiateEmergency('SYSTEM_LOCKDOWN')}
                         className="sa-btn sa-btn-danger"
+                        style={{ padding: '0.65rem 1.2rem' }}
                     >
-                        Pause All Contests
+                        Initiate System Lockdown
+                    </button>
+                    <button
+                        onClick={() => initiateEmergency('PURGE_CACHE')}
+                        className="sa-btn sa-btn-secondary"
+                        style={{ padding: '0.65rem 1.2rem' }}
+                    >
+                        Purge Application Cache
                     </button>
                 </div>
             </div>

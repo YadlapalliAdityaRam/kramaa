@@ -1,4 +1,4 @@
-// Default sample graph for general visualizations
+// Default sample graph for general visualizations (7 nodes)
 export const defaultGraph = {
     nodes: [
         { id: 'A', label: 'A' },
@@ -20,6 +20,24 @@ export const defaultGraph = {
     ]
 };
 
+// Specialized 5-node Unweighted Graph for Comparison Mode
+export const comparisonGraph = {
+    nodes: [
+        { id: 'A', label: 'A' },
+        { id: 'B', label: 'B' },
+        { id: 'C', label: 'C' },
+        { id: 'D', label: 'D' },
+        { id: 'E', label: 'E' }
+    ],
+    edges: [
+        { from: 'A', to: 'B' },
+        { from: 'A', to: 'C' },
+        { from: 'B', to: 'D' },
+        { from: 'C', to: 'E' },
+        { from: 'D', to: 'E' }
+    ]
+};
+
 // Specialized BFS Graph: Layered/Tree-like to show level discovery
 export const bfsGraph = {
     nodes: [
@@ -27,17 +45,13 @@ export const bfsGraph = {
         { id: '2', label: '2' },
         { id: '3', label: '3' },
         { id: '4', label: '4' },
-        { id: '5', label: '5' },
-        { id: '6', label: '6' },
-        { id: '7', label: '7' }
+        { id: '5', label: '5' }
     ],
     edges: [
         { from: '1', to: '2' },
         { from: '1', to: '3' },
         { from: '2', to: '4' },
-        { from: '2', to: '5' },
-        { from: '3', to: '6' },
-        { from: '3', to: '7' }
+        { from: '2', to: '5' }
     ]
 };
 
@@ -48,21 +62,17 @@ export const dfsGraph = {
         { id: 'B', label: 'B' },
         { id: 'C', label: 'C' },
         { id: 'D', label: 'D' },
-        { id: 'E', label: 'E' },
-        { id: 'F', label: 'F' }
+        { id: 'E', label: 'E' }
     ],
     edges: [
         { from: 'A', to: 'B' },
         { from: 'B', to: 'C' },
         { from: 'C', to: 'D' },
-        { from: 'D', to: 'E' },
-        { from: 'E', to: 'F' },
-        { from: 'A', to: 'C' },
-        { from: 'B', to: 'E' }
+        { from: 'D', to: 'E' }
     ]
 };
 
-// Weighted graph for Dijkstra/Bellman-Ford/Prim's
+// Weighted graph for general visualizer (6 nodes)
 export const defaultWeightedGraph = {
     nodes: [
         { id: 'A', label: 'A' },
@@ -82,6 +92,24 @@ export const defaultWeightedGraph = {
         { from: 'D', to: 'E', weight: 2 },
         { from: 'D', to: 'F', weight: 6 },
         { from: 'E', to: 'F', weight: 3 }
+    ]
+};
+
+// Specialized 5-Node Weighted Graph for Comparison Mode
+export const comparisonWeightedGraph = {
+    nodes: [
+        { id: 'A', label: 'A' },
+        { id: 'B', label: 'B' },
+        { id: 'C', label: 'C' },
+        { id: 'D', label: 'D' },
+        { id: 'E', label: 'E' }
+    ],
+    edges: [
+        { from: 'A', to: 'B', weight: 4 },
+        { from: 'A', to: 'C', weight: 2 },
+        { from: 'B', to: 'D', weight: 5 },
+        { from: 'C', to: 'D', weight: 1 },
+        { from: 'D', to: 'E', weight: 3 }
     ]
 };
 

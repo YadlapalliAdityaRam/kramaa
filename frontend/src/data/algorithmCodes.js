@@ -3868,6 +3868,353 @@ public void timSort(int[] arr, int minRun) {
     return dp[n][amount];
 }`
     },
+    fenwickTree: {
+        javascript: `class FenwickTree {
+    constructor(size) {
+        this.tree = new Array(size + 1).fill(0);
+    }
+
+    update(index, val) {
+        for (; index < this.tree.length; index += index & -index) {
+            this.tree[index] += val;
+        }
+    }
+
+    query(index) {
+        let sum = 0;
+        for (; index > 0; index -= index & -index) {
+            sum += this.tree[index];
+        }
+        return sum;
+    }
+}`,
+        python: `class FenwickTree:
+    def __init__(self, size):
+        self.tree = [0] * (size + 1)
+
+    def update(self, index, val):
+        while index < len(self.tree):
+            self.tree[index] += val
+            index += index & -index
+
+    def query(self, index):
+        sum_val = 0
+        while index > 0:
+            sum_val += self.tree[index]
+            index -= index & -index
+        return sum_val`,
+        cpp: `class FenwickTree {
+    vector<int> tree;
+public:
+    FenwickTree(int n) : tree(n + 1, 0) {}
+
+    void update(int index, int val) {
+        for (; index < tree.size(); index += index & -index)
+            tree[index] += val;
+    }
+
+    int query(int index) {
+        int sum = 0;
+        for (; index > 0; index -= index & -index)
+            sum += tree[index];
+        return sum;
+    }
+};`,
+        java: `class FenwickTree {
+    private int[] tree;
+
+    public FenwickTree(int size) {
+        tree = new int[size + 1];
+    }
+
+    public void update(int index, int val) {
+        for (; index < tree.length; index += index & -index) {
+            tree[index] += val;
+        }
+    }
+
+    public int query(int index) {
+        int sum = 0;
+        for (; index > 0; index -= index & -index) {
+            sum += tree[index];
+        }
+        return sum;
+    }
+}`
+    },
+    floydWarshall: {
+        javascript: `function floydWarshall(V, graph) {
+    const dist = Array.from({ length: V }, (_, i) =>
+        Array.from({ length: V }, (_, j) => (i === j ? 0 : graph[i][j] || Infinity))
+    );
+
+    for (let k = 0; k < V; k++) {
+        for (let i = 0; i < V; i++) {
+            for (let j = 0; j < V; j++) {
+                if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+    return dist;
+}`,
+        python: `def floyd_warshall(V, graph):
+    dist = [[float('inf')] * V for _ in range(V)]
+    for i in range(V):
+        for j in range(V):
+            dist[i][j] = graph[i][j]
+
+    for k in range(V):
+        for i in range(V):
+            for j in range(V):
+                if dist[i][k] + dist[k][j] < dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+
+    return dist`,
+        cpp: `void floydWarshall(int V, vector<vector<int>>& dist) {
+    for (int k = 0; k < V; k++) {
+        for (int i = 0; i < V; i++) {
+            for (int j = 0; j < V; j++) {
+                if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+}`,
+        java: `public void floydWarshall(int V, int[][] dist) {
+    for (int k = 0; k < V; k++) {
+        for (int i = 0; i < V; i++) {
+            for (int j = 0; j < V; j++) {
+                if (dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                }
+            }
+        }
+    }
+}`
+    },
+    fractionalKnapsack: {
+        javascript: `function fractionalKnapsack(capacity, items) {
+    items.sort((a, b) => (b.value / b.weight) - (a.value / a.weight));
+    let totalValue = 0;
+    let remainingCapacity = capacity;
+
+    for (let item of items) {
+        if (remainingCapacity <= 0) break;
+        if (item.weight <= remainingCapacity) {
+            totalValue += item.value;
+            remainingCapacity -= item.weight;
+        } else {
+            totalValue += (item.value / item.weight) * remainingCapacity;
+            remainingCapacity = 0;
+        }
+    }
+    return totalValue;
+}`,
+        python: `def fractional_knapsack(capacity, items):
+    items.sort(key=lambda x: x.value / x.weight, reverse=True)
+    total_value = 0
+    remaining_capacity = capacity
+
+    for item in items:
+        if remaining_capacity <= 0:
+            break
+        if item.weight <= remaining_capacity:
+            total_value += item.value
+            remaining_capacity -= item.weight
+        else:
+            total_value += (item.value / item.weight) * remaining_capacity
+            remaining_capacity = 0
+
+    return total_value`,
+        cpp: `double fractionalKnapsack(int capacity, vector<Item>& items) {
+    sort(items.begin(), items.end(), [](Item a, Item b) {
+        return (double)a.value / a.weight > (double)b.value / b.weight;
+    });
+    double totalValue = 0.0;
+    int remainingCapacity = capacity;
+
+    for (auto& item : items) {
+        if (remainingCapacity <= 0) break;
+        if (item.weight <= remainingCapacity) {
+            totalValue += item.value;
+            remainingCapacity -= item.weight;
+        } else {
+            totalValue += ((double)item.value / item.weight) * remainingCapacity;
+            remainingCapacity = 0;
+        }
+    }
+    return totalValue;
+}`,
+        java: `public double fractionalKnapsack(int capacity, Item[] items) {
+    Arrays.sort(items, (a, b) => Double.compare((double)b.value / b.weight, (double)a.value / a.weight));
+    double totalValue = 0.0;
+    int remainingCapacity = capacity;
+
+    for (Item item : items) {
+        if (remainingCapacity <= 0) break;
+        if (item.weight <= remainingCapacity) {
+            totalValue += item.value;
+            remainingCapacity -= item.weight;
+        } else {
+            totalValue += ((double)item.value / item.weight) * remainingCapacity;
+            remainingCapacity = 0;
+        }
+    }
+    return totalValue;
+}`
+    },
+    euclideanGcd: {
+        javascript: `function gcd(a, b) {
+    while (b !== 0) {
+        let temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}`,
+        python: `def gcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a`,
+        cpp: `int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}`,
+        java: `public int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}`
+    },
+    cycleSort: {
+        javascript: `function cycleSort(arr) {
+    let writes = 0;
+
+    for (let cycleStart = 0; cycleStart < arr.length - 1; cycleStart++) {
+        let item = arr[cycleStart];
+        let pos = cycleStart;
+
+        for (let i = cycleStart + 1; i < arr.length; i++) {
+            if (arr[i] < item) pos++;
+        }
+
+        if (pos === cycleStart) continue;
+
+        while (item === arr[pos]) pos++;
+
+        if (pos !== cycleStart) {
+            [arr[pos], item] = [item, arr[pos]];
+            writes++;
+        }
+
+        while (pos !== cycleStart) {
+            pos = cycleStart;
+            for (let i = cycleStart + 1; i < arr.length; i++) {
+                if (arr[i] < item) pos++;
+            }
+            while (item === arr[pos]) pos++;
+            if (item !== arr[pos]) {
+                [arr[pos], item] = [item, arr[pos]];
+                writes++;
+            }
+        }
+    }
+    return arr;
+}`,
+        python: `def cycle_sort(arr):
+    writes = 0
+    for cycle_start in range(0, len(arr) - 1):
+        item = arr[cycle_start]
+        pos = cycle_start
+        for i in range(cycle_start + 1, len(arr)):
+            if arr[i] < item:
+                pos += 1
+
+        if pos == cycle_start:
+            continue
+
+        while item == arr[pos]:
+            pos += 1
+
+        arr[pos], item = item, arr[pos]
+        writes += 1
+
+        while pos != cycle_start:
+            pos = cycle_start
+            for i in range(cycle_start + 1, len(arr)):
+                if arr[i] < item:
+                    pos += 1
+            while item == arr[pos]:
+                pos += 1
+            arr[pos], item = item, arr[pos]
+            writes += 1
+
+    return arr`,
+        cpp: `int cycleSort(vector<int>& arr) {
+    int writes = 0;
+    int n = arr.size();
+    for (int cycle_start = 0; cycle_start <= n - 2; cycle_start++) {
+        int item = arr[cycle_start];
+        int pos = cycle_start;
+        for (int i = cycle_start + 1; i < n; i++)
+            if (arr[i] < item) pos++;
+        if (pos == cycle_start) continue;
+        while (item == arr[pos]) pos++;
+        if (pos != cycle_start) {
+            swap(item, arr[pos]);
+            writes++;
+        }
+        while (pos != cycle_start) {
+            pos = cycle_start;
+            for (int i = cycle_start + 1; i < n; i++)
+                if (arr[i] < item) pos++;
+            while (item == arr[pos]) pos++;
+            if (item != arr[pos]) {
+                swap(item, arr[pos]);
+                writes++;
+            }
+        }
+    }
+    return writes;
+}`,
+        java: `public int cycleSort(int[] arr) {
+    int writes = 0;
+    int n = arr.length;
+    for (int cycleStart = 0; cycleStart <= n - 2; cycleStart++) {
+        int item = arr[cycleStart];
+        int pos = cycleStart;
+        for (int i = cycleStart + 1; i < n; i++)
+            if (arr[i] < item) pos++;
+        if (pos == cycleStart) continue;
+        while (item == arr[pos]) pos++;
+        if (pos != cycleStart) {
+            int temp = item; item = arr[pos]; arr[pos] = temp;
+            writes++;
+        }
+        while (pos != cycleStart) {
+            pos = cycleStart;
+            for (int i = cycleStart + 1; i < n; i++)
+                if (arr[i] < item) pos++;
+            while (item == arr[pos]) pos++;
+            if (item != arr[pos]) {
+                int temp = item; item = arr[pos]; arr[pos] = temp;
+                writes++;
+            }
+        }
+    }
+    return writes;
+}`
+    },
     floydCycle: {
         javascript: `function hasCycle(head) {
     let slow = head;

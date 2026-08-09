@@ -38,35 +38,36 @@ const AuditLogViewer = () => {
     };
 
     return (
-        <div className="glass-panel">
-            <div className="sa-card-header mb-6">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FaHistory className="text-blue-400" /> Audit Logs
+        <div className="sa-card">
+            <div className="sa-card-header" style={{ marginBottom: '1.2rem' }}>
+                <h2 className="sa-card-title">
+                    <FaHistory style={{ color: 'var(--sa-accent-blue)' }} /> System Audit Logs
                 </h2>
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-5 mb-6 bg-[#1e1e1e] p-4 rounded-xl border border-[#333]">
-                <div className="flex items-center gap-2 text-gray-400">
+            <div className="sa-filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.2rem', padding: '0.85rem 1.2rem', borderRadius: '14px', background: 'var(--sa-pill-inactive)', border: '1px solid var(--sa-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--sa-text-muted)', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     <FaFilter />
-                    <span className="text-sm font-bold tracking-wider">FILTERS</span>
+                    <span>Filter</span>
                 </div>
                 <input
                     type="text"
                     name="action"
-                    placeholder="Filter by Action (e.g. USER_LOGIN)"
+                    placeholder="Filter by Action (e.g. USER_LOGIN, CONTEST_CREATE)..."
                     value={filters.action}
                     onChange={handleFilterChange}
-                    className="bg-[#252526] text-white px-4 py-2.5 rounded-lg border border-[#444] text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none flex-1 transition-all"
+                    className="sa-input"
+                    style={{ flex: 1 }}
                 />
             </div>
 
             {/* Logs Table */}
             {loading ? (
-                <div className="text-gray-400 text-center py-8">Loading logs...</div>
+                <div className="sa-empty-text" style={{ padding: '2.5rem 0' }}>Loading logs...</div>
             ) : (
-                <div className="table-container">
-                    <table className="data-table">
+                <div className="sa-table-container">
+                    <table className="sa-table">
                         <thead>
                             <tr>
                                 <th>Timestamp</th>
@@ -80,25 +81,27 @@ const AuditLogViewer = () => {
                         <tbody>
                             {logs.map(log => (
                                 <tr key={log._id}>
-                                    <td className="text-gray-400 text-sm">
+                                    <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.82rem' }}>
                                         {new Date(log.timestamp).toLocaleString()}
                                     </td>
-                                    <td className="font-semibold text-blue-400 text-sm">
-                                        {log.action}
+                                    <td>
+                                        <span className="sa-badge sa-badge-blue">
+                                            {log.action}
+                                        </span>
                                     </td>
-                                    <td className="text-gray-300 text-sm">{log.targetType}</td>
-                                    <td className="text-purple-400 text-sm">
+                                    <td style={{ color: 'var(--sa-text)', fontSize: '0.85rem' }}>{log.targetType}</td>
+                                    <td style={{ color: 'var(--sa-accent)', fontWeight: '600', fontSize: '0.85rem' }}>
                                         {log.actor ? (log.actor.username || log.actor.email) : 'System'}
                                     </td>
-                                    <td className="text-gray-500 text-xs max-w-xs truncate" title={JSON.stringify(log.details, null, 2)}>
+                                    <td style={{ color: 'var(--sa-text-muted)', fontSize: '0.78rem', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={JSON.stringify(log.details, null, 2)}>
                                         {JSON.stringify(log.details)}
                                     </td>
-                                    <td className="text-gray-500 font-mono text-xs">{log.ipAddress}</td>
+                                    <td style={{ color: 'var(--sa-text-muted)', fontFamily: 'monospace', fontSize: '0.78rem' }}>{log.ipAddress}</td>
                                 </tr>
                             ))}
                             {logs.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-8 text-gray-500">No logs found.</td>
+                                    <td colSpan="6" className="sa-empty-row">No logs found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -107,19 +110,21 @@ const AuditLogViewer = () => {
             )}
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-6 gap-5">
+            <div className="sa-pagination" style={{ marginTop: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <button
                     disabled={page === 1}
                     onClick={() => setPage(p => p - 1)}
-                    className="px-5 py-2.5 bg-[#333] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#444] text-sm font-semibold transition-all min-h-[44px] border border-transparent hover:border-teal-500/30"
+                    className="sa-btn sa-btn-secondary"
+                    style={{ opacity: page === 1 ? 0.45 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer' }}
                 >
                     Previous
                 </button>
-                <span className="text-gray-400 text-sm font-semibold">Page {page} of {totalPages}</span>
+                <span style={{ color: 'var(--sa-text-muted)', fontSize: '0.85rem', fontWeight: '600' }}>Page {page} of {totalPages}</span>
                 <button
                     disabled={page === totalPages}
                     onClick={() => setPage(p => p + 1)}
-                    className="px-5 py-2.5 bg-[#333] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#444] text-sm font-semibold transition-all min-h-[44px] border border-transparent hover:border-teal-500/30"
+                    className="sa-btn sa-btn-secondary"
+                    style={{ opacity: page === totalPages ? 0.45 : 1, cursor: page === totalPages ? 'not-allowed' : 'pointer' }}
                 >
                     Next
                 </button>

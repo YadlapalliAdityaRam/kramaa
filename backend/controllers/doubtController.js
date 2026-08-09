@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const Doubt = require('../models/Doubt');
 const DoubtView = require('../models/DoubtView');
 const CommentReaction = require('../models/CommentReaction');
@@ -108,7 +110,29 @@ const normalizeDoubtPayload = (rawDoubt) => {
     if (!rawDoubt || typeof rawDoubt !== 'object') return rawDoubt;
 
     const doubt = rawDoubt;
-    doubt.imageUrl = normalizeImageUrl(doubt.imageUrl);
+    const normalizedImageUrl = normalizeImageUrl(doubt.imageUrl);
+
+    // Verify the uploaded file actually exists on disk before exposing it.
+    // This prevents broken image icons when a file is missing (e.g. deleted or not synced).
+    if (normalizedImageUrl) {
+        let fileExists = true;
+        try {
+            // Extract just the /uploads/... path from any absolute URL.
+            const urlPath = normalizedImageUrl.replace(/^https?:\/\/[^/]+/, '');
+            const normalizedPath = urlPath.replace(/^\/api\/uploads\//, '/uploads/');
+            if (normalizedPath.startsWith('/uploads/')) {
+                const filename = normalizedPath.split('/').pop().split('?')[0];
+                const diskPath = path.join(__dirname, '..', 'public', 'uploads', 'doubts', filename);
+                fileExists = fs.existsSync(diskPath);
+            }
+        } catch (_e) {
+            // If we can't verify, assume it exists.
+        }
+        doubt.imageUrl = fileExists ? normalizedImageUrl : null;
+    } else {
+        doubt.imageUrl = null;
+    }
+
     if (doubt.user && typeof doubt.user === 'object') {
         doubt.user = normalizePopulatedUser(doubt.user);
     }

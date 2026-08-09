@@ -1,0 +1,383 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   MultiAlgoVisualizer.css — Modern Workspace & Live Arena Layout
+   ═══════════════════════════════════════════════════════════════════════
+   ARCHITECTURE NOTE:
+   - This stylesheet governs the MINI VERSION of algorithm components on the Comparison Page.
+   - All mini components are aligned in the MIDDLE of the page using CSS Grid & Flexbox.
+   - On Desktop, comparison cards are set to fit exactly 1/3 of the container width (33.333%).
+   - Animations do not overlap because each mini card uses scoped containers, distinct IDs,
+     and isolated canvas step loops.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.arena-container {
+    background: var(--surface-bg, #0f172a);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    border-radius: 20px;
+    padding: 24px;
+    margin: 24px auto 0 auto; /* Centered in middle of page */
+    max-width: 1400px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: var(--text-primary, #f8fafc);
+}
+
+/* ── Top Header & Global Toolbar ── */
+.arena-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+}
+
+.arena-title-group h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary, #ffffff);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.arena-title-group p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted, #94a3b8);
+}
+
+.arena-global-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.arena-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-bg-raised, #1e293b);
+    padding: 4px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+
+.arena-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    background: transparent;
+    color: var(--text-primary, #f8fafc);
+}
+
+.arena-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.arena-btn-primary {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+.arena-btn-primary:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.arena-btn-accent {
+    background: linear-gradient(135deg, #a855f7, #7e22ce);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+}
+.arena-btn-accent:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.arena-btn-outline {
+    background: var(--surface-bg-raised, #1e293b);
+    border-color: var(--surface-border, rgba(255, 255, 255, 0.12));
+    color: var(--text-primary, #e2e8f0);
+}
+.arena-btn-outline:hover:not(:disabled) {
+    background: var(--surface-bg, #334155);
+    border-color: var(--text-muted, #94a3b8);
+}
+
+.arena-btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+.arena-btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+/* ── Speed Control Group ── */
+.arena-speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+    background: var(--surface-bg-raised, #1e293b);
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+}
+
+.arena-speed-control input[type="range"] {
+    width: 90px;
+    accent-color: #0284c7;
+    cursor: pointer;
+}
+
+/* ── Equal Progress Mode Banner ── */
+.arena-equal-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: #38bdf8;
+}
+
+/* ── Winner Summary Card ── */
+.arena-winner-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 14px;
+    color: #fbbf24;
+    animation: winnerGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes winnerGlow {
+    from { box-shadow: 0 0 10px rgba(251, 191, 36, 0.15); }
+    to   { box-shadow: 0 0 20px rgba(251, 191, 36, 0.35); }
+}
+
+.arena-winner-title {
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.arena-winner-desc {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #cbd5e1);
+}
+
+/* ── Lanes Grid Layout — Centered in Middle of Page with 1/3 Width per Slot ── */
+.arena-lanes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* Exactly 1/3 width per slot on desktop */
+    gap: 20px;
+    align-items: stretch;
+    justify-content: center; /* Middle alignment */
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .arena-lanes-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columns on tablet */
+    }
+}
+
+@media (max-width: 640px) {
+    .arena-lanes-grid {
+        grid-template-columns: 1fr; /* 1 column on mobile */
+    }
+}
+
+/* ── Lane Card — Scoped Container for Mini Version ── */
+.arena-lane-card {
+    background: var(--surface-bg-raised, #1e293b);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    min-width: 0; /* Prevents flex/grid child overflow */
+}
+
+.arena-lane-card.is-winner {
+    border-color: #fbbf24;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.25);
+}
+
+.arena-lane-card.is-running {
+    border-color: #0284c7;
+}
+
+/* Lane Header */
+.lane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+}
+
+.lane-algo-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary, #ffffff);
+    letter-spacing: -0.01em;
+}
+
+.lane-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lane-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary, #cbd5e1);
+}
+
+.lane-badge.status-running {
+    background: rgba(2, 132, 199, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(2, 132, 199, 0.4);
+}
+
+.lane-badge.status-done {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.lane-badge.status-stopped {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* Metrics Cards Row */
+.lane-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+}
+
+.metric-card {
+    background: var(--surface-bg, #0f172a);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.06));
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.metric-card-lbl {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.metric-card-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: 'Fira Code', monospace;
+    color: var(--text-primary, #f8fafc);
+}
+
+/* Canvas Box — Mini Version Container */
+.lane-canvas-wrapper {
+    background: var(--algo-grid-bg, #0f172a);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
+    padding: 12px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 250px;
+    max-height: 320px;
+    position: relative;
+}
+
+/* Step Description Footnote */
+.lane-step-desc {
+    min-height: 38px;
+    font-size: 0.82rem;
+    color: var(--text-secondary, #cbd5e1);
+    line-height: 1.45;
+    padding: 8px 12px;
+    background: var(--surface-bg, #0f172a);
+    border-radius: 8px;
+    border-left: 3px solid #0284c7;
+    display: flex;
+    align-items: center;
+}
+
+/* Lane Control Buttons Row */
+.lane-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lane-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.lane-input-field {
+    flex: 1;
+    background: var(--algo-input-bg, #0f172a);
+    border: 1px solid var(--algo-input-border, rgba(255, 255, 255, 0.12));
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-primary, #ffffff);
+    font-size: 0.85rem;
+    font-family: 'Fira Code', monospace;
+}
+
+.lane-input-field:focus {
+    border-color: #0284c7;
+    outline: none;
+}

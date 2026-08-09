@@ -1,218 +1,292 @@
-.egg-container {
-    padding: 20px;
+/* ═══════════════════════════════════════════════════════════════════════
+   EggDropVisualizer.css — Theme-Adaptive & Redesigned Layout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.egg-visualizer-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    color: #e2e8f0;
     height: 100%;
+    min-height: 560px;
+    gap: 12px;
 }
 
-.egg-controls-top {
+.egg-desc-wrapper {
     display: flex;
     align-items: center;
-    gap: 15px;
-    background: rgba(30, 41, 59, 0.6);
-    padding: 12px 20px;
-    border-radius: 12px;
-    border: 1px solid #334155;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
-.input-group {
+.egg-badge {
+    font-size: 0.8rem;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 3px 10px;
+    border-radius: 6px;
+    color: #fbbf24;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.egg-desc-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Input Panel */
+.egg-input-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.egg-input-group {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.input-group label {
-    font-size: 0.85rem;
-    color: #94a3b8;
+.egg-input-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
 }
 
-.input-group input {
-    width: 60px;
-    background: #0f172a;
-    border: 1px solid #334155;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-
-.apply-btn,
-.toggle-dp-btn {
-    padding: 8px 16px;
-    background: #3b82f6;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.apply-btn:hover,
-.toggle-dp-btn:hover {
-    background: #2563eb;
-}
-
-.toggle-dp-btn {
-    background: #475569;
-}
-
-.egg-visual-center {
-    flex: 1;
-    background: rgba(15, 23, 42, 0.4);
-    border-radius: 16px;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 400px;
-}
-
-.building-view {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.building-stats {
-    display: flex;
-    gap: 20px;
-}
-
-.stat-pill {
-    background: rgba(30, 41, 59, 0.8);
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid #334155;
-    font-size: 0.9rem;
-}
-
-.building-skyline {
-    display: flex;
-    flex-direction: column;
-    width: 240px;
-    border: 4px solid #1e293b;
+.egg-number-input {
+    width: 70px;
+    background: var(--algo-input-bg);
+    border: 1px solid var(--algo-input-border);
     border-radius: 8px;
-    background: #0f172a;
-    overflow: hidden;
+    color: var(--algo-input-text);
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.egg-number-input:focus { border-color: #fbbf24; }
+
+.egg-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.egg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, background 0.2s ease;
+    white-space: nowrap;
+}
+.egg-btn:hover { transform: translateY(-1px); }
+
+.egg-btn-primary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+}
+
+.egg-btn-secondary {
+    background: var(--surface-bg);
+    color: var(--text-secondary);
+    border-color: var(--surface-border);
+}
+
+.egg-btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--surface-border);
+}
+
+.egg-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    background: var(--surface-bg);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--surface-border);
+}
+
+.egg-leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.egg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.egg-dot.yellow { background: #fbbf24; }
+.egg-dot.red    { background: #f87171; }
+.egg-dot.green  { background: #10b981; }
+
+/* Canvas Stage */
+.egg-canvas-wrapper {
+    flex: 1;
+    min-height: 300px;
+    background: var(--algo-grid-bg);
+    border: 1px solid var(--algo-grid-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    overflow-x: auto;
+    transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.egg-building-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.egg-card-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.egg-card-title code {
+    color: #fbbf24;
+    font-family: 'Fira Code', monospace;
+}
+
+.egg-building-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 .egg-floor {
-    height: 40px;
-    border-bottom: 1px solid #1e293b;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    padding: 0 15px;
-    position: relative;
-    transition: background 0.3s;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    font-weight: 700;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .floor-num {
-    font-size: 0.75rem;
-    color: #475569;
-    font-weight: 700;
-    width: 25px;
-}
-
-/* Floor States */
-.state-uncertain {
-    background: rgba(148, 163, 184, 0.1);
-}
-
-.state-testing {
-    background: rgba(245, 158, 11, 0.2);
-}
-
-.state-survived {
-    background: rgba(34, 197, 94, 0.2);
-}
-
-.state-broken {
-    background: rgba(239, 68, 68, 0.2);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
 }
 
 .egg-icon {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.egg-icon.dropping {
-    animation: eggDropAnim 0.5s ease-in forwards;
+.egg-floor.state-testing {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #fbbf24;
+}
+.egg-floor.state-testing .floor-num { color: #fbbf24; }
+
+.egg-floor.state-broken {
+    background: rgba(248, 113, 113, 0.2);
+    border-color: #f87171;
+}
+.egg-floor.state-broken .floor-num { color: #f87171; }
+
+.egg-floor.state-survived {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+}
+.egg-floor.state-survived .floor-num { color: #10b981; }
+
+.egg-floor.state-uncertain {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
 }
 
-.egg-icon.cracked {
-    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
-}
-
-.egg-icon.safe {
-    filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.5));
-}
-
-@keyframes eggDropAnim {
-    0% {
-        transform: translate(-50%, -100px);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translate(-50%, 0);
-        opacity: 1;
-    }
-}
-
-/* DP Table Styles */
-.dp-view-container {
-    width: 100%;
+/* DP Table */
+.egg-dp-card {
+    background: var(--surface-bg-raised);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    padding: 14px 18px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 10px;
 }
 
 .egg-dp-scroll {
-    max-width: 100%;
     overflow-x: auto;
-    margin-top: 20px;
 }
 
 .egg-dp-table {
     border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    color: #cbd5e1;
+    width: 100%;
+    font-size: 0.85rem;
 }
 
 .egg-dp-table th,
 .egg-dp-table td {
-    border: 1px solid #334155;
-    padding: 10px 15px;
+    padding: 6px 10px;
+    border: 1px solid var(--surface-border);
     text-align: center;
+    font-family: 'Fira Code', monospace;
 }
 
 .egg-dp-table th {
-    background: rgba(30, 41, 59, 1);
-    color: #94a3b8;
+    background: var(--surface-bg);
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 700;
 }
 
-.egg-dp-table td.zero {
-    color: #475569;
-}
-
-.egg-educational-note {
-    background: rgba(59, 130, 246, 0.05);
-    border-left: 4px solid #3b82f6;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 0.95rem;
+.egg-dp-table td {
+    color: var(--text-primary);
+    font-weight: 700;
 }
 
 .egg-controls-wrapper {
-    margin-top: auto;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .egg-input-panel { flex-direction: column; align-items: stretch; }
+    .egg-legend      { margin-left: 0; flex-wrap: wrap; }
 }

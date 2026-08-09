@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import DualView from './DualView';
 import GraphCanvas from './GraphCanvas';
 import AnimationControls from '../components/animation-controls/AnimationControls';
@@ -6,15 +6,15 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateHuffmanCodingSteps } from '../algorithms/greedy/huffmanCoding';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FaCheck, FaRedo } from 'react-icons/fa';
 import './HuffmanCodingVisualizer.css';
 
-const HuffmanCodingVisualizer = () => {
-    const [inputText, setInputText] = useState("BCAADDDCCACACAC");
-    const [activeLanguage, setActiveLanguage] = useState("javascript");
+const DEFAULT_TEXT = "BCAADDDCCACACAC";
 
-    // We only re-generate steps when the user actually applies the input.
-    const [appliedText, setAppliedText] = useState(inputText);
+const HuffmanCodingVisualizer = () => {
+    const [inputText, setInputText]     = useState(DEFAULT_TEXT);
+    const [appliedText, setAppliedText] = useState(DEFAULT_TEXT);
+    const [activeLanguage, setActiveLanguage] = useState("javascript");
 
     const steps = useMemo(() => generateHuffmanCodingSteps(appliedText), [appliedText]);
 
@@ -28,8 +28,7 @@ const HuffmanCodingVisualizer = () => {
         stepForward,
         stepBackward,
         speed,
-        setSpeed
-    ,
+        setSpeed,
         setIndex
     } = useGenericAnimation(steps);
 
@@ -38,224 +37,151 @@ const HuffmanCodingVisualizer = () => {
             toast.error("Input text cannot be empty.");
             return;
         }
-        if (inputText.length > 30) {
-            toast.error("Text is too long for clear visualization. Keep it under 30 characters.");
+        if (inputText.length > 25) {
+            toast.error("Keep text under 25 characters for clear tree layout.");
             return;
         }
         setAppliedText(inputText);
         reset();
-        toast.success("Huffman tree generating...");
+        toast.success("Generating Huffman Tree!");
     };
 
     const getActiveLine = (snapshot) => {
         if (!snapshot) return 0;
-        if (snapshot.type === 'init') return 2;     // freq map
-        if (snapshot.type === 'queue-init') return 4; // priority queue
-        if (snapshot.type === 'extract-min') return 6; // pop 2
-        if (snapshot.type === 'merge') return 8;    // create parent, push
-        if (snapshot.type === 'complete') return 12;  // codes
-        return 0;
+        switch (snapshot.type) {
+            case 'init':        return 3;
+            case 'queue-init':  return 6;
+            case 'extract-min': return 12;
+            case 'merge':        return 14;
+            case 'complete':     return 22;
+            default:             return 0;
+        }
     };
 
     const nodeStates = useMemo(() => {
         if (!currentStep || !currentStep.nodes) return {};
         const states = {};
-
-        // Default all to 'default'
         currentStep.nodes.forEach(n => {
             states[n.id] = 'default';
         });
-
-        // Highlight based on step
         if (currentStep.highlightedNodes) {
             currentStep.highlightedNodes.forEach(id => {
-                if (currentStep.type === 'extract-min') states[id] = 'mst-node'; // green-ish
-                if (currentStep.type === 'merge') states[id] = 'visiting'; // blue-ish
+                if (currentStep.type === 'extract-min') states[id] = 'mst-node';
+                if (currentStep.type === 'merge') states[id] = 'visiting';
             });
         }
-
         return states;
     }, [currentStep]);
 
     const edgeStates = useMemo(() => {
         if (!currentStep || !currentStep.edges) return {};
         const states = {};
-
         currentStep.edges.forEach(e => {
             const key = `${e.from}-${e.to}`;
             states[key] = 'default';
         });
-
         if (currentStep.newEdgeIds) {
             currentStep.newEdgeIds.forEach(id => {
-                states[id] = 'mst-edge'; // Highlight new edges in green
+                states[id] = 'mst-edge';
             });
         }
-
         return states;
     }, [currentStep]);
 
     const codeSnippet = algorithmCodes.huffmanCoding?.[activeLanguage] || "";
-
-    const freqMap = currentStep?.freqMap || {};
-    const queue = currentStep?.queue || [];
-    const huffmanCodes = currentStep?.huffmanCodes || {};
-    const compressionStats = currentStep?.compressionStats;
+    const stepData    = currentStep || {};
+    const huffmanCodes= stepData.huffmanCodes || {};
+    const stats       = stepData.compressionStats;
 
     return (
         <DualView
-            algorithmName="Huffman Coding"
+            algorithmName="Huffman Coding (Greedy Lossless Compression)"
             code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Select text and press Play."}
+            codeSnippetCategory="greedy"
+            description={
+                <div className="huf-desc-wrapper">
+                    <span className="huf-badge">Optimal Prefix Codes O(N log N)</span>
+                    <span className="huf-desc-text">
+                        {currentStep?.description || "Press Play to build Huffman tree by merging lowest frequency nodes."}
+                    </span>
+                </div>
+            }
         >
-            <div className="huffman-container">
-                {/* Inputs */}
-                <div className="huffman-input-bar">
-                    <div className="huffman-inputs">
-                        <div className="huffman-input-group">
-                            <span className="huffman-label">Text String:</span>
-                            <input
-                                type="text"
-                                className="huffman-text-input"
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value.toUpperCase())}
-                                placeholder="BCAADDDCCACACAC"
-                            />
-                        </div>
+            <div className="huf-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="huf-input-panel">
+                    <div className="huf-input-group">
+                        <label className="huf-input-label">Text String:</label>
+                        <input
+                            type="text"
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+                            placeholder="BCAADDDCCACACAC"
+                            className="huf-text-input"
+                        />
+                        <button onClick={handleApply} className="huf-btn huf-btn-primary">
+                            <FaCheck /> Generate
+                        </button>
                     </div>
-                    <button className="cs-btn cs-btn-primary" onClick={handleApply}>Generate Tree</button>
+
+                    <div className="huf-btn-group">
+                        <button onClick={() => { setInputText(DEFAULT_TEXT); setAppliedText(DEFAULT_TEXT); reset(); }} className="huf-btn huf-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="huf-legend">
+                        <div className="huf-leg-item"><span className="huf-dot green"></span> Smallest Freq Node</div>
+                        <div className="huf-leg-item"><span className="huf-dot blue"></span> Merging Parent</div>
+                    </div>
                 </div>
 
-                {/* Main Visualization Area */}
-                <div className="huffman-main-area">
-                    {/* Left: Freq Map & Queue */}
-                    <div className="huffman-left-panel">
-                        <div>
-                            <h4 className="huffman-card-title">Frequency Map</h4>
-                            <table className="huffman-table">
-                                <thead>
-                                    <tr><th>Char</th><th>Count</th></tr>
-                                </thead>
-                                <tbody>
-                                    {Object.entries(freqMap).map(([char, f]) => (
-                                        <tr key={char}>
-                                            <td className="hc-char">{char}</td>
-                                            <td className="hc-freq">{f}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div>
-                            <h4 className="huffman-card-title">Priority Queue (Min Heap)</h4>
-                            <div className="huffman-queue-container">
-                                <AnimatePresence>
-                                    {queue.map((node) => {
-                                        let qClass = '';
-                                        if (currentStep?.type === 'extract-min' && currentStep.highlightedNodes?.includes(node.id)) {
-                                            qClass = 'q-extracting';
-                                        } else if (currentStep?.type === 'merge' && currentStep.highlightedNodes?.includes(node.id)) {
-                                            qClass = 'q-merged';
-                                        }
-
-                                        return (
-                                            <motion.div
-                                                key={node.id}
-                                                className={`huffman-queue-item ${qClass}`}
-                                                layout
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, scale: 0.8 }}
-                                                transition={{ duration: 0.3 }}
-                                            >
-                                                <span className="hq-label">
-                                                    {node.isLeaf ? `'${node.char}'` : `Node ${node.id.substring(1)}`}
-                                                </span>
-                                                <span className="hq-weight">{node.freq}</span>
-                                            </motion.div>
-                                        );
-                                    })}
-                                </AnimatePresence>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Center: Graph Canvas */}
-                    <div className="huffman-center-panel">
-                        <div className="huffman-graph-label">Huffman Forest</div>
-                        <div className="huffman-canvas-wrap">
+                {/* ── Main Canvas Stage: Tree Canvas & Codes Panel ───────── */}
+                <div className="huf-canvas-wrapper">
+                    
+                    {/* Tree Canvas */}
+                    <div className="huf-tree-panel">
+                        <div className="huf-card-title">Huffman Tree Structure</div>
+                        <div className="huf-canvas-box">
                             <GraphCanvas
-                                nodes={currentStep?.nodes || []}
-                                edges={currentStep?.edges || []}
+                                nodes={stepData.nodes || []}
+                                edges={stepData.edges || []}
                                 nodeStates={nodeStates}
                                 edgeStates={edgeStates}
-                                customLayoutOptions={{
-                                    hierarchical: {
-                                        enabled: true,
-                                        direction: 'UD', // Up-Down (Bottom-Up conceptually built)
-                                        sortMethod: 'directed',
-                                        levelSeparation: 80,
-                                        nodeSpacing: 100
-                                    }
-                                }}
                             />
                         </div>
                     </div>
 
-                    {/* Right: Prefix Codes & Stats */}
-                    <div className="huffman-right-panel">
-                        <h4 className="huffman-card-title">Prefix Codes</h4>
+                    {/* Codes & Compression Stats Panel */}
+                    <div className="huf-stats-panel">
+                        <div className="huf-card-title">Generated Prefix Codes</div>
+                        <div className="huf-codes-grid">
+                            {Object.entries(huffmanCodes).map(([char, code]) => (
+                                <div key={char} className="huf-code-chip">
+                                    <span className="char">'{char}'</span>
+                                    <span className="code">{code}</span>
+                                </div>
+                            ))}
+                        </div>
 
-                        <table className="huffman-table">
-                            <thead>
-                                <tr><th>Char</th><th>Huffman Code</th></tr>
-                            </thead>
-                            <tbody>
-                                {Object.keys(huffmanCodes).length > 0 ? (
-                                    Object.entries(huffmanCodes).map(([char, code]) => (
-                                        <tr key={char}>
-                                            <td className="hc-char">{char}</td>
-                                            <td className="hc-code">{code}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="2" style={{ textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
-                                            Waiting for tree completion...
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-
-                        {compressionStats && (
-                            <motion.div
-                                className="huffman-stats-card"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="hs-title">Compression Results</div>
-                                <div style={{ marginBottom: '10px' }}>
-                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Original (8-bit):</span>
-                                    <div className="hs-value" style={{ color: '#fca5a5' }}>{compressionStats.originalStrLength} bits</div>
-                                </div>
-                                <div>
-                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Huffman Encoded:</span>
-                                    <div className="hs-value">{compressionStats.encodedStrLength} bits</div>
-                                </div>
-                                <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#10b981' }}>
-                                    Saved {(((compressionStats.originalStrLength - compressionStats.encodedStrLength) / compressionStats.originalStrLength) * 100).toFixed(1)}% space!
-                                </div>
-                            </motion.div>
+                        {stats && (
+                            <div className="huf-compression-box">
+                                <div>Original (ASCII): <strong>{stats.originalBits} bits</strong></div>
+                                <div>Huffman Encoded: <strong>{stats.compressedBits} bits</strong></div>
+                                <div className="savings">Savings: <strong>{stats.savings}%</strong></div>
+                            </div>
                         )}
                     </div>
+
                 </div>
 
-                <div className="huffman-controls-wrapper">
+                {/* ── YouTube Video Player Controls ────────────────────── */}
+                <div className="huf-controls-wrapper">
                     <AnimationControls
                         inputType="none"
                         onNext={stepForward}
@@ -271,6 +197,7 @@ const HuffmanCodingVisualizer = () => {
                         onScrub={setIndex}
                     />
                 </div>
+
             </div>
         </DualView>
     );

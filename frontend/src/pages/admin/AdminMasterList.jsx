@@ -82,21 +82,24 @@ const AdminMasterList = () => {
     };
 
     return (
-        <div className="p-6">
-            <div className="glass-panel">
-                <div className="flex justify-between items-center mb-6">
+        <div style={{ padding: '0.5rem 0' }}>
+            <div className="sa-card">
+                <div className="sa-card-header" style={{ marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                     <div>
-                        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <FaUserShield className="text-purple-500" /> Admin Master List
+                        <h2 className="sa-card-title">
+                            <FaUserShield style={{ color: 'var(--sa-accent)' }} /> Admin Master List
                         </h2>
-                        <p className="text-gray-400 text-sm mt-1">Monitor admin performance and contributions</p>
+                        <p style={{ color: 'var(--sa-text-muted)', fontSize: '0.86rem', margin: '0.3rem 0 0 0' }}>
+                            Monitor admin performance, question curation, and contest contributions
+                        </p>
                     </div>
-                    <div className="relative">
-                        <FaSearch className="absolute left-3 top-3 text-gray-500" />
+                    <div style={{ position: 'relative', width: 'min(320px, 100%)' }}>
+                        <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--sa-text-muted)' }} />
                         <input
                             type="text"
                             placeholder="Search admins..."
-                            className="bg-gray-800 text-white pl-10 pr-4 py-2 rounded-lg border border-gray-700 focus:border-purple-500 outline-none w-64 transition-all focus:w-80"
+                            className="sa-input"
+                            style={{ paddingLeft: '36px' }}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -104,60 +107,69 @@ const AdminMasterList = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20">
-                        <div className="spinner mb-4 border-4 border-purple-500 border-t-transparent w-12 h-12 rounded-full animate-spin mx-auto"></div>
-                        <p className="text-gray-400">Loading admin data...</p>
+                    <div className="sa-empty-text" style={{ padding: '3rem 0' }}>
+                        <p>Loading admin data...</p>
                     </div>
                 ) : filteredAdmins.length === 0 ? (
-                    <div className="text-center py-16 text-gray-500">
-                        <FaUserShield className="text-4xl mx-auto mb-4 opacity-50" />
+                    <div className="sa-empty-text" style={{ padding: '3rem 0' }}>
+                        <FaUserShield style={{ fontSize: '2.5rem', margin: '0 auto 0.75rem', opacity: 0.4 }} />
                         <p>No admins found matching your search.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.2rem' }}>
                         {filteredAdmins.map((admin, index) => (
                             <motion.div
                                 key={admin._id}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 hover:bg-gray-800/80 transition-all group"
+                                transition={{ delay: index * 0.04 }}
+                                className="sa-stat-card"
+                                style={{ padding: '1.4rem', border: '1px solid var(--sa-border)', borderRadius: '16px' }}
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem', gap: '0.8rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                        <div style={{
+                                            width: '46px', height: '46px', borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: '#ffffff', fontWeight: '800', fontSize: '1.2rem',
+                                            boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)'
+                                        }}>
                                             {admin.username[0].toUpperCase()}
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-white text-lg group-hover:text-purple-400 transition-colors">
+                                            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: '0 0 0.2rem 0', color: 'var(--sa-text)' }}>
                                                 {admin.username}
                                             </h3>
-                                            <div className="flex items-center gap-1.5 text-gray-400 text-sm">
-                                                <FaEnvelope className="text-xs" /> {admin.email}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--sa-text-muted)', fontSize: '0.78rem' }}>
+                                                <FaEnvelope style={{ fontSize: '0.72rem' }} /> {admin.email}
                                             </div>
                                         </div>
                                     </div>
-                                    {getStatusBadge(admin.isActive)}
+                                    <span className={`sa-badge ${admin.isActive ? 'sa-badge-green' : 'sa-badge-red'}`}>
+                                        {admin.isActive ? <><FaCheckCircle /> Active</> : <><FaTimesCircle /> Disabled</>}
+                                    </span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700/50">
-                                        <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
-                                            <FaBrain className="text-blue-400" /> Problems
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.2rem' }}>
+                                    <div style={{ background: 'var(--sa-pill-inactive)', borderRadius: '12px', padding: '0.8rem', border: '1px solid var(--sa-border-subtle)' }}>
+                                        <div style={{ color: 'var(--sa-text-muted)', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.2rem' }}>
+                                            <FaBrain style={{ color: 'var(--sa-accent-blue)' }} /> Problems
                                         </div>
-                                        <div className="text-2xl font-bold text-white">{admin.totalProblems}</div>
+                                        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--sa-text)' }}>{admin.totalProblems || 0}</div>
                                     </div>
-                                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700/50">
-                                        <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center gap-1">
-                                            <FaTrophy className="text-yellow-400" /> Contests
+                                    <div style={{ background: 'var(--sa-pill-inactive)', borderRadius: '12px', padding: '0.8rem', border: '1px solid var(--sa-border-subtle)' }}>
+                                        <div style={{ color: 'var(--sa-text-muted)', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.2rem' }}>
+                                            <FaTrophy style={{ color: '#eab308' }} /> Contests
                                         </div>
-                                        <div className="text-2xl font-bold text-white">{admin.totalContests}</div>
+                                        <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--sa-text)' }}>{admin.totalContests || 0}</div>
                                     </div>
                                 </div>
 
                                 <button
                                     onClick={() => navigate(`admin/${admin._id}`)}
-                                    className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2"
+                                    className="sa-btn sa-btn-primary"
+                                    style={{ width: '100%', justifyContent: 'center', borderRadius: '10px', padding: '0.65rem' }}
                                 >
                                     <FaChartLine /> View Detailed Analytics
                                 </button>

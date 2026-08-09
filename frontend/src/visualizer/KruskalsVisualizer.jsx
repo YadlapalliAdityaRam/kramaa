@@ -6,7 +6,7 @@ import AnimationControls from '../components/animation-controls/AnimationControl
 import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateKruskalsSteps } from '../algorithms/graphs/kruskals';
 import { defaultWeightedGraph } from '../algorithms/graphs/graphData';
-import { generateFallbackCode } from './algorithmFallbacks';
+import { algorithmCodes } from '../data/algorithmCodes';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import './KruskalsVisualizer.css';
@@ -18,20 +18,16 @@ const KruskalsVisualizer = () => {
     const steps = useMemo(() => generateKruskalsSteps(graphData), [graphData]);
     const anim = useGenericAnimation(steps);
 
-    const codeSnippet = useMemo(() => generateFallbackCode({
-        name: "Kruskal's Minimum Spanning Tree",
-        categoryKey: "graphs",
-        language: activeLanguage
-    }), [activeLanguage]);
+    const codeSnippet = algorithmCodes.kruskal?.[activeLanguage] || '';
 
     const getActiveLine = () => {
         if (!anim.currentStep) return 1;
         const desc = anim.currentStep.description || '';
-        if (desc.includes('Sort all')) return 3;
-        if (desc.includes('Picking')) return 5;
-        if (desc.includes('No cycle')) return 6;
-        if (desc.includes('Cycle')) return 8;
-        if (desc.includes('Finished') || desc.includes('complete')) return 10;
+        if (desc.includes('Sort all')) return 2;
+        if (desc.includes('Picking')) return 12;
+        if (desc.includes('No cycle')) return 15;
+        if (desc.includes('Cycle')) return 13;
+        if (desc.includes('Finished') || desc.includes('complete')) return 19;
         return 1;
     };
 
@@ -41,7 +37,6 @@ const KruskalsVisualizer = () => {
     const unionFindSets = currentStep?.unionFindSets || {};
     const mstEdgeList = currentStep?.mstEdges || [];
 
-    // Build MST-only edge states: only show accepted edges
     const mstEdgeStates = useMemo(() => {
         const states = {};
         (graphData.edges || []).forEach(e => {
@@ -65,7 +60,6 @@ const KruskalsVisualizer = () => {
         return states;
     }, [graphData.nodes, mstEdgeList]);
 
-    // Determine edge color class for the sorted list
     const getEdgeStatus = (edge, idx) => {
         const es = currentStep?.edgeStates || {};
         const key = `${edge.from}-${edge.to}`;
@@ -82,6 +76,7 @@ const KruskalsVisualizer = () => {
             activeLine={getActiveLine()}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
+            codeSnippetCategory="graphs"
             description={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
                     <span className="kruskal-step-badge">
@@ -93,19 +88,21 @@ const KruskalsVisualizer = () => {
                 </div>
             }
         >
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
+            <div className="kruskal-wrapper">
 
                 <GraphInput
                     nodes={graphData.nodes || []}
                     edges={graphData.edges || []}
-                    onGraphUpdate={(g) => { setGraphData(g); anim.reset(); }}
+                    onGraphUpdate={(g, e) => {
+                        const data = Array.isArray(g) ? { nodes: g, edges: e } : g;
+                        setGraphData(data);
+                        anim.reset();
+                    }}
                     requiresWeights={true}
                     requiresDirected={false}
                 />
 
-                {/* ── Top: Full Graph + MST Construction side by side ── */}
                 <div className="kruskal-dual-graphs">
-                    {/* Full Graph View */}
                     <div className="kruskal-graph-panel">
                         <div className="kruskal-graph-label">Original Graph</div>
                         <div className="kruskal-graph-canvas-wrap">
@@ -118,7 +115,6 @@ const KruskalsVisualizer = () => {
                         </div>
                     </div>
 
-                    {/* MST Construction View */}
                     <div className="kruskal-graph-panel kruskal-mst-panel">
                         <div className="kruskal-graph-label kruskal-mst-label">MST Construction</div>
                         <div className="kruskal-graph-canvas-wrap">
@@ -132,10 +128,7 @@ const KruskalsVisualizer = () => {
                     </div>
                 </div>
 
-                {/* ── Bottom: Edge List + Disjoint Sets + MST Weight ── */}
                 <div className="kruskal-info-row">
-
-                    {/* Sorted Edge List */}
                     <div className="kruskal-info-card">
                         <h4 className="kruskal-card-title">📋 Sorted Edges</h4>
                         <div className="kruskal-edge-list">
@@ -156,7 +149,6 @@ const KruskalsVisualizer = () => {
                         </div>
                     </div>
 
-                    {/* Disjoint Sets */}
                     <div className="kruskal-info-card">
                         <h4 className="kruskal-card-title">🌲 Disjoint Sets</h4>
                         <div className="kruskal-sets-wrap">
@@ -186,7 +178,6 @@ const KruskalsVisualizer = () => {
                         </div>
                     </div>
 
-                    {/* MST Weight */}
                     <div className="kruskal-info-card kruskal-weight-card">
                         <h4 className="kruskal-card-title">⚡ MST Weight</h4>
                         <div className="kruskal-total-weight">
@@ -197,7 +188,6 @@ const KruskalsVisualizer = () => {
                         </div>
                     </div>
 
-                    {/* Legend */}
                     <div className="kruskal-info-card kruskal-legend-card">
                         <h4 className="kruskal-card-title">🎨 Legend</h4>
                         <div className="kruskal-legend-items">
@@ -209,21 +199,20 @@ const KruskalsVisualizer = () => {
                     </div>
                 </div>
 
-                {/* ── Controls ── */}
                 <div className="kruskal-controls-bar">
                     <AnimationControls
                         inputType="none"
                         isPlaying={anim.isPlaying}
                         onPlay={anim.play}
                         onPause={anim.pause}
-                        onStepForward={anim.stepForward}
-                        onStepBackward={anim.stepBackward}
+                        onNext={anim.stepForward}
+                        onPrev={anim.stepBackward}
                         onReset={anim.reset}
                         speed={anim.speed}
                         onSpeedChange={anim.setSpeed}
                         currentStep={anim.currentStepIndex}
                         totalSteps={anim.totalSteps}
-                        onScrub={anim.setStep}
+                        onScrub={anim.setIndex}
                     />
                 </div>
             </div>

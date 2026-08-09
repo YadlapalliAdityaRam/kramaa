@@ -209,11 +209,11 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <div className="main-content auth-page">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-panel"
+                className="glass-panel auth-card"
                 style={{ padding: '36px', borderRadius: '20px', width: '100%', maxWidth: '460px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '22px' }}>

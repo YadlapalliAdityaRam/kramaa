@@ -5,17 +5,17 @@ import useGenericAnimation from '../hooks/useGenericAnimation';
 import { generateFibonacciSearchSteps } from '../algorithms/searching/fibonacciSearch';
 import { algorithmCodes } from '../data/algorithmCodes';
 import { toast } from 'react-hot-toast';
-import { FaArrowRight, FaSearchPlus, FaGripLinesVertical, FaInfoCircle } from 'react-icons/fa';
+import { FaRandom, FaCheck, FaInfoCircle, FaRedo } from 'react-icons/fa';
 import './FibonacciSearchVisualizer.css';
 
 const DEFAULT_ARRAY = [3, 7, 12, 18, 21, 25, 30, 36, 40, 45, 52, 60, 68, 75, 82];
 
 const FibonacciSearchVisualizer = () => {
-    const [arrayInput, setArrayInput] = useState(DEFAULT_ARRAY);
-    const [target, setTarget] = useState(25);
-    const [tempTarget, setTempTarget] = useState(25);
+    const [arrayInput, setArrayInput]         = useState(DEFAULT_ARRAY);
+    const [target, setTarget]                 = useState(25);
+    const [tempTarget, setTempTarget]         = useState(25);
     const [activeLanguage, setActiveLanguage] = useState('javascript');
-    const [showIntuition, setShowIntuition] = useState(true);
+    const [showIntuition, setShowIntuition]   = useState(true);
 
     const steps = useMemo(
         () => generateFibonacciSearchSteps(arrayInput, target),
@@ -43,7 +43,7 @@ const FibonacciSearchVisualizer = () => {
     };
 
     const handleGenerateRandom = () => {
-        const size = 12 + Math.floor(Math.random() * 5);
+        const size = 15;
         const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 95) + 2)
             .sort((a, b) => a - b);
         setArrayInput(newArray);
@@ -54,130 +54,144 @@ const FibonacciSearchVisualizer = () => {
         toast.success('Random sorted array and target generated!');
     };
 
-    const handleManualInput = (newArray) => {
-        const sorted = [...newArray].sort((a, b) => a - b);
-        setArrayInput(sorted);
-        reset();
-        toast.success('Array updated and sorted!');
-    };
-
     const getActiveLine = (step) => {
         if (!step) return 0;
         switch (step.type) {
-            case 'info': return 11;
-            case 'check': return 33;
-            case 'narrow': return 41;
-            case 'found': return 62;
-            case 'not-found': return 81;
-            default: return 0;
+            case 'info':      return 5;
+            case 'check':     return 12;
+            case 'narrow':    return 13;
+            case 'found':     return 18;
+            case 'not-found': return 25;
+            default:          return 0;
         }
+    };
+
+    const codeSnippet = algorithmCodes.fibonacciSearch?.[activeLanguage] || '';
+    const stepData    = currentStep || {};
+    const activeProbe = stepData.probeIdx !== undefined ? stepData.probeIdx : stepData.i;
+    const currentFib  = stepData.fib !== undefined ? stepData.fib : stepData.fibM;
+
+    const renderArray = () => {
+        if (!currentStep) return null;
+        const { arraySnapshot, offset, type } = currentStep;
+
+        return (
+            <div className="fib-array-grid">
+                {arraySnapshot.map((val, idx) => {
+                    let state = 'default';
+
+                    if (offset !== undefined && offset !== -1 && idx <= offset) state = 'excluded';
+                    if (idx === activeProbe) state = 'check';
+                    if (type === 'found' && idx === activeProbe) state = 'found';
+                    if (type === 'not-found') state = 'excluded';
+
+                    return (
+                        <div key={idx} className="fib-cell-wrapper">
+                            <div className={`fib-cell state-${state}`} id={`cell-${idx}`}>
+                                <span className="fib-val">{val}</span>
+                                {idx === activeProbe && <span className="fib-ptr-badge">Probe idx</span>}
+                            </div>
+                            <span className="fib-idx">[{idx}]</span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
     };
 
     return (
         <DualView
             algorithmName="Fibonacci Search"
-            code={algorithmCodes.fibonacciSearch?.[activeLanguage] || ''}
+            code={codeSnippet}
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={currentStep?.description || "Find a location using Fibonacci-based intervals."}
+            codeSnippetCategory="searching"
+            description={
+                <div className="fib-desc-wrapper">
+                    <span className="fib-badge">Fibonacci Intervals O(log N)</span>
+                    <span className="fib-desc-text">
+                        {currentStep?.description || 'Press Play to observe searching using Fibonacci numbers to divide intervals.'}
+                    </span>
+                </div>
+            }
         >
-            <div className="fib-search-container">
-                <div className="fib-input-bar">
-                    <button className="toggle-intuition-btn" onClick={() => setShowIntuition(!showIntuition)}>
-                        {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
-                    </button>
-                    <div className="target-control">
-                        <label>Target:</label>
+            <div className="fib-visualizer-wrapper">
+
+                {/* ── Top Input Controls Panel ──────────────────────────── */}
+                <div className="fib-input-panel">
+                    <div className="fib-input-group">
+                        <label className="fib-input-label">Target Number:</label>
                         <input
                             type="number"
                             value={tempTarget}
-                            onChange={(e) => setTempTarget(parseInt(e.target.value) || 0)}
+                            onChange={(e) => setTempTarget(Number(e.target.value))}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApplyTarget()}
+                            className="fib-number-input"
                         />
-                        <button className="apply-target-btn" onClick={handleApplyTarget}>Set</button>
+                        <button onClick={handleApplyTarget} className="fib-btn fib-btn-primary">
+                            <FaCheck /> Find
+                        </button>
+                    </div>
+
+                    <div className="fib-btn-group">
+                        <button onClick={handleGenerateRandom} className="fib-btn fib-btn-secondary">
+                            <FaRandom /> Random Array
+                        </button>
+                        <button onClick={() => setShowIntuition(!showIntuition)} className="fib-btn fib-btn-outline">
+                            <FaInfoCircle /> {showIntuition ? 'Hide Intuition' : 'Show Intuition'}
+                        </button>
+                        <button onClick={reset} className="fib-btn fib-btn-outline">
+                            <FaRedo /> Reset
+                        </button>
+                    </div>
+
+                    <div className="fib-legend">
+                        <div className="fib-leg-item"><span className="fib-dot blue"></span> Probe Cell</div>
+                        <div className="fib-leg-item"><span className="fib-dot green"></span> Target Found</div>
+                        <div className="fib-leg-item"><span className="fib-dot gray"></span> Excluded</div>
                     </div>
                 </div>
 
+                {/* Intuition Callout */}
                 {showIntuition && (
                     <div className="fib-intuition-panel">
                         <h4>🧬 The Fibonacci Rhythm</h4>
                         <p>
-                            Fibonacci Search uses <strong>Fibonacci numbers</strong> instead of simple halves to divide a library shelf!
+                            Fibonacci Search uses <strong>Fibonacci numbers</strong> (1, 1, 2, 3, 5, 8, 13...) to divide a sorted array instead of simple binary halves!
                         </p>
-                        <div className="edu-grid">
-                            <div className="edu-item"><FaSearchPlus /> <strong>Divide:</strong> Fibonacci numbers split the shelf into uneven but mathematical parts.</div>
-                            <div className="edu-item"><FaArrowRight /> <strong>Leap:</strong> Move using Fibonacci steps (Fm, Fm-1, Fm-2).</div>
-                            <div className="edu-item"><FaInfoCircle /> <strong>Gears:</strong> It only uses addition and subtraction—no costly divisions!</div>
-                        </div>
+                        <ul>
+                            <li><strong>Division:</strong> Divides array into uneven Fibonacci intervals.</li>
+                            <li><strong>Speed:</strong> Uses only addition and subtraction operations—avoiding division instructions.</li>
+                        </ul>
                     </div>
                 )}
 
-                <div className="fib-dashboard">
-                    <div className="fib-gear">
-                        <span className="label">Fk</span>
-                        <div className={`val ${currentStep?.fib !== null ? 'pulse' : ''}`}>{currentStep?.fib ?? '-'}</div>
-                    </div>
-                    <div className="fib-gear">
-                        <span className="label">Fk-1</span>
-                        <div className={`val ${currentStep?.fib1 !== null ? 'pulse' : ''}`}>{currentStep?.fib1 ?? '-'}</div>
-                    </div>
-                    <div className="fib-gear">
-                        <span className="label">Fk-2</span>
-                        <div className={`val ${currentStep?.fib2 !== null ? 'pulse' : ''}`}>{currentStep?.fib2 ?? '-'}</div>
-                    </div>
-                    <div className="fib-gear offset-gear">
-                        <span className="label">Offset</span>
-                        <div className="val">{currentStep?.offset ?? '-'}</div>
-                    </div>
-                </div>
-
-                <div className="fib-visual-area">
-                    <div className="fib-array">
-                        {arrayInput.map((val, idx) => {
-                            let state = 'default';
-                            if (currentStep) {
-                                if (idx === currentStep.probeIdx) state = 'probe';
-                                else if (idx < currentStep.low || idx > currentStep.high) state = 'eliminated';
-                                else state = 'active';
-
-                                if (currentStep.type === 'found' && idx === currentStep.probeIdx) state = 'found';
-                                if (currentStep.type === 'not-found') state = 'eliminated';
-                            }
-
-                            return (
-                                <div key={idx} className="fib-cell-wrapper">
-                                    <div className={`fib-cell state-${state}`}>
-                                        {val}
-                                    </div>
-                                    <div className="fib-idx">{idx}</div>
-                                    {currentStep?.probeIdx === idx && (
-                                        <div className="fib-pointer">🔍</div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                <div className="fib-footer">
-                    <div className="fib-complexity">
-                        <div className="comp-item">
-                            <span className="label">Time:</span>
-                            <span className="val">O(log N)</span>
+                {/* ── Main Canvas Stage: Array Cells & Fibonacci Values ───── */}
+                <div className="fib-canvas-wrapper">
+                    <div className="fib-metrics-row">
+                        <div className="fib-metric-card">
+                            <span className="metric-lbl">Fm (Current)</span>
+                            <span className="metric-val">{currentFib ?? '-'}</span>
                         </div>
-                        <div className="comp-item">
-                            <span className="label">Space:</span>
-                            <span className="val">O(1)</span>
+                        <div className="fib-metric-card">
+                            <span className="metric-lbl">Fm-1</span>
+                            <span className="metric-val">{stepData.fib1 ?? '-'}</span>
+                        </div>
+                        <div className="fib-metric-card">
+                            <span className="metric-lbl">Fm-2</span>
+                            <span className="metric-val">{stepData.fib2 ?? '-'}</span>
+                        </div>
+                        <div className="fib-metric-card">
+                            <span className="metric-lbl">Offset</span>
+                            <span className="metric-val">{stepData.offset ?? '-1'}</span>
                         </div>
                     </div>
-                    <div className="fib-legend">
-                        <div className="leg-item"><span className="dot yellow"></span> Probing</div>
-                        <div className="leg-item"><span className="dot blue"></span> Active Range</div>
-                        <div className="leg-item"><span className="dot gray"></span> Eliminated</div>
-                        <div className="leg-item"><span className="dot green"></span> Found</div>
-                    </div>
+
+                    {renderArray()}
                 </div>
 
+                {/* ── YouTube Video Player Controls ────────────────────── */}
                 <div className="fib-controls-wrapper">
                     <AnimationControls
                         inputType="none"
@@ -192,10 +206,9 @@ const FibonacciSearchVisualizer = () => {
                         currentStep={currentStepIndex}
                         totalSteps={steps.length}
                         onScrub={setIndex}
-                        onGenerateRandom={handleGenerateRandom}
-                        onManualInput={handleManualInput}
                     />
                 </div>
+
             </div>
         </DualView>
     );

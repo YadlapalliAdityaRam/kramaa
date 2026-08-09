@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProblems } from '../redux/slices/problemSlice';
 import { loadUser } from '../redux/slices/authSlice';
@@ -140,7 +139,7 @@ function getTimeUntilMidnight() {
 }
 
 // ── SVG Progress Ring Component ──
-function ProgressRing({ solved, total, easy, medium, hard }) {
+function ProgressRing({ solved, total }) {
     const radius = 35;
     const safeRadius = Number.isFinite(radius) ? radius : 35;
     const circumference = 2 * Math.PI * safeRadius;
@@ -154,17 +153,11 @@ function ProgressRing({ solved, total, easy, medium, hard }) {
                 <circle
                     className="ring-fill"
                     cx="40" cy="40" r={safeRadius}
-                    stroke="url(#ringGrad)"
+                    stroke="#8dc9b1"
                     strokeDasharray={circumference}
                     strokeDashoffset={offset}
                     style={{ animation: 'progress-fill 1.2s ease-out both' }}
                 />
-                <defs>
-                    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#14b8a6" />
-                        <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                </defs>
             </svg>
             <div className="cp-ring-center">
                 <span className="ring-num">{solved}</span>
@@ -517,16 +510,15 @@ const CodingPlatform = () => {
     );
 
     return (
-        <div className="main-content">
-            <div className="cp-root">
+        <div className="cp-root">
 
                 {/* ═══ HERO SECTION ═══ */}
                 <div className="cp-hero">
                     <div>
                         <h1>
-                            {user ? <>Welcome back, <span style={{ color: '#5eead4' }}>{user.username}</span> 👋</> : 'Practice Arena ⚔️'}
+                            {user ? <>Welcome back, <span className="cp-hero-username">{user.username}</span></> : 'Practice arena'}
                         </h1>
-                        <p className="cp-subtitle">Sharpen your skills. Conquer the interview.</p>
+                        <p className="cp-subtitle">Pick a problem, make a pass, and strengthen the habits that compound.</p>
                         {user && (
                             <div className="cp-level-badge">
                                 <FaStar style={{ color: '#fbbf24' }} />
@@ -538,13 +530,7 @@ const CodingPlatform = () => {
                     </div>
                     <Link
                         to="/profile"
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            textDecoration: 'none', background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8',
-                            fontWeight: '600', padding: '8px 16px', borderRadius: '12px',
-                            fontSize: '0.85rem', transition: 'all 0.2s'
-                        }}
+                        className="cp-profile-link"
                     >
                         <FaUserCircle /> Profile
                     </Link>
@@ -553,15 +539,12 @@ const CodingPlatform = () => {
                 {/* ═══ STAT CARDS ═══ */}
                 <div className="cp-stats-grid">
                     {/* Card 1: Problems Solved (Progress Ring) */}
-                    <motion.div className="cp-stat-card" whileHover={{ y: -4 }}>
+                    <div className="cp-stat-card">
                         <div className="cp-stat-label">Problems Solved</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <ProgressRing
                                 solved={solvedIDs.length}
                                 total={problems.length}
-                                easy={easySolved}
-                                medium={mediumSolved}
-                                hard={hardSolved}
                             />
                             <div className="cp-diff-breakdown">
                                 <div className="cp-diff-row">
@@ -581,10 +564,10 @@ const CodingPlatform = () => {
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Card 2: Streak */}
-                    <motion.div className="cp-stat-card" whileHover={{ y: -4 }}>
+                    <div className="cp-stat-card">
                         <div className="cp-stat-label">Current Streak</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <span className="cp-streak-fire">{streak > 0 ? '🔥' : '❄️'}</span>
@@ -608,10 +591,10 @@ const CodingPlatform = () => {
                         <div className="cp-stat-sub" style={{ marginTop: '6px' }}>
                             Longest: <span style={{ color: '#94a3b8', fontWeight: '600' }}>{longestStreak} days</span>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Card 3: XP & Level */}
-                    <motion.div className="cp-stat-card" whileHover={{ y: -4 }}>
+                    <div className="cp-stat-card">
                         <div className="cp-stat-label">Experience Points</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                             <div className="cp-stat-value" style={{ color: '#c4b5fd' }}>{userXp}</div>
@@ -623,10 +606,10 @@ const CodingPlatform = () => {
                         <div className="cp-stat-sub" style={{ marginTop: '6px' }}>
                             {xpForNext - userXp} XP to Level {userLevel + 1}
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Card 4: Acceptance Rate */}
-                    <motion.div className="cp-stat-card" whileHover={{ y: -4 }}>
+                    <div className="cp-stat-card">
                         <div className="cp-stat-label">Acceptance Rate</div>
                         <div className="cp-stat-value" style={{ color: '#34d399' }}>
                             {formatPercent(userAcceptanceRate)}
@@ -642,16 +625,12 @@ const CodingPlatform = () => {
                                 transition: 'width 0.8s ease'
                             }} />
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
 
                 {/* ═══ CONTEST ANNOUNCEMENT ═══ */}
                 {isAuthenticated && contestAnnouncement && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="cp-contest-banner"
-                    >
+                    <div className="cp-contest-banner">
                         <div className="cp-contest-info">
                             <div className="cp-contest-label">📢 Contest Announcement</div>
                             <div className="cp-contest-title">{contestAnnouncement.title}</div>
@@ -673,17 +652,12 @@ const CodingPlatform = () => {
                                 Dismiss
                             </button>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {/* Daily Challenge */}
                 {dailyProblem && (
-                    <motion.div
-                        className="cp-daily-card"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                    >
+                    <div className="cp-daily-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                             <div style={{ flex: 1, minWidth: '260px' }}>
                                 <div className="cp-daily-badge">
@@ -716,16 +690,11 @@ const CodingPlatform = () => {
                                 </Link>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {isAuthenticated && (
-                    <motion.div
-                        className="cp-calendar-card"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                    >
+                    <div className="cp-calendar-card">
                         <div className="cp-calendar-header">
                             <div>
                                 <div className="cp-calendar-title">Daily Challenge Tracker</div>
@@ -764,12 +733,9 @@ const CodingPlatform = () => {
                             ))}
                         </div>
 
-                        <motion.div
+                        <div
                             key={calendarAnimationKey}
                             className="cp-calendar-grid"
-                            initial={{ opacity: 0.6, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.22, ease: 'easeOut' }}
                         >
                             {challengeCalendarCells.map((cell, index) => {
                                 if (!cell) {
@@ -800,7 +766,7 @@ const CodingPlatform = () => {
                                     </Link>
                                 );
                             })}
-                        </motion.div>
+                        </div>
 
                         <div className="cp-calendar-legend">
                             <span><span className="cp-legend-dot solved">&#10003;</span> Solved</span>
@@ -808,7 +774,7 @@ const CodingPlatform = () => {
                             <span><span className="cp-legend-dot future">&bull;</span> Upcoming</span>
                             {dailyCalendarLoading && <span className="cp-calendar-loading">Updating...</span>}
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 {/* ═══ FILTER BAR ═══ */}
@@ -886,19 +852,14 @@ const CodingPlatform = () => {
                         <span></span>
                     </div>
 
-                    {sortedProblems.map((problem, index) => {
+                    {sortedProblems.map((problem) => {
                         const pid = normalizeId(problem._id);
                         const isSolved = solvedIDs.includes(pid);
                         const isBookmarked = bookmarkedIDs.includes(pid);
                         const acceptance = problem.submissionAcceptanceRate || 0;
 
                         return (
-                            <motion.div
-                                key={problem._id}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: Math.min(index * 0.02, 0.5) }}
-                            >
+                            <div key={problem._id}>
                                 <Link
                                     to={`/coding-platform/${problem.slug || problem._id}`}
                                     className="cp-problem-row"
@@ -951,7 +912,7 @@ const CodingPlatform = () => {
                                         {isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
                                     </button>
                                 </Link>
-                            </motion.div>
+                            </div>
                         );
                     })}
 
@@ -972,7 +933,6 @@ const CodingPlatform = () => {
                         </div>
                     )}
                 </div>
-            </div>
         </div>
     );
 };

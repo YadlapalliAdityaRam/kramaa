@@ -112,16 +112,16 @@ const AdminManagement = () => {
         <div className="sa-card">
             <div className="sa-card-header">
                 <h2 className="sa-card-title">
-                    <FaUserPlus className="text-purple-400" /> Admin Management
+                    <FaUserPlus style={{ color: 'var(--sa-accent)' }} /> Admin Management
                 </h2>
             </div>
 
             {/* Invite Form */}
-            <form onSubmit={handleInvite} style={{ marginBottom: '2rem', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h3 style={{ textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            <form onSubmit={handleInvite} style={{ marginBottom: '2rem', background: 'var(--sa-pill-inactive)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--sa-border)' }}>
+                <h3 style={{ textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: '700', color: 'var(--sa-text-muted)', marginBottom: '1rem', letterSpacing: '0.05em' }}>
                     Invite New Admin
                 </h3>
-                <div className="sa-form-group">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                     <input
                         type="text"
                         placeholder="First Name"
@@ -151,20 +151,20 @@ const AdminManagement = () => {
                     type="submit"
                     disabled={inviting}
                     className="sa-btn sa-btn-primary"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', justifyContent: 'center' }}
                 >
                     {inviting ? 'Sending...' : 'Send Invitation'}
                 </button>
             </form>
 
             {/* Admin List */}
-            <h3 style={{ textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            <h3 style={{ textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: '700', color: 'var(--sa-text-muted)', marginBottom: '1rem', letterSpacing: '0.05em' }}>
                 Current Admins
             </h3>
             {loading ? (
-                <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
+                <p className="sa-empty-text">Loading...</p>
             ) : admins.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)' }}>No active admins found.</p>
+                <p className="sa-empty-text">No active admins found.</p>
             ) : (
                 <div className="sa-table-container">
                     <table className="sa-table">
@@ -183,8 +183,8 @@ const AdminManagement = () => {
                         <tbody>
                             {admins.map(admin => (
                                 <tr key={admin._id}>
-                                    <td style={{ fontWeight: '500' }}>{admin.firstName || admin.username} {admin.lastName}</td>
-                                    <td style={{ color: 'var(--text-muted)' }}>{admin.email}</td>
+                                    <td style={{ fontWeight: '600' }}>{admin.firstName || admin.username} {admin.lastName}</td>
+                                    <td style={{ color: 'var(--sa-text-muted)' }}>{admin.email}</td>
                                     <td>
                                         <span className={`sa-badge ${admin.role === 'SUPER_ADMIN' ? 'sa-badge-purple' : 'sa-badge-blue'}`}>
                                             {admin.role}
@@ -193,36 +193,38 @@ const AdminManagement = () => {
                                     <td>{admin.performance?.createdProblems || 0}</td>
                                     <td>{admin.performance?.approvedProblems || 0}</td>
                                     <td>{admin.performance?.pendingProblems || 0}</td>
-                                    <td>{admin.performance?.acceptanceRate || 0}%</td>
-                                    <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                        <button
-                                            onClick={() => navigate(`/super-admin/problems/admin/${admin._id}`)}
-                                            className="sa-btn sa-btn-primary"
-                                            style={{ padding: '6px 10px', borderRadius: '4px', cursor: 'pointer' }}
-                                            title="View Admin Analysis"
-                                        >
-                                            Analysis
-                                        </button>
-                                        {admin.role !== 'SUPER_ADMIN' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleRevoke(admin._id)}
-                                                    className="sa-btn-warning"
-                                                    style={{ padding: '6px', borderRadius: '4px', cursor: 'pointer', background: '#eab308', border: 'none', color: 'black' }}
-                                                    title="Revoke Admin Access"
-                                                >
-                                                    Revoke
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(admin._id)}
-                                                    className="sa-btn-danger"
-                                                    style={{ padding: '6px', borderRadius: '4px', cursor: 'pointer', background: '#ef4444', border: 'none', color: 'white' }}
-                                                    title="Delete & Deactivate Account"
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </>
-                                        )}
+                                    <td style={{ fontWeight: '600' }}>{admin.performance?.acceptanceRate || 0}%</td>
+                                    <td style={{ textAlign: 'right' }}>
+                                        <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                                            <button
+                                                onClick={() => navigate(`/super-admin/problems/admin/${admin._id}`)}
+                                                className="sa-btn sa-btn-primary"
+                                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                                                title="View Admin Analysis"
+                                            >
+                                                Analysis
+                                            </button>
+                                            {admin.role !== 'SUPER_ADMIN' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleRevoke(admin._id)}
+                                                        className="sa-btn sa-btn-secondary"
+                                                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                                                        title="Revoke Admin Access"
+                                                    >
+                                                        Revoke
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(admin._id)}
+                                                        className="sa-btn sa-btn-danger"
+                                                        style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
+                                                        title="Delete & Deactivate Account"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

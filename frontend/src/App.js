@@ -7,6 +7,8 @@ import TopProgressBar from './components/common/TopProgressBar';
 import PageTransition from './components/common/PageTransition';
 import AppErrorBoundary from './components/common/AppErrorBoundary';
 import NetworkStatusHandler from './components/common/NetworkStatusHandler';
+import AlgorithmStudyGuide from './components/AlgorithmStudyGuide';
+import './styles/ContentPages.css';
 
 // Pages
 import Home from './pages/Home';
@@ -71,6 +73,7 @@ import PalindromePartitioningVisualizer from './visualizer/PalindromePartitionin
 import CombSortVisualizer from './visualizer/CombSortVisualizer';
 import CountingSortVisualizer from './visualizer/CountingSortVisualizer';
 import FibonacciSearchVisualizer from './visualizer/FibonacciSearchVisualizer';
+import TwoPointersVisualizer from './visualizer/TwoPointersVisualizer';
 import DijkstraVisualizer from './visualizer/DijkstraVisualizer';
 import MergeSortVisualizer from './visualizer/MergeSortVisualizer';
 import KruskalsVisualizer from './visualizer/KruskalsVisualizer';
@@ -93,7 +96,6 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import VerifyEmailOtp from './pages/auth/VerifyEmailOtp';
-import Leaderboard from './pages/Leaderboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminProfile from './pages/SuperAdminProfile';
 import AdminReports from './pages/AdminReports';
@@ -234,6 +236,7 @@ const AppContent = () => {
                     <Route path="/algorithms/sorting/tim" element={<TimSortVisualizer />} />
                     <Route path="/algorithms/sorting/merge" element={<MergeSortVisualizer />} />
                     <Route path="/algorithms/sorting/cycle-sort" element={<CycleSortVisualizer />} />
+                    <Route path="/algorithms/sorting/cycle" element={<CycleSortVisualizer />} />
                     <Route path="/algorithms/graphs/a-star" element={<AStarVisualizer />} />
                     <Route path="/algorithms/graphs/dijkstra" element={<DijkstraVisualizer />} />
                     <Route path="/algorithms/graphs/kruskals-mst" element={<KruskalsVisualizer />} />
@@ -252,6 +255,7 @@ const AppContent = () => {
                     <Route path="/algorithms/searching/jump-search" element={<JumpSearchVisualizer />} />
                     <Route path="/algorithms/searching/jump" element={<JumpSearchVisualizer />} />
                     <Route path="/algorithms/searching/sentinel-linear" element={<SentinelLinearSearchVisualizer />} />
+                    <Route path="/algorithms/searching/two-pointers" element={<TwoPointersVisualizer />} />
 
                     <Route path="/algorithms/math/sieve" element={<SieveVisualizer />} />
                     <Route path="/algorithms/sorting/quick" element={<QuickSortVisualizer />} />
@@ -322,7 +326,6 @@ const AppContent = () => {
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
-                    <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/contest/:id" element={<ContestParticipation />} />
                     <Route path="/contest/:contestId/problem/:problemId" element={<ContestProblemView />} />
                     <Route path="/contest/:id/leaderboard" element={<ContestLeaderboard />} />
@@ -384,6 +387,7 @@ const AppContent = () => {
                     {/* Fallback */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <AlgorithmStudyGuide />
                 </main>
               </AppErrorBoundary>
             </PageTransition>

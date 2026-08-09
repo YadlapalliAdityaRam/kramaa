@@ -27,6 +27,30 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
+// Ensure avatar upload directory exists
+const avatarUploadDir = path.join(__dirname, '../public/uploads/avatars');
+if (!fs.existsSync(avatarUploadDir)) {
+    fs.mkdirSync(avatarUploadDir, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, avatarUploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const avatarFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Please upload an image file (PNG, JPG, JPEG, WEBP).'), false);
+    }
+};
+
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
@@ -35,4 +59,13 @@ const upload = multer({
     }
 });
 
+const uploadAvatar = multer({
+    storage: avatarStorage,
+    fileFilter: avatarFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB max
+    }
+});
+
 module.exports = upload;
+module.exports.uploadAvatar = uploadAvatar;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaPlay, FaPause, FaStepBackward, FaStepForward, FaRedo } from 'react-icons/fa';
+import { FaPlay, FaPause, FaStepBackward, FaStepForward, FaRedo, FaSlidersH, FaRandom, FaCheck } from 'react-icons/fa';
+import { MdSkipPrevious, MdSkipNext, MdReplay, MdPlayArrow, MdPause } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 import './AnimationControls.css';
 
@@ -58,94 +59,116 @@ const AnimationControls = ({
         setManualInput(parsed.join(', '));
     };
 
+    // Calculate scrubber percentage for YouTube-style progress fill
+    const maxSteps = Math.max(1, safeTotalSteps - 1);
+    const progressPercent = maxSteps > 0 ? (safeCurrentStep / maxSteps) * 100 : 0;
+
     return (
-        <div className="animation-controls">
-            <div className="ac-top-row">
-                {/* Control Buttons (Reset, Back, Play/Pause, Forward) */}
-                <div className="controls-group">
-                    <button onClick={onReset} title="Reset" className="control-btn icon-btn">
-                        <FaRedo />
-                    </button>
-                    <button onClick={handleBackward} disabled={safeCurrentStep === 0} title="Step Back" className="control-btn icon-btn">
-                        <FaStepBackward />
-                    </button>
-                    <button onClick={isPlaying ? onPause : onPlay} className="control-btn play-btn" title={isPlaying ? 'Pause' : 'Play'}>
-                        {isPlaying ? <FaPause /> : <FaPlay />}
-                    </button>
-                    <button onClick={handleForward} disabled={safeCurrentStep === Math.max(0, safeTotalSteps - 1)} title="Step Forward" className="control-btn icon-btn">
-                        <FaStepForward />
-                    </button>
-                </div>
-
-                {/* Speed Controls */}
-                <div className="speed-control-group">
-                    {[0.5, 1, 1.5, 2, 4].map(s => (
-                        <button
-                            key={s}
-                            className={`speed-btn ${speed === s ? 'active' : ''}`}
-                            onClick={() => onSpeedChange(s)}
-                            title={`${s}x Speed`}
-                        >
-                            {s}x
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Scrubber and Step Tracker */}
-            <div className="scrubber-container">
+        <div className="yt-player-controls">
+            {/* YouTube Progress Scrubber Bar */}
+            <div className="yt-progress-container">
                 <input
                     type="range"
                     min="0"
-                    max={Math.max(0, safeTotalSteps - 1)}
+                    max={maxSteps}
                     value={safeCurrentStep}
                     onChange={(e) => onScrub && onScrub(parseInt(e.target.value, 10))}
-                    className="scrubber-input"
-                    title="Scrub through steps"
+                    className="yt-scrubber-input"
+                    style={{
+                        background: `linear-gradient(to right, #ff0000 0%, #ff0000 ${progressPercent}%, var(--surface-border) ${progressPercent}%, var(--surface-border) 100%)`
+                    }}
+                    title="Scrub step"
                 />
-                <div className="step-tracker-badge">
-                    Step {safeCurrentStep + 1} / {safeTotalSteps || 1}
+            </div>
+
+            {/* Bottom Bar: YouTube Player Control Buttons */}
+            <div className="yt-controls-bar">
+                {/* Left Controls: Reset, Prev, Play/Pause, Next, Timestamp */}
+                <div className="yt-left-controls">
+                    <button onClick={onReset} title="Replay / Reset to Original State" className="yt-btn yt-icon-btn with-text">
+                        <MdReplay />
+                        <span className="yt-btn-text">Original State</span>
+                    </button>
+
+                    <button
+                        onClick={handleBackward}
+                        disabled={safeCurrentStep === 0}
+                        title="Previous Step"
+                        className="yt-btn yt-icon-btn"
+                    >
+                        <MdSkipPrevious />
+                    </button>
+
+                    <button
+                        onClick={isPlaying ? onPause : onPlay}
+                        className={`yt-btn yt-play-btn ${isPlaying ? 'playing' : ''}`}
+                        title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
+                    >
+                        {isPlaying ? <MdPause /> : <MdPlayArrow />}
+                    </button>
+
+                    <button
+                        onClick={handleForward}
+                        disabled={safeCurrentStep === Math.max(0, safeTotalSteps - 1)}
+                        title="Next Step"
+                        className="yt-btn yt-icon-btn"
+                    >
+                        <MdSkipNext />
+                    </button>
+
+                    {/* Step Timestamp Counter */}
+                    <div className="yt-time-display">
+                        <span className="yt-step-current">{safeCurrentStep + 1}</span>
+                        <span className="yt-step-divider">/</span>
+                        <span className="yt-step-total">{safeTotalSteps || 1}</span>
+                    </div>
+                </div>
+
+                {/* Right Controls: Speed Selector */}
+                <div className="yt-right-controls">
+                    <div className="yt-speed-menu">
+                        <span className="yt-speed-label"><FaSlidersH /></span>
+                        {[0.5, 1, 1.5, 2, 4].map(s => (
+                            <button
+                                key={s}
+                                className={`yt-speed-btn ${speed === s ? 'active' : ''}`}
+                                onClick={() => onSpeedChange(s)}
+                                title={`${s}x Speed`}
+                            >
+                                {s}x
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* Input Configuration Box */}
-            <div>
+            <div className="yt-input-config">
                 {inputType === 'graph' ? (
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <button onClick={onOpenGraphModal} className="control-btn play-btn">
+                    <div className="yt-modal-btn-wrapper">
+                        <button onClick={onOpenGraphModal} className="yt-action-btn primary full">
                             Configure Custom Graph
                         </button>
                     </div>
                 ) : inputType === 'tree' ? (
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <button onClick={onOpenTreeModal} className="control-btn play-btn">
+                    <div className="yt-modal-btn-wrapper">
+                        <button onClick={onOpenTreeModal} className="yt-action-btn primary full">
                             Configure Custom Tree
                         </button>
                     </div>
                 ) : (inputType === 'string' || inputType === 'none') ? null : (
                     <>
-                        <div className="ac-manual-input-box">
+                        <div className="yt-manual-input-box">
                             <input
                                 type="text"
-                                placeholder="Auto Array (e.g. 50, 10, 20 max 10)"
+                                placeholder="Custom Array (e.g. 50, 10, 20 max 10)"
                                 value={manualInput}
                                 onChange={(event) => setManualInput(event.target.value)}
-                                style={{
-                                    background: 'rgba(0,0,0,0.15)',
-                                    border: '1px solid rgba(255,255,255,0.12)',
-                                    color: '#f5f5f5',
-                                    padding: '0 16px',
-                                    borderRadius: '12px',
-                                    flex: 1,
-                                    height: '44px',
-                                    fontSize: '0.92rem',
-                                    fontWeight: '500',
-                                    outline: 'none'
-                                }}
+                                className="yt-text-input"
                             />
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={applyManualInput} className="ac-action-btn primary">
-                                    Set array
+                            <div className="yt-btn-row">
+                                <button onClick={applyManualInput} className="yt-action-btn primary">
+                                    <FaCheck /> Set Array
                                 </button>
                                 <button onClick={() => {
                                     const count = Math.floor(Math.random() * 6) + 5; // 5-10
@@ -153,12 +176,12 @@ const AnimationControls = ({
                                     setManualInput(arr.join(', '));
                                     if (onManualInput) onManualInput(arr);
                                     else if (onGenerateRandom) onGenerateRandom();
-                                }} title="Randomize" className="ac-action-btn">
-                                    Randomize
+                                }} title="Generate Random Array" className="yt-action-btn secondary">
+                                    <FaRandom /> Randomize
                                 </button>
                             </div>
                         </div>
-                        <div style={{ fontSize: '0.82rem', color: '#cfcfcf', marginTop: '6px', fontWeight: '500' }}>
+                        <div className="yt-help-hint">
                             Enter up to 10 numbers separated by commas or spaces.
                         </div>
                     </>

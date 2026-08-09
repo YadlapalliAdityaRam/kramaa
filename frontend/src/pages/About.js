@@ -1,17 +1,39 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
+import { FaArrowRight, FaCode, FaEye, FaTrophy } from 'react-icons/fa';
 
-const About = () => {
-    return (
-        <div style={{ padding: '2rem', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '1rem', background: 'linear-gradient(135deg, #3b82f6, #10b981)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>About Kramaa</h1>
-            <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto 2rem' }}>
-                The ultimate platform for mastering algorithms through interactive visualizations, real-time coding, and competitive challenges.
-            </p>
-            <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
-                <p style={{ margin: 0, fontWeight: '600', color: 'var(--primary-teal)' }}>Created by Aditya Ram</p>
+const principles = [
+    { icon: <FaEye />, title: 'Make the logic visible', copy: 'Follow the operations that usually stay hidden behind an answer.' },
+    { icon: <FaCode />, title: 'Practice with intent', copy: 'Apply the idea in a focused coding workspace, not a disconnected exercise.' },
+    { icon: <FaTrophy />, title: 'Pressure-test the habit', copy: 'Use contests and progress signals to turn knowledge into good judgment.' }
+];
+
+const About = () => (
+    <main className="content-page about-page">
+        <header className="content-page-intro">
+            <p className="content-kicker">About Kramaa</p>
+            <h1>Algorithms become useful when their decisions are clear.</h1>
+            <p className="content-lede">Kramaa is a practical environment for seeing an idea work, writing it yourself, and building the confidence to use it under pressure.</p>
+        </header>
+
+        <section className="principles-grid" aria-label="How Kramaa supports learning">
+            {principles.map((principle, index) => (
+                <article className="principle-card" key={principle.title}>
+                    <span className="principle-index">0{index + 1}</span>
+                    <span className="principle-icon" aria-hidden="true">{principle.icon}</span>
+                    <h2>{principle.title}</h2>
+                    <p>{principle.copy}</p>
+                </article>
+            ))}
+        </section>
+
+        <section className="content-callout">
+            <div>
+                <p className="content-kicker">Start with one idea</p>
+                <h2>See the mechanism. Then make it yours.</h2>
             </div>
-        </div>
-    );
-};
+            <Link to="/algorithms" className="content-button">Open the algorithm library <FaArrowRight aria-hidden="true" /></Link>
+        </section>
+    </main>
+);
 
 export default About;

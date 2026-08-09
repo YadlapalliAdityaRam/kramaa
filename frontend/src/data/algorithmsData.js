@@ -808,8 +808,15 @@ const defaultUseCases = [
     'Visualizer practice'
 ];
 
+const difficultyLabels = {
+    Beginner: 'Easy',
+    Intermediate: 'Medium',
+    Advanced: 'Hard'
+};
+
 export const algorithmList = [...coreAlgorithms, ...expansionAlgorithms].map((algorithm) => ({
     ...algorithm,
+    difficulty: difficultyLabels[algorithm.difficulty] || algorithm.difficulty || 'Medium',
     inputLimit: 10,
     timeComplexity: {
         ...defaultComplexity,
