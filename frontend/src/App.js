@@ -13,6 +13,7 @@ import './styles/ContentPages.css';
 
 // Pages
 import Home from './pages/Home';
+import Foundations from './pages/Foundations';
 import Algorithms from './pages/Algorithms';
 import BubbleSortVisualizer from './visualizer/BubbleSortVisualizer';
 import InsertionSortVisualizer from './visualizer/InsertionSortVisualizer';
@@ -223,6 +224,7 @@ const AppContent = () => {
                 <main className="main-content" style={{ paddingTop: shouldHideNavbar ? '0' : 'var(--nav-height)' }}>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/foundations" element={<Foundations />} />
                     {/* Algorithms */}
                     <Route path="/algorithms" element={<Algorithms />} />
                     <Route path="/algorithms/sorting/bubble" element={<BubbleSortVisualizer />} />

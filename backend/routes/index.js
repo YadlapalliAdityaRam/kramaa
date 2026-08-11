@@ -21,6 +21,7 @@ router.use('/users', require('./userRoutes'));
 router.use('/profiles', profileRoutes);
 router.use('/doubts', doubtRoutes);
 router.use('/settings', settingRoutes);
+router.use('/mentor', require('./mentorRoutes'));
 
 // Test route
 router.get('/', (req, res) => {

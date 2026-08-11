@@ -86,14 +86,7 @@ const BinarySearchVisualizer = () => {
             activeLine={getActiveLine(currentStep)}
             activeLanguage={activeLanguage}
             onLanguageChange={setActiveLanguage}
-            description={
-                <div className="bs-desc-wrapper">
-                    <span className="bs-badge">Sorted Array Search</span>
-                    <span className="bs-desc-text">
-                        {description || "Enter a target value and press Search to observe logarithmic O(log N) search."}
-                    </span>
-                </div>
-            }
+            description={<div className="bs-desc-wrapper"><span className="bs-badge">Sorted Array Search</span></div>}
         >
             <div className="bs-visualizer-wrapper">
 
@@ -132,6 +125,11 @@ const BinarySearchVisualizer = () => {
                 </div>
 
                 {/* ── Main Array Visualization Canvas ───────────────────── */}
+                <div className="bs-step-panel" aria-live="polite">
+                    <div className="bs-step-label">Current step <span>{currentStepIndex + 1} / {steps.length || 1}</span></div>
+                    <p>{description || "Enter a target value and press Search to observe logarithmic O(log N) search."}</p>
+                </div>
+
                 <div className="bs-canvas-wrapper">
                     <div className="bs-array-container">
                         <AnimatePresence mode="popLayout">

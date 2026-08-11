@@ -247,6 +247,7 @@ app.use('/api/profiles', require('./routes/profileRoutes'));
 app.use('/api/superadmin', require('./routes/superAdminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/mentor', require('./routes/mentorRoutes'));
 app.use('/api', require('./routes/socialRoutes'));
 
 // Serve frontend bundle in production when deploying as a single service.

@@ -8,6 +8,7 @@ import SubmissionResultModal from '../components/coding/SubmissionResultModal';
 import ReportModal from '../components/common/ReportModal';
 import PerformanceGraphModal from '../components/coding/PerformanceGraphModal';
 import CodeEditor from '../components/coding/CodeEditor';
+import MentorPanel from '../components/coding/MentorPanel';
 import FollowButton from '../components/social/FollowButton';
 import api, { getCurrentSocketBaseUrl, getSocketClientOptions } from '../utils/api';
 import { fetchProblem, likeProblem, unlikeProblem } from '../redux/slices/problemSlice';
@@ -1183,6 +1184,7 @@ const ProblemWorkspace = () => {
             overflow: 'hidden',
             paddingBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : 0
         }}>
+            <MentorPanel problem={problem} code={code} submissionError={submissionResult?.error || ''} />
             {/* ═══════════ HEADER ═══════════ */}
             <div ref={headerRef} style={{
                 minHeight: isMobile ? 'auto' : '48px',

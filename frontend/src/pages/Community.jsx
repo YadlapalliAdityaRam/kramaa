@@ -1053,9 +1053,11 @@ const CreateThreadModal = ({ isOpen, onClose, onSuccess, isAuthenticated }) => {
                 formData.append('image', image);
             }
 
-            await api.post('/doubts/create', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            // Let Axios/browser set the multipart boundary automatically.
+            // Manually setting Content-Type can send the request without a
+            // boundary, causing Multer to reject the upload before the
+            // controller receives the post.
+            await api.post('/doubts/create', formData);
 
             toast.success("Thread created!");
             onSuccess();

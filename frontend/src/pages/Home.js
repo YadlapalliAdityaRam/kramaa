@@ -219,20 +219,26 @@ const Home = () => {
                     <p>Each part of Kramaa has a distinct job: learn the model, test the implementation, then measure your growth.</p>
                 </div>
                 <div className="path-list">
-                    <Link to="/algorithms" className="path-row">
+                    <Link to="/foundations" className="path-row">
                         <span className="path-index">01</span>
+                        <span className="path-icon"><FaRoute aria-hidden="true" /></span>
+                        <span className="path-copy"><strong>Start learning from zero</strong><small>No coding experience needed—meet each DSA idea through stories, visuals, simple questions, and guided practice.</small></span>
+                        <FaArrowRight className="path-arrow" aria-hidden="true" />
+                    </Link>
+                    <Link to="/algorithms" className="path-row">
+                        <span className="path-index">02</span>
                         <span className="path-icon"><FaLayerGroup aria-hidden="true" /></span>
                         <span className="path-copy"><strong>Build the mental model</strong><small>Walk through every comparison, branch, and state change.</small></span>
                         <FaArrowRight className="path-arrow" aria-hidden="true" />
                     </Link>
                     <Link to="/coding-platform" className="path-row">
-                        <span className="path-index">02</span>
+                        <span className="path-index">03</span>
                         <span className="path-icon"><FaCode aria-hidden="true" /></span>
                         <span className="path-copy"><strong>Put it into practice</strong><small>Work through curated problems in an uncluttered coding workspace.</small></span>
                         <FaArrowRight className="path-arrow" aria-hidden="true" />
                     </Link>
                     <Link to="/contests" className="path-row">
-                        <span className="path-index">03</span>
+                        <span className="path-index">04</span>
                         <span className="path-icon"><FaTrophy aria-hidden="true" /></span>
                         <span className="path-copy"><strong>Work under pressure</strong><small>Join timed rounds and calibrate your decision-making.</small></span>
                         <FaArrowRight className="path-arrow" aria-hidden="true" />
